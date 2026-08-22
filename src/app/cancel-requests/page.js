@@ -1,12 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Filter, Search, Plus, Trash2, Edit3, Eye, ArrowUpDown } from "lucide-react";
+import {
+  Filter,
+  Search,
+  Plus,
+  Trash2,
+  Edit3,
+  ChevronDown,
+  ChevronRight,
+  ArrowUpDown,
+  Layers,
+  Check,
+  X,
+} from "lucide-react";
 
 export default function CancelRequestList() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedRows, setExpandedRows] = useState({ 1: true }); // Mặc định mở dòng đầu tiên cho user thấy
+
   const [requests, setRequests] = useState([
     {
       id: 1,
@@ -19,6 +33,10 @@ export default function CancelRequestList() {
       approveDate: "21/08/2026",
       status: "Đã phê duyệt",
       note: "Khách đổi sang chất liệu 75Y",
+      subItems: [
+        { id: 101, itemCode: "ITM-RING-61Y-01", moCode: "MO-2026-8891", qty: 2, reason: "Khách đổi sang ni 48" },
+        { id: 102, itemCode: "ITM-BRAC-75Y-04", moCode: "MO-2026-8892", qty: 3, reason: "Khách hủy mẫu lắc tay" },
+      ],
     },
     {
       id: 2,
@@ -31,6 +49,9 @@ export default function CancelRequestList() {
       approveDate: "-",
       status: "Chờ phê duyệt",
       note: "Sai kích thước ni tay",
+      subItems: [
+        { id: 201, itemCode: "ITM-NECK-18K-09", moCode: "MO-2026-8910", qty: 2, reason: "Sai độ dài dây chuyền 45cm" },
+      ],
     },
     {
       id: 3,
@@ -43,6 +64,10 @@ export default function CancelRequestList() {
       approveDate: "-",
       status: "Chờ phê duyệt",
       note: "Khách hủy hợp đồng đợt 1",
+      subItems: [
+        { id: 301, itemCode: "ITM-RING-24K-05", moCode: "MO-2026-9001", qty: 4, reason: "Khách giảm ngân sách" },
+        { id: 302, itemCode: "ITM-EARR-14K-12", moCode: "MO-2026-9002", qty: 6, reason: "Hủy theo yêu cầu Sale" },
+      ],
     },
     {
       id: 4,
@@ -55,6 +80,9 @@ export default function CancelRequestList() {
       approveDate: "19/08/2026",
       status: "Đã phê duyệt",
       note: "Hủy theo yêu cầu Sale",
+      subItems: [
+        { id: 401, itemCode: "ITM-PEND-999-01", moCode: "MO-2026-7811", qty: 1, reason: "Mặt dây chuyền lỗi đúc" },
+      ],
     },
     {
       id: 5,
@@ -67,13 +95,40 @@ export default function CancelRequestList() {
       approveDate: "16/08/2026",
       status: "Từ chối",
       note: "Hàng đã hoàn thiện xong, không thể hủy",
+      subItems: [
+        { id: 501, itemCode: "ITM-SET-BRIDAL-01", moCode: "MO-2026-6650", qty: 3, reason: "Khách trễ hạn thanh toán" },
+      ],
     },
   ]);
 
-  const handleDelete = (id, code) => {
+  const toggleRow = (id) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const handleDelete = (id, code, e) => {
+    e.stopPropagation();
     if (confirm(`Chị đẹp có chắc chắn muốn xóa yêu cầu "${code}" không ạ?`)) {
       setRequests(requests.filter((r) => r.id !== id));
     }
+  };
+
+  const handleQuickApprove = (id, status, e) => {
+    e.stopPropagation();
+    setRequests(
+      requests.map((r) =>
+        r.id === id
+          ? {
+              ...r,
+              status,
+              approver: "Trần Thị Bích",
+              approveDate: new Date().toLocaleDateString("vi-VN"),
+            }
+          : r
+      )
+    );
   };
 
   const getStatusBadge = (status) => {
@@ -119,7 +174,10 @@ export default function CancelRequestList() {
 
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Danh sách yêu cầu hủy SO</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Danh sách yêu cầu hủy SO</h1>
+          <p className="text-xs text-gray-500 mt-0.5">Click vào từng dòng để mở/đóng xem chi tiết các mặt hàng yêu cầu hủy (Subtable)</p>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -210,7 +268,8 @@ export default function CancelRequestList() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">STT</th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-10"></th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">STT</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mã yêu cầu</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mã SO</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng SL hủy</th>
@@ -224,54 +283,142 @@ export default function CancelRequestList() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredRequests.length > 0 ? (
-                filteredRequests.map((req, index) => (
-                  <tr key={req.id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-sm font-semibold text-[#005a46]">
-                      <Link href={`/cancel-requests/create?id=${req.id}`} className="hover:underline">
-                        {req.requestCode}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-sm font-medium text-gray-900">{req.soCode}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-900 font-bold text-center">
-                      <span className="px-2 py-0.5 bg-gray-100 rounded-md">{req.totalQty}</span>
-                    </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-700">{req.requester}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-500">{req.requestDate}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-700">{req.approver}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-500">{req.approveDate}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-sm">
-                      <span
-                        className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusBadge(
-                          req.status
-                        )}`}
+                filteredRequests.map((req, index) => {
+                  const isExpanded = !!expandedRows[req.id];
+                  return (
+                    <React.Fragment key={req.id}>
+                      {/* Main Row */}
+                      <tr
+                        onClick={() => toggleRow(req.id)}
+                        className={`cursor-pointer transition-colors ${
+                          isExpanded ? "bg-emerald-50/40 font-medium" : "hover:bg-gray-50"
+                        }`}
                       >
-                        {req.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Link
-                          href={`/cancel-requests/create?id=${req.id}`}
-                          className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition"
-                          title="Sửa / Chi tiết"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(req.id, req.requestCode)}
-                          className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition"
-                          title="Xóa"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                        <td className="px-3 py-3.5 text-center text-gray-400">
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-[#005a46] inline" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-gray-400 inline" />
+                          )}
+                        </td>
+                        <td className="px-3 py-3.5 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-sm font-semibold text-[#005a46]">
+                          <div className="flex items-center space-x-1.5">
+                            <Layers className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>{req.requestCode}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-sm font-medium text-gray-900">{req.soCode}</td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-900 font-bold">
+                          <span className="px-2.5 py-0.5 bg-emerald-100/70 text-emerald-800 rounded-full text-xs font-semibold">
+                            {req.totalQty} SP
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-700">{req.requester}</td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-500">{req.requestDate}</td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-700">{req.approver}</td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-500">{req.approveDate}</td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-sm">
+                          <span
+                            className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusBadge(
+                              req.status
+                            )}`}
+                          >
+                            {req.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2" onClick={(e) => e.stopPropagation()}>
+                            <Link
+                              href={`/cancel-requests/create?id=${req.id}`}
+                              className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition"
+                              title="Sửa / Chi tiết"
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </Link>
+                            <button
+                              onClick={(e) => handleDelete(req.id, req.requestCode, e)}
+                              className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition"
+                              title="Xóa"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Expandable Submenu / Subtable */}
+                      {isExpanded && (
+                        <tr className="bg-gray-50/70 border-b border-gray-200">
+                          <td colSpan={11} className="px-6 py-4">
+                            <div className="bg-white rounded-lg border border-emerald-200 p-4 shadow-sm space-y-3">
+                              <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                                <div className="flex items-center space-x-2">
+                                  <div className="h-2 w-2 rounded-full bg-[#005a46]"></div>
+                                  <span className="text-sm font-bold text-gray-900">
+                                    Chi tiết các mặt hàng yêu cầu hủy ({req.subItems?.length || 0} sản phẩm)
+                                  </span>
+                                  <span className="text-xs text-gray-500 italic">- Ghi chú: {req.note}</span>
+                                </div>
+
+                                {req.status === "Chờ phê duyệt" && (
+                                  <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                      onClick={(e) => handleQuickApprove(req.id, "Đã phê duyệt", e)}
+                                      className="flex items-center px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold shadow-sm transition"
+                                    >
+                                      <Check className="h-3.5 w-3.5 mr-1" />
+                                      Duyệt nhanh
+                                    </button>
+                                    <button
+                                      onClick={(e) => handleQuickApprove(req.id, "Từ chối", e)}
+                                      className="flex items-center px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold shadow-sm transition"
+                                    >
+                                      <X className="h-3.5 w-3.5 mr-1" />
+                                      Từ chối
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200 text-xs">
+                                  <thead className="bg-gray-100">
+                                    <tr>
+                                      <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase w-12">STT</th>
+                                      <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Mã Item</th>
+                                      <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Mã MO (Lệnh SX)</th>
+                                      <th className="px-4 py-2 text-center font-semibold text-gray-600 uppercase w-28">SL hủy</th>
+                                      <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Lý do hủy chi tiết</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="bg-white divide-y divide-gray-100">
+                                    {req.subItems?.map((sub, sIdx) => (
+                                      <tr key={sub.id} className="hover:bg-gray-50">
+                                        <td className="px-3 py-2.5 text-gray-500 text-center font-medium">{sIdx + 1}</td>
+                                        <td className="px-4 py-2.5 font-semibold text-gray-900">{sub.itemCode}</td>
+                                        <td className="px-4 py-2.5 text-gray-600">{sub.moCode}</td>
+                                        <td className="px-4 py-2.5 text-center font-bold text-red-600">
+                                          <span className="px-2 py-0.5 bg-red-50 rounded border border-red-200">
+                                            {sub.qty}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-2.5 text-gray-700">{sub.reason}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={11} className="px-4 py-8 text-center text-sm text-gray-500">
                     Không tìm thấy yêu cầu hủy SO nào phù hợp.
                   </td>
                 </tr>
