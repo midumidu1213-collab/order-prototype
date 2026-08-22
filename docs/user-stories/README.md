@@ -8,9 +8,9 @@ Thư mục này chứa toàn bộ các User Stories đặc tả chi tiết cho t
 
 | Mã US | Tên User Story | Phạm vi & Màn hình | Link tài liệu |
 | :---: | :--- | :--- | :---: |
-| **US-CAN-01** | Xem và quản lý danh sách Yêu cầu hủy SO | **Màn hình 1:** Bảng danh sách, bộ lọc Tabs, Live Search, nút Xóa | [`US-CAN-01-danh-sach-yeu-cau-huy-so.md`](./US-CAN-01-danh-sach-yeu-cau-huy-so.md) |
-| **US-CAN-02** | Tạo mới và chỉnh sửa Yêu cầu hủy SO | **Màn hình 2:** Form thông tin chung tinh gọn, Subtable chi tiết, Real-time sum | [`US-CAN-02-tao-chinh-sua-yeu-cau-huy-so.md`](./US-CAN-02-tao-chinh-sua-yeu-cau-huy-so.md) |
-| **US-CAN-03** | Xem chi tiết Subtable và Phê duyệt nhanh | **Màn hình 3:** Click dòng trượt mở Subtable, Quick Approve / Reject | [`US-CAN-03-chi-tiet-subtable-phe-duyet-nhanh.md`](./US-CAN-03-chi-tiet-subtable-phe-duyet-nhanh.md) |
+| **US-DH-01** | Xem và quản lý danh sách Yêu cầu hủy SO | **Màn hình 1:** Bảng danh sách, bộ lọc Tabs, Live Search, nút Xóa | [`US-DH-01-danh-sach-yeu-cau-huy-so.md`](./US-DH-01-danh-sach-yeu-cau-huy-so.md) |
+| **US-DH-02** | Tạo mới và chỉnh sửa Yêu cầu hủy SO | **Màn hình 2:** Form thông tin chung tinh gọn, Subtable chi tiết, Real-time sum | [`US-DH-02-tao-chinh-sua-yeu-cau-huy-so.md`](./US-DH-02-tao-chinh-sua-yeu-cau-huy-so.md) |
+| **US-DH-03** | Xem chi tiết Subtable và Phê duyệt nhanh | **Màn hình 3:** Click dòng trượt mở Subtable, Quick Approve / Reject | [`US-DH-03-chi-tiet-subtable-phe-duyet-nhanh.md`](./US-DH-03-chi-tiet-subtable-phe-duyet-nhanh.md) |
 
 ---
 

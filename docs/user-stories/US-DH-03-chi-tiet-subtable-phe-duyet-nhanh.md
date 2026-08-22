@@ -1,10 +1,8 @@
-# US-CAN-03: Màn hình Chi tiết (Expandable Submenu / Subtable trên Danh sách) & Phê duyệt nhanh
+# US-DH-03: Màn hình Chi tiết (Expandable Submenu / Subtable trên Danh sách) & Phê duyệt nhanh
 
-> **Mã Story:** `US-CAN-03`  
+> **Mã Story:** `US-DH-03`  
 > **Module:** Quản lý đơn hàng (Sales Order Management)  
 > **Feature:** Yêu cầu hủy SO (Cancel Sales Order Requests)  
-> **Tác giả:** @ba-master (AI Airlearn)  
-> **Trạng thái:** Sẵn sàng phát triển (Ready for Dev)  
 
 ---
 
@@ -16,19 +14,31 @@
 ---
 
 ## 2. Luồng Nghiệp vụ (Business Flow)
-1. **Mở rộng dòng (Expand Row):**
-   * Người dùng click vào bất kỳ vùng nào trên dòng đơn hàng (hoặc click icon mũi tên `▶` ở cột đầu tiên).
-   * Dòng đang chọn chuyển sang trạng thái Active (nền xanh nhẹ `bg-emerald-50/40`), icon mũi tên đổi thành `▼`.
-   * Một dòng phụ trượt mở ngay bên dưới, hiển thị thẻ khung chi tiết danh sách sản phẩm bị hủy (Subtable).
-2. **Xem chi tiết sản phẩm:**
-   * Tiêu đề Subtable thể hiện số lượng sản phẩm chi tiết và Ghi chú/Lý do của yêu cầu đó.
-   * Bảng con gồm các cột: `STT`, `Mã Item`, `Mã MO (Lệnh SX)`, `SL hủy` (nổi bật màu đỏ), `Lý do hủy chi tiết`.
-3. **Phê duyệt nhanh tại chỗ (Quick Approval):**
-   * Nếu yêu cầu đang ở trạng thái `Chờ phê duyệt` và người dùng có quyền Quản lý/Approver:
-     * Nút **[Duyệt nhanh]** (Xanh lá) và **[Từ chối]** (Đỏ) sẽ hiển thị ở góc phải của Subtable.
-     * Quản lý bấm nút tương ứng để cập nhật trạng thái ngay lập tức mà không cần reload trang.
-4. **Thu gọn dòng (Collapse Row):**
-   * Người dùng click lại vào dòng đó (hoặc icon `▼`) để đóng bảng con lại.
+
+```mermaid
+flowchart TD
+    Start([Đang ở Màn hình Danh sách: US-DH-01]) --> ClickRow[Người dùng Click vào dòng hoặc icon ▶]
+    
+    ClickRow --> CheckState{Dòng đang mở hay đóng?}
+    
+    CheckState -->|Đang đóng| Expand[Active dòng & Trượt mở Subtable chi tiết bên dưới]
+    CheckState -->|Đang mở| Collapse[Thu gọn Subtable & Trả về trạng thái bình thường]
+    
+    Expand --> ViewDetail[Xem chi tiết từng Item: Mã Item, Mã MO, SL hủy, Lý do hủy]
+    
+    ViewDetail --> CheckRole{Vai trò & Trạng thái đơn?}
+    
+    CheckRole -->|Đơn 'Chờ duyệt' + Vai trò Quản lý| ShowActions[Hiển thị 2 nút: Duyệt nhanh / Từ chối]
+    CheckRole -->|Đơn đã xong hoặc Nhân viên| ViewOnly[Chỉ xem thông tin]
+    
+    ShowActions --> UserDecision{Quản lý bấm nút}
+    
+    UserDecision -->|Bấm 'Duyệt nhanh'| ApproveAction[Cập nhật Trạng thái = 'Đã phê duyệt' + Ghi nhận Người/Ngày duyệt]
+    UserDecision -->|Bấm 'Từ chối'| RejectAction[Cập nhật Trạng thái = 'Từ chối' + Ghi nhận Người/Ngày duyệt]
+    
+    ApproveAction --> UpdateBadge[Đổi Badge xanh & Ẩn bộ nút duyệt]
+    RejectAction --> UpdateBadgeRed[Đổi Badge đỏ & Ẩn bộ nút duyệt]
+```
 
 ---
 

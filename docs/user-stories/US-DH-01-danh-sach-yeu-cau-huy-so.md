@@ -1,10 +1,8 @@
-# US-CAN-01: Màn hình Danh sách Yêu cầu Hủy SO
+# US-DH-01: Màn hình Danh sách Yêu cầu Hủy SO
 
-> **Mã Story:** `US-CAN-01`  
+> **Mã Story:** `US-DH-01`  
 > **Module:** Quản lý đơn hàng (Sales Order Management)  
 > **Feature:** Yêu cầu hủy SO (Cancel Sales Order Requests)  
-> **Tác giả:** @ba-master (AI Airlearn)  
-> **Trạng thái:** Sẵn sàng phát triển (Ready for Dev)  
 
 ---
 
@@ -30,10 +28,10 @@ flowchart TD
     SearchBox --> UpdateTable
     
     Action -->|3. Tạo yêu cầu mới| BtnCreate[Bấm nút '+ Tạo yêu cầu hủy']
-    BtnCreate --> ScreenCreate[Chuyển sang Form Tạo mới: US-CAN-02]
+    BtnCreate --> ScreenCreate[Chuyển sang Form Tạo mới: US-DH-02]
     
     Action -->|4. Sửa yêu cầu| BtnEdit[Bấm icon Sửa ✏️]
-    BtnEdit --> ScreenEdit[Chuyển sang Form Chỉnh sửa: US-CAN-02]
+    BtnEdit --> ScreenEdit[Chuyển sang Form Chỉnh sửa: US-DH-02]
     
     Action -->|5. Xóa yêu cầu| BtnDelete[Bấm icon Xóa 🗑️]
     BtnDelete --> CheckStatus{Trạng thái = 'Chờ phê duyệt'?}
@@ -43,7 +41,7 @@ flowchart TD
     CheckStatus -->|Sai| BlockDelete[Khóa nút Xóa]
     
     Action -->|6. Xem chi tiết mặt hàng| ClickRow[Click vào dòng hoặc icon ▶]
-    ClickRow --> ExpandSubtable[Trượt mở Subtable chi tiết: US-CAN-03]
+    ClickRow --> ExpandSubtable[Trượt mở Subtable chi tiết: US-DH-03]
 ```
 
 ---

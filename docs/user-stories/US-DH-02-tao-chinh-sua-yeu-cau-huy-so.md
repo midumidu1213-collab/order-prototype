@@ -1,10 +1,8 @@
-# US-CAN-02: Màn hình Tạo mới và Chỉnh sửa Yêu cầu Hủy SO
+# US-DH-02: Màn hình Tạo mới và Chỉnh sửa Yêu cầu Hủy SO
 
-> **Mã Story:** `US-CAN-02`  
+> **Mã Story:** `US-DH-02`  
 > **Module:** Quản lý đơn hàng (Sales Order Management)  
 > **Feature:** Yêu cầu hủy SO (Cancel Sales Order Requests)  
-> **Tác giả:** @ba-master (AI Airlearn)  
-> **Trạng thái:** Sẵn sàng phát triển (Ready for Dev)  
 
 ---
 
@@ -16,19 +14,35 @@
 ---
 
 ## 2. Luồng Nghiệp vụ (Business Flow)
-1. **Khởi tạo:** Người dùng bấm nút **+ Tạo yêu cầu hủy** từ trang danh sách hoặc bấm icon **Sửa ✏️** trên một dòng đơn có sẵn.
-2. **Nhập thông tin chung (Card 1):**
-   * Hệ thống tự động sinh `Mã yêu cầu` (Read-only).
-   * Người dùng chọn `Mã SO cần hủy` từ dropdown danh sách đơn hàng.
-   * `Tổng SL hủy` được hệ thống khóa (Read-only) và tự động tính toán tổng từ Subtable bên dưới.
-   * Người dùng nhập `Lý do tổng quan / Ghi chú` của đợt hủy.
-   * *(Lưu ý: Các trường Người/Ngày yêu cầu, Người/Ngày duyệt được hệ thống tự động quản lý ngầm, không hiển thị trên giao diện form).*
-3. **Khai báo chi tiết sản phẩm (Card 2 - Subtable):**
-   * Người dùng nhập: `Mã Item`, `Mã MO (Lệnh SX)`, `SL yêu cầu hủy` (> 0), `Lý do hủy chi tiết`.
-   * Người dùng có thể bấm **+ Thêm dòng sản phẩm** để khai báo thêm các Item khác.
-   * Người dùng có thể bấm icon **Xóa dòng 🗑️** để bỏ bớt các Item không cần hủy.
-4. **Gửi yêu cầu:** Người dùng bấm nút **Gửi yêu cầu phê duyệt** ở thanh hành động cố định phía dưới màn hình.
-5. **Hoàn tất:** Hệ thống lưu bản ghi, hiển thị thông báo thành công và tự động chuyển hướng về trang danh sách `/cancel-requests`.
+
+```mermaid
+flowchart TD
+    Start([Bấm '+ Tạo yêu cầu hủy' hoặc icon Sửa ✏️]) --> FormView[Hiển thị Màn hình Form: US-DH-02]
+    
+    FormView --> Step1[1. Thông tin chung: Hệ thống tự sinh Mã YC & Chọn Mã SO]
+    Step1 --> Step2[2. Khai báo Subtable: Nhập Mã Item, Mã MO, SL hủy, Lý do hủy]
+    
+    Step2 --> RealtimeCalc[Hệ thống tự động cộng dồn Tổng SL hủy Real-time]
+    
+    RealtimeCalc --> UserAction{Hành động người dùng}
+    
+    UserAction -->|Bấm '+ Thêm dòng'| AddRow[Thêm dòng sản phẩm mới vào Subtable]
+    AddRow --> Step2
+    
+    UserAction -->|Bấm icon Xóa dòng 🗑️| CheckCount{Số dòng > 1?}
+    CheckCount -->|Đúng| RemoveRow[Xóa dòng & Cập nhật lại Tổng SL hủy]
+    CheckCount -->|Sai| AlertMinRow[Cảnh báo: Yêu cầu cần tối thiểu 1 sản phẩm]
+    RemoveRow --> Step2
+    AlertMinRow --> Step2
+    
+    UserAction -->|Bấm 'Hủy bỏ'| CancelForm[Hủy thao tác & Quay về Danh sách US-DH-01]
+    
+    UserAction -->|Bấm 'Gửi yêu cầu phê duyệt'| ValidateForm{Kiểm tra dữ liệu bắt buộc?}
+    ValidateForm -->|Hợp lệ| SaveRecord[Lưu yêu cầu với Trạng thái = 'Chờ phê duyệt']
+    ValidateForm -->|Thiếu thông tin| ShowError[Hiển thị cảnh báo điền đầy đủ trường *]
+    SaveRecord --> SuccessNotify[Hiển thị Toast thành công & Chuyển hướng sau 1.5s]
+    SuccessNotify --> Done([Quay về Màn hình Danh sách US-DH-01])
+```
 
 ---
 
