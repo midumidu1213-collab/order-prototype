@@ -171,63 +171,8 @@ export default function CreateCancelRequest() {
             <span className="text-xs text-gray-400">Tự động cộng dồn từ bảng Subtable</span>
           </div>
 
-          {/* Người yêu cầu */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Người yêu cầu <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.requester}
-              onChange={(e) => setFormData({ ...formData, requester: e.target.value })}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm"
-            />
-          </div>
-
-          {/* Ngày yêu cầu */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Ngày yêu cầu <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={formData.requestDate}
-              onChange={(e) => setFormData({ ...formData, requestDate: e.target.value })}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm"
-            />
-          </div>
-
-          {/* Người phê duyệt */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Người phê duyệt dự kiến <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={formData.approver}
-              onChange={(e) => setFormData({ ...formData, approver: e.target.value })}
-              className="mt-1 block w-full border border-gray-300 bg-white rounded-md shadow-sm py-2 px-3 focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm"
-            >
-              <option value="Trần Thị Bích">Trần Thị Bích (Trưởng phòng Kinh doanh)</option>
-              <option value="Đặng Quốc Cường">Đặng Quốc Cường (Giám đốc Kỹ thuật)</option>
-              <option value="Hoàng Văn Nam">Hoàng Văn Nam (Quản đốc Xưởng)</option>
-            </select>
-          </div>
-
-          {/* Ngày phê duyệt */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Ngày phê duyệt</label>
-            <input
-              type="date"
-              value={formData.approveDate}
-              onChange={(e) => setFormData({ ...formData, approveDate: e.target.value })}
-              placeholder="Để trống nếu đang chờ duyệt"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm text-gray-500"
-            />
-            <span className="text-xs text-gray-400">Sẽ được cập nhật khi Quản lý duyệt</span>
-          </div>
-
-          {/* Ghi chú chung */}
-          <div className="md:col-span-2">
+          {/* Ghi chú / Lý do chung */}
+          <div className="md:col-span-3">
             <label className="block text-sm font-medium text-gray-700">Lý do tổng quan / Ghi chú</label>
             <input
               type="text"
