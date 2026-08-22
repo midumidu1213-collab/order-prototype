@@ -16,15 +16,35 @@
 ---
 
 ## 2. Luồng Nghiệp vụ (Business Flow)
-1. **Truy cập:** Người dùng chọn menu `Quản lý đơn hàng` > `Yêu cầu hủy SO` trên thanh Sidebar (Đường dẫn `/cancel-requests`).
-2. **Xem danh sách:** Hệ thống hiển thị bảng danh sách các yêu cầu hủy kèm số thứ tự, thông tin mã đơn, người tạo, người duyệt, số lượng hủy và trạng thái.
-3. **Lọc trạng thái:** Người dùng bấm chọn các Tab (*Tất cả*, *Chờ phê duyệt*, *Đã phê duyệt*, *Từ chối*) để lọc dữ liệu tương ứng.
-4. **Tìm kiếm:** Người dùng nhập từ khóa vào ô tìm kiếm (Mã YC, Mã SO, Người YC) để lọc dữ liệu theo thời gian thực.
-5. **Thao tác:**
-   * Bấm nút **+ Tạo yêu cầu hủy** để chuyển sang màn hình Tạo mới (`US-CAN-02`).
-   * Bấm icon **Sửa ✏️** để chỉnh sửa yêu cầu.
-   * Bấm icon **Xóa 🗑️** để xóa yêu cầu (chỉ áp dụng cho đơn *Chờ phê duyệt*).
-   * Click vào dòng để mở rộng xem Subtable chi tiết (`US-CAN-03`).
+
+```mermaid
+flowchart TD
+    Start([Truy cập Menu: Yêu cầu hủy SO]) --> ViewList[Hiển thị Bảng danh sách mặc định]
+    
+    ViewList --> Action{Người dùng tương tác}
+    
+    Action -->|1. Lọc theo trạng thái| TabFilter[Bấm chọn Tab: Tất cả / Chờ duyệt / Đã duyệt / Từ chối]
+    TabFilter --> UpdateTable[Cập nhật danh sách hiển thị]
+    
+    Action -->|2. Tìm kiếm nhanh| SearchBox[Nhập từ khóa: Mã YC / Mã SO / Người YC]
+    SearchBox --> UpdateTable
+    
+    Action -->|3. Tạo yêu cầu mới| BtnCreate[Bấm nút '+ Tạo yêu cầu hủy']
+    BtnCreate --> ScreenCreate[Chuyển sang Form Tạo mới: US-CAN-02]
+    
+    Action -->|4. Sửa yêu cầu| BtnEdit[Bấm icon Sửa ✏️]
+    BtnEdit --> ScreenEdit[Chuyển sang Form Chỉnh sửa: US-CAN-02]
+    
+    Action -->|5. Xóa yêu cầu| BtnDelete[Bấm icon Xóa 🗑️]
+    BtnDelete --> CheckStatus{Trạng thái = 'Chờ phê duyệt'?}
+    CheckStatus -->|Đúng| ModalConfirm[Bật Popup xác nhận Xóa]
+    ModalConfirm -->|Đồng ý| ExecDelete[Xóa bản ghi & Thông báo thành công]
+    ModalConfirm -->|Hủy| ViewList
+    CheckStatus -->|Sai| BlockDelete[Khóa nút Xóa]
+    
+    Action -->|6. Xem chi tiết mặt hàng| ClickRow[Click vào dòng hoặc icon ▶]
+    ClickRow --> ExpandSubtable[Trượt mở Subtable chi tiết: US-CAN-03]
+```
 
 ---
 
@@ -45,19 +65,7 @@
 
 ---
 
-## 4. Ma trận Phân quyền (RBAC Matrix)
-
-| Hành động | Nhân viên Sales | Quản lý / Approver | Admin Hệ thống |
-| :--- | :---: | :---: | :---: |
-| **Xem danh sách (Read)** | ✅ (Chỉ thấy đơn của mình/team) | ✅ (Toàn bộ) | ✅ (Toàn bộ) |
-| **Lọc & Tìm kiếm** | ✅ | ✅ | ✅ |
-| **Tạo mới (Create)** | ✅ | ✅ | ✅ |
-| **Chỉnh sửa (Update)** | ✅ (Chỉ khi *Chờ phê duyệt*) | ✅ | ✅ |
-| **Xóa yêu cầu (Delete)** | ✅ (Chỉ khi *Chờ phê duyệt*) | ✅ | ✅ |
-
----
-
-## 5. Tiêu chí Chấp nhận (Acceptance Criteria - Gherkin)
+## 4. Tiêu chí Chấp nhận (Acceptance Criteria - Gherkin)
 
 ### AC 1.1: Hiển thị danh sách và Tabs trạng thái
 *   **Given:** Người dùng đã đăng nhập và truy cập vào trang `/cancel-requests`.
@@ -84,7 +92,7 @@
 
 ---
 
-## 6. Definition of Done (DoD)
+## 5. Definition of Done (DoD)
 - [x] Giao diện chuẩn UI/UX Sevago Jewelry, tương thích hiển thị trên màn hình Desktop.
 - [x] Đầy đủ các bộ lọc Tab, thanh tìm kiếm và phân quyền nút hành động.
 - [x] Đã kiểm thử chức năng Xóa, Lọc Tab hoạt động chính xác trên Prototype.
