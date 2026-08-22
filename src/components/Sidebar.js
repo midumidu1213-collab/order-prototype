@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Home,
   Database,
@@ -11,13 +14,15 @@ import {
 } from "lucide-react";
 
 export default function Sidebar() {
+  const pathname = usePathname();
+
   return (
     <aside className="w-64 bg-[#005a46] text-white flex flex-col h-full overflow-y-auto">
       {/* Cấu trúc Sidebar tương tự giao diện */}
       <nav className="flex-1 px-2 py-4 space-y-1">
         <Link
           href="/"
-          className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-[#004737] text-gray-200"
+          className={`flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-[#004737] ${pathname === "/" ? "text-white" : "text-gray-200"}`}
         >
           <Home className="mr-3 h-5 w-5" />
           Trang chủ
@@ -54,7 +59,11 @@ export default function Sidebar() {
           <div className="pl-11 space-y-1">
             <Link
               href="/"
-              className="group flex items-center px-3 py-2 text-sm font-medium rounded-md bg-white/20 text-white"
+              className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                pathname === "/" || pathname.startsWith("/orders")
+                  ? "bg-white/20 text-white font-semibold"
+                  : "hover:bg-[#004737] text-gray-300"
+              }`}
             >
               Thông tin đơn hàng
             </Link>
@@ -69,6 +78,16 @@ export default function Sidebar() {
               className="group flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-[#004737] text-gray-300"
             >
               Đơn hàng đào tạo
+            </Link>
+            <Link
+              href="/cancel-requests"
+              className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                pathname.startsWith("/cancel-requests")
+                  ? "bg-white/20 text-white font-semibold"
+                  : "hover:bg-[#004737] text-gray-300"
+              }`}
+            >
+              Yêu cầu hủy SO
             </Link>
           </div>
         </div>
