@@ -14,6 +14,7 @@ import {
   Layers,
   Check,
   X,
+  RefreshCw,
 } from "lucide-react";
 
 export default function CancelRequestList() {
@@ -32,7 +33,7 @@ export default function CancelRequestList() {
       requestDate: "20/08/2026",
       approver: "Trần Thị Bích",
       approveDate: "21/08/2026",
-      status: "Đã phê duyệt",
+      status: "Đã duyệt",
       note: "Khách đổi sang chất liệu 75W",
       subItems: [
         {
@@ -43,6 +44,7 @@ export default function CancelRequestList() {
           weight: "0.85 chỉ (3.19g)",
           price: 5200000,
           qty: 2,
+          disposition: "Hủy luôn",
           reason: "Khách đổi sang ni 48",
         },
         {
@@ -53,6 +55,7 @@ export default function CancelRequestList() {
           weight: "1.42 chỉ (5.33g)",
           price: 8600000,
           qty: 3,
+          disposition: "Chuyển SO khác",
           reason: "Khách hủy mẫu lắc tay",
         },
       ],
@@ -67,7 +70,7 @@ export default function CancelRequestList() {
       requestDate: "21/08/2026",
       approver: "-",
       approveDate: "-",
-      status: "Chờ phê duyệt",
+      status: "Chờ duyệt",
       note: "Sai kích thước ni tay",
       subItems: [
         {
@@ -78,6 +81,7 @@ export default function CancelRequestList() {
           weight: "1.15 chỉ (4.31g)",
           price: 4800000,
           qty: 2,
+          disposition: "Hủy luôn",
           reason: "Sai kích thước ni tay 52",
         },
       ],
@@ -90,10 +94,10 @@ export default function CancelRequestList() {
       totalQty: 10,
       requester: "Phạm Minh Tú",
       requestDate: "22/08/2026",
-      approver: "-",
-      approveDate: "-",
-      status: "Chờ phê duyệt",
-      note: "Khách giảm ngân sách đợt 1",
+      approver: "Trần Thị Bích",
+      approveDate: "23/08/2026",
+      status: "Đã xử lý", // Đồng bộ từ KHSX
+      note: "KHSX đã hủy MO và rã liệu xong",
       subItems: [
         {
           id: 301,
@@ -103,6 +107,7 @@ export default function CancelRequestList() {
           weight: "1.80 chỉ (6.75g)",
           price: 15200000,
           qty: 4,
+          disposition: "Hủy luôn",
           reason: "Khách giảm ngân sách",
         },
         {
@@ -113,6 +118,7 @@ export default function CancelRequestList() {
           weight: "3.50 chỉ (13.12g)",
           price: 28500000,
           qty: 6,
+          disposition: "Chuyển SO khác",
           reason: "Hủy theo yêu cầu đại lý",
         },
       ],
@@ -125,10 +131,10 @@ export default function CancelRequestList() {
       totalQty: 1,
       requester: "Nguyễn Văn An",
       requestDate: "18/08/2026",
-      approver: "Trần Thị Bích",
-      approveDate: "19/08/2026",
-      status: "Đã phê duyệt",
-      note: "Hủy theo yêu cầu Sale",
+      approver: "-",
+      approveDate: "-",
+      status: "Đã hủy",
+      note: "Sale Admin tự hủy yêu cầu do khách đổi ý",
       subItems: [
         {
           id: 401,
@@ -138,6 +144,7 @@ export default function CancelRequestList() {
           weight: "0.95 chỉ (3.56g)",
           price: 1200000,
           qty: 1,
+          disposition: "Hủy luôn",
           reason: "Mặt dây chuyền lỗi đúc",
         },
       ],
@@ -163,6 +170,7 @@ export default function CancelRequestList() {
           weight: "0.78 chỉ (2.93g)",
           price: 6500000,
           qty: 3,
+          disposition: "Hủy luôn",
           reason: "Khách trễ hạn thanh toán",
         },
       ],
@@ -201,125 +209,67 @@ export default function CancelRequestList() {
 
   const getStatusBadge = (status) => {
     switch (status) {
+      case "Đã duyệt":
       case "Đã phê duyệt":
         return "border-green-300 text-green-700 bg-green-50";
+      case "Chờ duyệt":
       case "Chờ phê duyệt":
         return "border-yellow-300 text-yellow-700 bg-yellow-50";
       case "Từ chối":
         return "border-red-300 text-red-700 bg-red-50";
+      case "Đã hủy":
+        return "border-gray-300 text-gray-700 bg-gray-100";
+      case "Đã xử lý":
+        return "border-blue-300 text-blue-700 bg-blue-50 font-bold";
       default:
         return "border-gray-300 text-gray-700 bg-gray-50";
     }
   };
 
-  const filteredRequests = requests.filter((r) => {
-    const matchTab =
-      activeTab === "all" ||
-      (activeTab === "pending" && r.status === "Chờ phê duyệt") ||
-      (activeTab === "approved" && r.status === "Đã phê duyệt") ||
-      (activeTab === "rejected" && r.status === "Từ chối");
+  // Lọc theo Tab và Search
+  const filteredRequests = requests.filter((req) => {
+    // Tab filter
+    let matchTab = true;
+    if (activeTab === "pending") matchTab = req.status === "Chờ duyệt" || req.status === "Chờ phê duyệt";
+    else if (activeTab === "approved") matchTab = req.status === "Đã duyệt" || req.status === "Đã phê duyệt";
+    else if (activeTab === "rejected") matchTab = req.status === "Từ chối";
+    else if (activeTab === "cancelled") matchTab = req.status === "Đã hủy";
+    else if (activeTab === "processed") matchTab = req.status === "Đã xử lý";
 
+    // Search filter
     const matchSearch =
-      r.requestCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.soCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.requester.toLowerCase().includes(searchTerm.toLowerCase());
+      req.requestCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      req.soCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      req.requester.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      req.customer.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchTab && matchSearch;
   });
 
-  const countPending = requests.filter((r) => r.status === "Chờ phê duyệt").length;
-  const countApproved = requests.filter((r) => r.status === "Đã phê duyệt").length;
+  const countPending = requests.filter((r) => r.status === "Chờ duyệt" || r.status === "Chờ phê duyệt").length;
+  const countApproved = requests.filter((r) => r.status === "Đã duyệt" || r.status === "Đã phê duyệt").length;
   const countRejected = requests.filter((r) => r.status === "Từ chối").length;
+  const countCancelled = requests.filter((r) => r.status === "Đã hủy").length;
+  const countProcessed = requests.filter((r) => r.status === "Đã xử lý").length;
 
   return (
     <div className="space-y-4">
-      {/* Breadcrumb */}
-      <div className="text-xs text-gray-500 flex items-center space-x-1">
+      {/* Breadcrumbs */}
+      <div className="text-sm text-gray-500">
         <span>Quản lý đơn hàng</span>
-        <span>&gt;</span>
-        <span className="font-semibold text-gray-700">Yêu cầu hủy SO</span>
+        <span className="mx-2">&gt;</span>
+        <span className="font-medium text-gray-900">Yêu cầu hủy SO</span>
       </div>
 
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Danh sách yêu cầu hủy SO</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Click vào từng dòng để mở/đóng xem chi tiết các mặt hàng yêu cầu hủy (Subtable)</p>
+          <h2 className="text-2xl font-bold text-gray-900">Danh sách Yêu cầu hủy SO</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            Quản lý phê duyệt Base Request và theo dõi tiến độ đồng bộ KHSX
+          </p>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-6">
-          <button
-            onClick={() => setActiveTab("all")}
-            className={`whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === "all"
-                ? "border-[#005a46] text-[#005a46] font-semibold"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            Tất cả ({requests.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("pending")}
-            className={`whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === "pending"
-                ? "border-[#005a46] text-[#005a46] font-semibold"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            Chờ phê duyệt ({countPending})
-          </button>
-          <button
-            onClick={() => setActiveTab("approved")}
-            className={`whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === "approved"
-                ? "border-[#005a46] text-[#005a46] font-semibold"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            Đã phê duyệt ({countApproved})
-          </button>
-          <button
-            onClick={() => setActiveTab("rejected")}
-            className={`whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === "rejected"
-                ? "border-[#005a46] text-[#005a46] font-semibold"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            Từ chối ({countRejected})
-          </button>
-        </nav>
-      </div>
-
-      {/* Action Toolbar */}
-      <div className="flex justify-between items-center">
-        <div className="flex space-x-3 items-center">
-          <button className="flex items-center px-3 py-1.5 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm">
-            <Filter className="h-4 w-4 mr-2 text-gray-500" />
-            Bộ lọc
-          </button>
-          <button className="flex items-center px-3 py-1.5 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm">
-            <ArrowUpDown className="h-4 w-4 mr-2 text-gray-500" />
-            Sắp xếp
-          </button>
-          <div className="relative rounded-md shadow-sm">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="focus:ring-[#005a46] focus:border-[#005a46] block w-72 pl-9 sm:text-sm border-gray-300 rounded-md border p-1.5"
-              placeholder="Tìm theo Mã YC, Mã SO, Người YC..."
-            />
-          </div>
-        </div>
-
-        <div>
+        <div className="flex items-center space-x-3">
           <Link
             href="/cancel-requests/create"
             className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#005a46] hover:bg-[#004737] transition"
@@ -330,23 +280,131 @@ export default function CancelRequestList() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
+      {/* Tabs Filter - 5 Trạng thái chuẩn */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-6 overflow-x-auto text-sm">
+          <button
+            onClick={() => setActiveTab("all")}
+            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium transition ${
+              activeTab === "all"
+                ? "border-[#005a46] text-[#005a46]"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Tất cả ({requests.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("pending")}
+            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium transition ${
+              activeTab === "pending"
+                ? "border-yellow-600 text-yellow-700 font-bold"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Chờ duyệt ({countPending})
+          </button>
+          <button
+            onClick={() => setActiveTab("approved")}
+            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium transition ${
+              activeTab === "approved"
+                ? "border-green-600 text-green-700 font-bold"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Đã duyệt ({countApproved})
+          </button>
+          <button
+            onClick={() => setActiveTab("processed")}
+            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium transition ${
+              activeTab === "processed"
+                ? "border-blue-600 text-blue-700 font-bold"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Đã xử lý (KHSX) ({countProcessed})
+          </button>
+          <button
+            onClick={() => setActiveTab("rejected")}
+            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium transition ${
+              activeTab === "rejected"
+                ? "border-red-600 text-red-700 font-bold"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Từ chối ({countRejected})
+          </button>
+          <button
+            onClick={() => setActiveTab("cancelled")}
+            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium transition ${
+              activeTab === "cancelled"
+                ? "border-gray-600 text-gray-800 font-bold"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Đã hủy ({countCancelled})
+          </button>
+        </nav>
+      </div>
+
+      {/* Filter / Search Bar */}
+      <div className="flex flex-col sm:flex-row justify-between gap-3 bg-white p-3 rounded-lg border border-gray-200 shadow-xs">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Tìm theo Mã YC (YCH-...), Mã SO (SO2608...), Người yêu cầu, Khách hàng..."
+            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#005a46] focus:border-[#005a46]"
+          />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+        </div>
+        <div className="flex items-center space-x-2 text-xs text-gray-500">
+          <span>💡 <b>Mẹo:</b> Click vào dòng bất kỳ để mở rộng xem chi tiết Subtable và Hướng xử lý KHSX.</span>
+        </div>
+      </div>
+
+      {/* Data Table */}
+      <div className="bg-white shadow rounded-lg border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase w-10"></th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">STT</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mã yêu cầu</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mã SO</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng SL hủy</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Người yêu cầu</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ngày yêu cầu</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Người phê duyệt</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ngày phê duyệt</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Thao tác</th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-10">
+                  #
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">
+                  STT
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Mã yêu cầu
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Mã SO
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Khách hàng
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Tổng SL hủy
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Người yêu cầu
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Ngày yêu cầu
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Người duyệt
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Ngày duyệt
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Trạng thái
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-20">
+                  Thao tác
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -355,48 +413,59 @@ export default function CancelRequestList() {
                   const isExpanded = !!expandedRows[req.id];
                   return (
                     <React.Fragment key={req.id}>
-                      {/* Main Row */}
                       <tr
                         onClick={() => toggleRow(req.id)}
-                        className={`cursor-pointer transition-colors ${
-                          isExpanded ? "bg-emerald-50/40 font-medium" : "hover:bg-gray-50"
+                        className={`hover:bg-gray-50/80 cursor-pointer transition select-none ${
+                          isExpanded ? "bg-emerald-50/40" : ""
                         }`}
                       >
                         <td className="px-3 py-3.5 text-center text-gray-400">
                           {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-[#005a46] inline" />
+                            <ChevronDown className="h-4 w-4 text-[#005a46] mx-auto" />
                           ) : (
-                            <ChevronRight className="h-4 w-4 text-gray-400 inline" />
+                            <ChevronRight className="h-4 w-4 text-gray-400 mx-auto" />
                           )}
                         </td>
-                        <td className="px-3 py-3.5 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-sm font-semibold text-[#005a46]">
-                          <div className="flex items-center space-x-1.5">
-                            <Layers className="h-3.5 w-3.5 text-emerald-600" />
-                            <span>{req.requestCode}</span>
-                          </div>
+                        <td className="px-3 py-3.5 text-center font-medium text-gray-500">
+                          {index + 1}
                         </td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-sm font-medium text-gray-900">{req.soCode}</td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-900 font-bold">
-                          <span className="px-2.5 py-0.5 bg-emerald-100/70 text-emerald-800 rounded-full text-xs font-semibold">
+                        <td className="px-4 py-3.5 font-bold text-[#005a46] whitespace-nowrap">
+                          {req.requestCode}
+                        </td>
+                        <td className="px-4 py-3.5 font-bold text-gray-900 whitespace-nowrap">
+                          {req.soCode}
+                        </td>
+                        <td className="px-4 py-3.5 text-gray-700 text-xs font-medium max-w-xs truncate">
+                          {req.customer}
+                        </td>
+                        <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">
                             {req.totalQty} SP
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-700">{req.requester}</td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-500">{req.requestDate}</td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-700">{req.approver}</td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-500">{req.approveDate}</td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-sm">
+                        <td className="px-4 py-3.5 text-gray-700 whitespace-nowrap font-medium text-xs">
+                          {req.requester}
+                        </td>
+                        <td className="px-4 py-3.5 text-gray-500 whitespace-nowrap text-xs">
+                          {req.requestDate}
+                        </td>
+                        <td className="px-4 py-3.5 text-gray-700 whitespace-nowrap font-medium text-xs">
+                          {req.approver}
+                        </td>
+                        <td className="px-4 py-3.5 text-gray-500 whitespace-nowrap text-xs">
+                          {req.approveDate}
+                        </td>
+                        <td className="px-3 py-3.5 text-center whitespace-nowrap">
                           <span
-                            className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusBadge(
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(
                               req.status
                             )}`}
                           >
                             {req.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-2" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-4 py-3.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-center space-x-1.5">
                             <Link
                               href={`/cancel-requests/create?id=${req.id}`}
                               className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition"
@@ -418,7 +487,7 @@ export default function CancelRequestList() {
                       {/* Expandable Submenu / Subtable */}
                       {isExpanded && (
                         <tr className="bg-gray-50/70 border-b border-gray-200">
-                          <td colSpan={11} className="px-6 py-4">
+                          <td colSpan={12} className="px-6 py-4">
                             <div className="bg-white rounded-lg border border-emerald-200 p-4 shadow-sm space-y-3">
                               <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
                                 <div className="flex items-center space-x-2">
@@ -429,10 +498,10 @@ export default function CancelRequestList() {
                                   <span className="text-xs text-gray-500 italic">- Ghi chú: {req.note}</span>
                                 </div>
 
-                                {req.status === "Chờ phê duyệt" && (
+                                {(req.status === "Chờ duyệt" || req.status === "Chờ phê duyệt") && (
                                   <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
                                     <button
-                                      onClick={(e) => handleQuickApprove(req.id, "Đã phê duyệt", e)}
+                                      onClick={(e) => handleQuickApprove(req.id, "Đã duyệt", e)}
                                       className="flex items-center px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold shadow-sm transition"
                                     >
                                       <Check className="h-3.5 w-3.5 mr-1" />
@@ -460,6 +529,7 @@ export default function CancelRequestList() {
                                       <th className="px-4 py-2 text-right font-semibold text-gray-600 uppercase w-28">Đơn giá</th>
                                       <th className="px-3 py-2 text-center font-semibold text-gray-600 uppercase w-20">SL hủy</th>
                                       <th className="px-4 py-2 text-right font-semibold text-gray-600 uppercase w-28">Thành tiền</th>
+                                      <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase w-36">Hướng xử lý (KHSX)</th>
                                       <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Lý do hủy chi tiết</th>
                                     </tr>
                                   </thead>
@@ -498,6 +568,17 @@ export default function CancelRequestList() {
                                           <td className="px-4 py-2.5 text-right font-bold text-red-600 whitespace-nowrap">
                                             {amount ? `${amount.toLocaleString("vi-VN")} đ` : "-"}
                                           </td>
+                                          <td className="px-4 py-2.5 whitespace-nowrap">
+                                            <span
+                                              className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
+                                                sub.disposition === "Chuyển SO khác"
+                                                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                                  : "bg-red-50 text-red-700 border border-red-200"
+                                              }`}
+                                            >
+                                              {sub.disposition || "Hủy luôn"}
+                                            </span>
+                                          </td>
                                           <td className="px-4 py-2.5 text-gray-700">{sub.reason || "-"}</td>
                                         </tr>
                                       );
@@ -514,7 +595,7 @@ export default function CancelRequestList() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={11} className="px-4 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={12} className="px-4 py-8 text-center text-sm text-gray-500">
                     Không tìm thấy yêu cầu hủy SO nào phù hợp.
                   </td>
                 </tr>

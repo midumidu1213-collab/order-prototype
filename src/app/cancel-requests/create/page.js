@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Plus, Trash2, Send, AlertCircle, CheckCircle2, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Send, AlertCircle, CheckCircle2, Image as ImageIcon, CheckSquare, Layers } from "lucide-react";
 
 // Database chuẩn hóa mẫu theo quy chuẩn mới ngành kim hoàn
 const SO_DATABASE = {
@@ -136,6 +136,7 @@ export default function CreateCancelRequest() {
   const [formData, setFormData] = useState({
     requestCode: "YCH-2026-006",
     soCode: "SO2608001",
+    isCancelFullOrder: false, // Tính năng Hủy toàn bộ đơn hàng
     generalReason: "",
   });
 
@@ -147,7 +148,7 @@ export default function CreateCancelRequest() {
     items: [],
   };
 
-  // Subtable State
+  // Subtable State - Mặc định SL hủy = SL đặt
   const [items, setItems] = useState([
     {
       id: 1,
@@ -156,8 +157,9 @@ export default function CreateCancelRequest() {
       weight: "0.85 chỉ (3.19g)",
       price: 5200000,
       orderedQty: 5,
-      qty: 2,
-      reason: "Hàng thương hiệu",
+      qty: 5, // Mặc định = SL đặt
+      disposition: "Hủy luôn", // Hướng xử lý: 'Hủy luôn' | 'Chuyển SO khác'
+      reason: "Khách đổi ý sang mẫu khác",
     },
     {
       id: 2,
@@ -166,16 +168,34 @@ export default function CreateCancelRequest() {
       weight: "1.42 chỉ (5.33g)",
       price: 8600000,
       orderedQty: 3,
-      qty: 3,
-      reason: "Khách yêu cầu giảm SL",
+      qty: 3, // Mặc định = SL đặt
+      disposition: "Chuyển SO khác", // Hướng xử lý: 'Hủy luôn' | 'Chuyển SO khác'
+      reason: "Chuyển gán cho đơn đại lý",
     },
   ]);
 
   const [notification, setNotification] = useState(null);
 
+  // Khi chọn toàn bộ sản phẩm trong SO
+  const handleSelectAllSOItems = () => {
+    const allSOItems = selectedSO.items.map((it, idx) => ({
+      id: Date.now() + idx,
+      itemCode: it.itemCode,
+      image: it.image,
+      weight: it.weight,
+      price: it.price,
+      orderedQty: it.orderedQty,
+      qty: it.orderedQty, // Mặc định hủy hết
+      disposition: "Hủy luôn",
+      reason: "Hủy toàn bộ theo yêu cầu khách",
+    }));
+    setItems(allSOItems);
+    setFormData((prev) => ({ ...prev, isCancelFullOrder: true }));
+  };
+
   // Khi đổi SO -> load item của SO đó
   const handleSOChange = (newSOCode) => {
-    setFormData((prev) => ({ ...prev, soCode: newSOCode }));
+    setFormData((prev) => ({ ...prev, soCode: newSOCode, isCancelFullOrder: false }));
     const soData = SO_DATABASE[newSOCode];
     if (soData && soData.items.length > 0) {
       const first = soData.items[0];
@@ -187,12 +207,21 @@ export default function CreateCancelRequest() {
           weight: first.weight,
           price: first.price,
           orderedQty: first.orderedQty,
-          qty: 1,
+          qty: first.orderedQty, // Mặc định = SL đặt
+          disposition: "Hủy luôn",
           reason: "",
         },
       ]);
     } else {
       setItems([]);
+    }
+  };
+
+  // Toggle Hủy cả đơn
+  const handleToggleCancelFullOrder = (checked) => {
+    setFormData((prev) => ({ ...prev, isCancelFullOrder: checked }));
+    if (checked) {
+      handleSelectAllSOItems();
     }
   };
 
@@ -220,7 +249,8 @@ export default function CreateCancelRequest() {
       weight: defaultItem.weight,
       price: defaultItem.price,
       orderedQty: defaultItem.orderedQty,
-      qty: 1,
+      qty: defaultItem.orderedQty, // Mặc định = SL đặt
+      disposition: "Hủy luôn",
       reason: "",
     };
     setItems([...items, newItem]);
@@ -248,7 +278,7 @@ export default function CreateCancelRequest() {
                   weight: matchedItem.weight,
                   price: matchedItem.price,
                   orderedQty: matchedItem.orderedQty,
-                  qty: 1,
+                  qty: matchedItem.orderedQty, // Khi đổi item: mặc định = SL đặt của item đó
                 }
               : item
           )
@@ -271,9 +301,11 @@ export default function CreateCancelRequest() {
       return;
     }
 
+    const cancelTypeStr = formData.isCancelFullOrder ? "Hủy toàn bộ đơn hàng" : "Hủy chi tiết Item";
+
     setNotification({
       type: "success",
-      message: `Đã tạo thành công yêu cầu hủy "${formData.requestCode}" cho đơn "${formData.soCode}" với tổng số lượng hủy là ${totalCancelQty} SP (Tổng giảm: ${totalCancelAmount.toLocaleString("vi-VN")} đ)! Đang chuyển hướng...`,
+      message: `Đã tạo thành công yêu cầu [${cancelTypeStr}] "${formData.requestCode}" cho đơn "${formData.soCode}"! Đang gửi duyệt Base Request (Mã RQ: 18797)...`,
     });
     setTimeout(() => {
       router.push("/cancel-requests");
@@ -295,7 +327,7 @@ export default function CreateCancelRequest() {
           <span className="text-gray-300">|</span>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Tạo mới yêu cầu hủy SO</h1>
-            <p className="text-xs text-gray-500">Nhập thông tin yêu cầu và chi tiết các mã sản phẩm cần hủy</p>
+            <p className="text-xs text-gray-500">Hỗ trợ Hủy cả đơn hàng, Hủy toàn bộ item hoặc Hủy giảm số lượng item</p>
           </div>
         </div>
       </div>
@@ -317,7 +349,7 @@ export default function CreateCancelRequest() {
         </div>
       )}
 
-      {/* Card 1: Thông tin chung */}
+      {/* Card 1: Thông tin chung & Tùy chọn Hủy cả đơn */}
       <div className="bg-white shadow rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -342,7 +374,7 @@ export default function CreateCancelRequest() {
             <span className="text-xs text-gray-400">Mã sinh tự động theo quy chuẩn</span>
           </div>
 
-          {/* Mã SO cần hủy (Đã bỏ tên khách trong option để gọn gàng) */}
+          {/* Mã SO cần hủy */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Mã SO cần hủy <span className="text-red-500">*</span>
@@ -360,7 +392,7 @@ export default function CreateCancelRequest() {
             </select>
           </div>
 
-          {/* Mã - Tên Khách hàng (Tự động từ SO) */}
+          {/* Mã - Tên Khách hàng */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Mã - Tên Khách hàng (Tự động)
@@ -373,6 +405,36 @@ export default function CreateCancelRequest() {
               title={selectedSO.customer}
             />
             <span className="text-xs text-gray-400">Tự động lấy thông tin từ SO gốc</span>
+          </div>
+
+          {/* Banner Tùy chọn Hủy cả đơn hàng */}
+          <div className="md:col-span-3 bg-amber-50/80 border border-amber-300 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="cancelFullOrderCheck"
+                checked={formData.isCancelFullOrder}
+                onChange={(e) => handleToggleCancelFullOrder(e.target.checked)}
+                className="h-5 w-5 text-[#005a46] rounded border-gray-300 focus:ring-[#005a46] cursor-pointer"
+              />
+              <label htmlFor="cancelFullOrderCheck" className="cursor-pointer">
+                <span className="text-sm font-bold text-amber-900 block">
+                  🔴 Hủy toàn bộ đơn hàng (Hủy tất cả {selectedSO.items?.length || 0} sản phẩm)
+                </span>
+                <span className="text-xs text-amber-700 block">
+                  Khi bật tùy chọn này, hệ thống sẽ tự động đưa toàn bộ các mã Item trong đơn vào danh sách hủy với SL hủy = SL đặt.
+                </span>
+              </label>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSelectAllSOItems}
+              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-semibold shadow-sm transition flex items-center"
+            >
+              <CheckSquare className="h-3.5 w-3.5 mr-1" />
+              Chọn tất cả Item
+            </button>
           </div>
 
           {/* Thông tin đơn hàng gốc: Loại đơn & Chất liệu / Tuổi vàng */}
@@ -409,7 +471,7 @@ export default function CreateCancelRequest() {
         </div>
       </div>
 
-      {/* Card 2: Subtable - Chi tiết sản phẩm hủy (Đầy đủ Hình ảnh, Trọng lượng, Đơn giá) */}
+      {/* Card 2: Subtable - Chi tiết sản phẩm hủy (Đầy đủ Hướng xử lý, Hình ảnh, Trọng lượng, Đơn giá) */}
       <div className="bg-white shadow rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -417,49 +479,62 @@ export default function CreateCancelRequest() {
             <div>
               <h2 className="text-base font-semibold text-gray-900">2. Chi tiết danh sách sản phẩm hủy (Subtable)</h2>
               <p className="text-xs text-gray-500">
-                Chọn sản phẩm có trong đơn hàng <b>{formData.soCode}</b> và nhập số lượng cần hủy
+                Mặc định số lượng hủy bằng SL đặt (cho phép chỉnh sửa) kèm Hướng xử lý định hướng cho KHSX
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleAddItem}
-            className="flex items-center px-3.5 py-1.5 bg-[#005a46] text-white text-xs font-semibold rounded-md hover:bg-[#004737] shadow-sm transition"
-          >
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Thêm dòng sản phẩm
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={handleSelectAllSOItems}
+              className="flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-md border border-gray-300 shadow-sm transition"
+            >
+              <Layers className="h-3.5 w-3.5 mr-1 text-[#005a46]" />
+              Chọn toàn bộ Item SO
+            </button>
+            <button
+              type="button"
+              onClick={handleAddItem}
+              className="flex items-center px-3.5 py-1.5 bg-[#005a46] text-white text-xs font-semibold rounded-md hover:bg-[#004737] shadow-sm transition"
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              Thêm dòng sản phẩm
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-10">STT</th>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-16">Hình ảnh</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-2.5 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-10">STT</th>
+                <th className="px-2.5 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-14">Hình ảnh</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase min-w-[200px]">
                   Mã Item (Trong đơn hàng) <span className="text-red-500">*</span>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-32">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-28">
                   Trọng lượng
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase w-32">
-                  Đơn giá (VND)
+                <th className="px-3 py-3 text-right text-xs font-semibold text-gray-600 uppercase w-28">
+                  Đơn giá
                 </th>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-28">
+                <th className="px-2.5 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-20">
                   SL đặt
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-32">
+                <th className="px-2.5 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-24">
                   SL hủy <span className="text-red-500">*</span>
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase w-36">
+                <th className="px-3 py-3 text-right text-xs font-semibold text-gray-600 uppercase w-32">
                   Thành tiền hủy
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-40">
+                  Hướng xử lý (KHSX) <span className="text-red-500">*</span>
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase min-w-[150px]">
                   Lý do hủy chi tiết
                 </th>
-                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-12">Xóa</th>
+                <th className="px-2.5 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-10">Xóa</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -467,10 +542,10 @@ export default function CreateCancelRequest() {
                 const itemAmount = (Number(item.qty) || 0) * (Number(item.price) || 0);
                 return (
                   <tr key={item.id} className="hover:bg-gray-50 transition">
-                    <td className="px-3 py-3 text-sm text-gray-500 font-medium text-center">{index + 1}</td>
+                    <td className="px-2.5 py-3 text-sm text-gray-500 font-medium text-center">{index + 1}</td>
 
                     {/* 1. Hình ảnh sản phẩm */}
-                    <td className="px-3 py-3 text-center">
+                    <td className="px-2.5 py-3 text-center">
                       {item.image ? (
                         <img
                           src={item.image}
@@ -485,11 +560,11 @@ export default function CreateCancelRequest() {
                     </td>
 
                     {/* 2. Mã Item dropdown */}
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       <select
                         value={item.itemCode}
                         onChange={(e) => handleItemChange(item.id, "itemCode", e.target.value)}
-                        className="w-full border border-gray-300 rounded-md py-1.5 px-2.5 text-xs font-medium text-gray-900 focus:ring-[#005a46] focus:border-[#005a46] bg-white"
+                        className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-xs font-medium text-gray-900 focus:ring-[#005a46] focus:border-[#005a46] bg-white"
                       >
                         {selectedSO.items.map((soItem) => (
                           <option key={soItem.itemCode} value={soItem.itemCode}>
@@ -500,54 +575,70 @@ export default function CreateCancelRequest() {
                     </td>
 
                     {/* 3. Trọng lượng */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded">
                         {item.weight || "-"}
                       </span>
                     </td>
 
                     {/* 4. Đơn giá */}
-                    <td className="px-4 py-3 text-right whitespace-nowrap text-xs font-semibold text-gray-800">
+                    <td className="px-3 py-3 text-right whitespace-nowrap text-xs font-semibold text-gray-800">
                       {item.price ? `${item.price.toLocaleString("vi-VN")} đ` : "-"}
                     </td>
 
                     {/* 5. SL đặt trong SO */}
-                    <td className="px-3 py-3 text-center">
+                    <td className="px-2.5 py-3 text-center">
                       <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs font-semibold">
                         {item.orderedQty || 1} SP
                       </span>
                     </td>
 
-                    {/* 6. SL yêu cầu hủy */}
-                    <td className="px-3 py-3">
+                    {/* 6. SL yêu cầu hủy (Mặc định = SL đặt, có thể sửa) */}
+                    <td className="px-2.5 py-3 text-center">
                       <input
                         type="number"
                         min="1"
                         max={item.orderedQty || 999}
                         value={item.qty}
                         onChange={(e) => handleItemChange(item.id, "qty", parseInt(e.target.value) || 0)}
-                        className="w-24 border border-gray-300 rounded-md py-1.5 px-2 text-xs font-bold text-emerald-800 focus:ring-[#005a46] focus:border-[#005a46] bg-emerald-50/50 text-center"
+                        className="w-16 border border-gray-300 rounded-md py-1.5 px-1 text-xs font-bold text-emerald-800 focus:ring-[#005a46] focus:border-[#005a46] bg-emerald-50/50 text-center"
                       />
                     </td>
 
                     {/* 7. Thành tiền hủy */}
-                    <td className="px-4 py-3 text-right whitespace-nowrap text-xs font-bold text-red-600">
+                    <td className="px-3 py-3 text-right whitespace-nowrap text-xs font-bold text-red-600">
                       {itemAmount ? `${itemAmount.toLocaleString("vi-VN")} đ` : "0 đ"}
                     </td>
 
-                    {/* 8. Lý do hủy chi tiết */}
-                    <td className="px-4 py-3">
+                    {/* 8. Hướng xử lý (KHSX): Hủy luôn | Chuyển SO khác */}
+                    <td className="px-3 py-3">
+                      <select
+                        value={item.disposition || "Hủy luôn"}
+                        onChange={(e) => handleItemChange(item.id, "disposition", e.target.value)}
+                        className={`w-full border rounded-md py-1.5 px-2 text-xs font-bold focus:ring-[#005a46] focus:border-[#005a46] ${
+                          item.disposition === "Chuyển SO khác"
+                            ? "bg-blue-50 text-blue-800 border-blue-300"
+                            : "bg-red-50 text-red-800 border-red-300"
+                        }`}
+                      >
+                        <option value="Hủy luôn">❌ Hủy luôn (Hủy MO)</option>
+                        <option value="Chuyển SO khác">🔄 Chuyển SO khác (Giữ kho)</option>
+                      </select>
+                    </td>
+
+                    {/* 9. Lý do hủy chi tiết */}
+                    <td className="px-3 py-3">
                       <input
                         type="text"
                         value={item.reason}
                         onChange={(e) => handleItemChange(item.id, "reason", e.target.value)}
                         placeholder="VD: Đổi ni tay, giảm ngân sách..."
-                        className="w-full border border-gray-300 rounded-md py-1.5 px-2.5 text-xs focus:ring-[#005a46] focus:border-[#005a46]"
+                        className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-xs focus:ring-[#005a46] focus:border-[#005a46]"
                       />
                     </td>
 
-                    {/* 9. Xóa dòng */}
-                    <td className="px-3 py-3 text-center">
+                    {/* 10. Xóa dòng */}
+                    <td className="px-2.5 py-3 text-center">
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(item.id)}
@@ -566,13 +657,13 @@ export default function CreateCancelRequest() {
                 <td colSpan={6} className="px-4 py-3 text-right font-bold text-gray-700">
                   Tổng cộng đợt hủy:
                 </td>
-                <td className="px-3 py-3 text-center text-[#005a46] font-bold text-sm">
+                <td className="px-2.5 py-3 text-center text-[#005a46] font-bold text-sm">
                   {totalCancelQty} SP
                 </td>
-                <td className="px-4 py-3 text-right text-red-600 font-bold text-sm">
+                <td className="px-3 py-3 text-right text-red-600 font-bold text-sm">
                   {totalCancelAmount.toLocaleString("vi-VN")} đ
                 </td>
-                <td colSpan={2}></td>
+                <td colSpan={3}></td>
               </tr>
             </tfoot>
           </table>
@@ -583,7 +674,7 @@ export default function CreateCancelRequest() {
       <div className="fixed bottom-0 right-0 left-64 bg-white border-t border-gray-200 px-6 py-3.5 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)] z-10">
         <div className="flex items-center text-xs text-gray-500 space-x-1">
           <AlertCircle className="h-4 w-4 text-amber-500" />
-          <span>Kiểm tra chính xác danh sách mã Item trước khi gửi phê duyệt</span>
+          <span>Yêu cầu sẽ được gửi duyệt Base Request (Mã RQ: 18797) và đồng bộ thông tin sang KHSX</span>
         </div>
 
         <div className="flex space-x-3">
@@ -599,7 +690,7 @@ export default function CreateCancelRequest() {
             className="flex items-center px-6 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-[#005a46] hover:bg-[#004737] shadow-sm transition"
           >
             <Send className="h-4 w-4 mr-2" />
-            Gửi yêu cầu phê duyệt
+            Gửi duyệt Base Request
           </button>
         </div>
       </div>

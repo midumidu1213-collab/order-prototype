@@ -58,7 +58,7 @@ flowchart TD
 | 6 | **Ngày yêu cầu** | Ngày (Date) | Có | Định dạng `DD/MM/YYYY`. |
 | 7 | **Người phê duyệt** | Chuỗi (Text) | Không | Tên quản lý đã duyệt. Hiển thị `-` nếu đang chờ duyệt. |
 | 8 | **Ngày phê duyệt** | Ngày (Date) | Không | Định dạng `DD/MM/YYYY`. Hiển thị `-` nếu đang chờ duyệt. |
-| 9 | **Trạng thái** | Phân loại (Enum) | Có | Badge màu phân biệt: <br>• `Chờ phê duyệt` (Vàng - `bg-yellow-50 text-yellow-700`)<br>• `Đã phê duyệt` (Xanh lá - `bg-green-50 text-green-700`)<br>• `Từ chối` (Đỏ - `bg-red-50 text-red-700`) |
+| 9 | **Trạng thái** | Phân loại (Enum) | Có | Badge màu phân biệt: <br>• `Chờ duyệt` (Vàng - `bg-yellow-50 text-yellow-700`)<br>• `Đã duyệt` (Xanh lá - `bg-green-50 text-green-700`)<br>• `Từ chối` (Đỏ - `bg-red-50 text-red-700`)<br>• `Đã hủy` (Xám - `bg-gray-100 text-gray-700`)<br>• `Đã xử lý` (Xanh dương - `bg-blue-50 text-blue-700`, đồng bộ từ KHSX) |
 | 10 | **Thao tác** | Hành động | Có | Icon Sửa ✏️ và Xóa 🗑️. |
 
 ---
@@ -68,13 +68,13 @@ flowchart TD
 ### AC 1.1: Hiển thị danh sách và Tabs trạng thái
 *   **Given:** Người dùng đã đăng nhập và truy cập vào trang `/cancel-requests`.
 *   **When:** Trang tải thành công.
-*   **Then:** Hệ thống hiển thị 4 Tabs trạng thái: `Tất cả (N)`, `Chờ phê duyệt (N)`, `Đã phê duyệt (N)`, `Từ chối (N)`.
-*   **And:** Bảng hiển thị đầy đủ 10 cột dữ liệu theo đúng đặc tả.
+*   **Then:** Hệ thống hiển thị 6 Tabs lọc: `Tất cả (N)`, `Chờ duyệt (N)`, `Đã duyệt (N)`, `Đã xử lý (N)`, `Từ chối (N)`, `Đã hủy (N)`.
+*   **And:** Bảng hiển thị đầy đủ các cột dữ liệu theo đúng đặc tả.
 
 ### AC 1.2: Lọc dữ liệu theo Tab
 *   **Given:** Người dùng đang ở màn hình danh sách.
-*   **When:** Người dùng click vào Tab `Chờ phê duyệt`.
-*   **Then:** Bảng chỉ hiển thị các dòng có `Trạng thái = "Chờ phê duyệt"`.
+*   **When:** Người dùng click vào Tab `Chờ duyệt` (hoặc `Đã xử lý`).
+*   **Then:** Bảng chỉ hiển thị các dòng có Trạng thái tương ứng.
 *   **And:** Con số đếm trên Tab khớp chính xác với số lượng bản ghi hiển thị.
 
 ### AC 1.3: Tìm kiếm tức thì (Live Search)

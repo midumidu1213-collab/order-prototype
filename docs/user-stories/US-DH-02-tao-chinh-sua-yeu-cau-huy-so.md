@@ -1,188 +1,175 @@
-# US-DH-02: Tạo Yêu Cầu Hủy Đơn Hàng (SO) & Tích Hợp Phê Duyệt Base Request - KHSX
+# US-DH-02: Màn Hình Tạo Mới & Chỉnh Sửa Yêu Cầu Hủy SO (Base Request & KHSX Sync)
 
 > **Mã Story:** `US-DH-02`  
 > **Module:** Quản lý đơn hàng (Sales Order Management)  
-> **Feature:** Yêu cầu hủy SO (Cancel Sales Order Requests)  
-> **Tích hợp:** Base Request (Workflow Approval) & KHSX (Manufacturing Planning Sync)  
+> **Feature:** Yêu cầu hủy đơn hàng SO (Cancel Sales Order Requests)  
+> **Tích hợp:** Base Request (Workflow Phê duyệt) & KHSX (Đồng bộ Lệnh sản xuất MO)  
 
 ---
 
-## 1. USER STORY (User Story Statement)
+## 1. TÓM TẮT USER STORY (USER STORY STATEMENT)
 
 *   **Là một (As a):** Admin / Sale Admin
-*   **Tôi muốn (I want):** Tạo yêu cầu hủy đơn hàng (SO) sau khi đơn đã được xác nhận — bao gồm:
-    *   Hủy toàn bộ đơn hàng (Cancel Full SO)
-    *   Hủy từng dòng sản phẩm (Cancel Specific Item)
-    *   Hủy giảm số lượng trong từng món (Reduce Item Quantity)
-    *   Tích hợp phê duyệt qua **Base Request** và đồng bộ với **Kế hoạch sản xuất (KHSX)**
+*   **Tôi muốn (I want):** Tạo yêu cầu hủy đơn hàng (SO) sau khi đơn đã được xác nhận với 3 hình thức linh hoạt:
+    1.  **Hủy toàn bộ đơn hàng (Full SO):** Có tính năng "Chọn tất cả Item trong SO" và tự động gán `SL hủy = SL đặt`.
+    2.  **Hủy toàn bộ 1 dòng Item (Full Item):** `SL hủy` mặc định bằng `SL đặt` ban đầu (cho phép chỉnh sửa).
+    3.  **Hủy giảm số lượng Item (Partial Item Qty):** Cho phép nhập số lượng giảm trừ (`1 <= SL hủy <= SL đặt`).
+    *   Khai báo chi tiết **Hướng xử lý hàng hủy** (`Hủy luôn` hoặc `Chuyển SO khác`) để định hướng cho KHSX.
+    *   Tích hợp gửi duyệt qua **Base Request** và đồng bộ thông tin sang **KHSX**.
 *   **Để (So that):**
-    *   Gửi đề xuất lên cấp Quản lý phê duyệt với đầy đủ hình ảnh, trọng lượng, đơn giá, giá trị giảm trừ và lý do hủy minh bạch.
-    *   Tự động tính toán lại tỷ lệ (%) chiết khấu cho nhóm các đơn hàng active còn lại (trong khung 24h) sau khi duyệt hủy thành công.
+    *   Gửi đề xuất lên cấp Quản lý phê duyệt với đầy đủ hình ảnh, trọng lượng, đơn giá, giá trị giảm trừ và hướng xử lý sản xuất minh bạch.
+    *   Tự động cập nhật cột `SL hủy` và trạng thái đơn hàng trên hệ thống QLĐH sau khi được duyệt.
+    *   Tự động tính toán lại tỷ lệ (%) chiết khấu nhóm đơn hàng active (trong khung 24h) sau khi duyệt hủy thành công.
 
 ---
 
-## 2. LUỒNG NGHIỆP VỤ (Business Flow Diagram)
+## 2. LUỒNG NGHIỆP VỤ (BUSINESS FLOW DIAGRAM)
 
 ```mermaid
 flowchart TD
-    Start([Sale Admin vào Form Tạo Yêu Cầu Hủy]) --> SelectSO[1. Chọn Mã SO cần hủy - VD: SO2608001]
+    Start([Sale Admin vào Form Tạo Yêu Cầu Hủy]) --> Step1[1. Chọn Mã SO cần hủy - VD: SO2608001]
     
-    SelectSO --> AutoFill[2. Tự động hiển thị Tên Khách hàng, Loại đơn, Nguyên liệu, Tuổi vàng]
+    Step1 --> AutoFill[2. Tự động hiển thị Tên Khách hàng, Loại đơn, Nguyên liệu, Tuổi vàng]
     AutoFill --> InputGeneralReason[3. Nhập Lý do hủy chung * Bắt buộc]
     
-    InputGeneralReason --> SubtableSection[4. Chọn Mã Item trong SO -> Tự động load Ảnh, Trọng lượng, Đơn giá, SL đặt]
-    SubtableSection --> InputCancelQty[5. Nhập SL yêu cầu hủy & Lý do hủy chi tiết nếu có]
-    InputCancelQty --> AutoCalc[6. Hệ thống tự động tính Thành tiền hủy & Tổng giá trị hủy]
+    InputGeneralReason --> ChooseMode{Chọn hình thức hủy}
     
-    AutoCalc --> ClickSubmit[7. Bấm 'Gửi yêu cầu phê duyệt']
-    ClickSubmit --> ValidateBR01{Kiểm tra BR-01: Đã có Yêu cầu nào đang 'Chờ duyệt' trên SO/Item này chưa?}
+    ChooseMode -->|Hủy toàn bộ đơn hàng| CheckAll[Bật Switch 'Hủy toàn bộ đơn' hoặc bấm 'Chọn tất cả Item']
+    CheckAll --> LoadAllItems[Hệ thống nạp toàn bộ Item của SO vào Subtable với SL hủy = SL đặt]
     
-    ValidateBR01 -->|Đã tồn tại| BlockSubmit[Báo lỗi: Đang có yêu cầu chờ duyệt trên đơn/món này!]
-    ValidateBR01 -->|Chưa có| CreateRecord[Tạo bản ghi YCH trên QLĐH với Trạng thái = 'Chờ phê duyệt']
+    ChooseMode -->|Hủy theo từng Item| PickItem[Chọn từng Mã Item cần hủy vào Subtable]
+    PickItem --> DefaultQty[Hệ thống tự động điền SL hủy = SL đặt & cho phép sửa]
     
-    CreateRecord --> SendBase[8. Bắn API sang Base Request: Nhóm Yêu cầu chỉnh sửa đơn hàng - Mã RQ: 18797]
+    LoadAllItems --> ConfigSubtable[4. Khai báo Hướng xử lý KHSX & Lý do chi tiết cho từng món]
+    DefaultQty --> ConfigSubtable
     
-    SendBase --> WaitApproval([Chờ Quản lý Phê duyệt trên Base Request])
+    ConfigSubtable --> AutoCalc[5. Tự động tính Thành tiền hủy & Tổng giá trị giảm trừ]
     
-    WaitApproval --> BaseWebhook{Base Request trả Webhook kết quả}
+    AutoCalc --> Submit[6. Bấm 'Gửi duyệt Base Request']
+    Submit --> CheckBR01{Kiểm tra BR-01: Có YC nào đang 'Chờ duyệt' trên đơn này?}
     
-    BaseWebhook -->|PHÊ DUYỆT| WebhookApprove[Xử lý Kết quả Duyệt:]
-    WebhookApprove --> UpdateYCHStatus[1. Đổi trạng thái YCH -> 'Đã phê duyệt' + Ghi log Người/Ngày duyệt]
-    UpdateYCHStatus --> UpdateSOStatus{Hủy toàn bộ hay hủy 1 phần?}
-    UpdateSOStatus -->|Hủy toàn bộ SO| CancelFullSO[Đổi trạng thái SO -> 'Đã hủy đơn']
-    UpdateSOStatus -->|Hủy từng Item/Giảm SL| MaskItem[Tô mờ Item bị hủy & Cập nhật SL còn lại trong SO]
+    CheckBR01 -->|Đã có| Block[Báo lỗi & Chặn tạo mới]
+    CheckBR01 -->|Chưa có| SavePending[Lưu YCH: Trạng thái = 'Chờ duyệt']
     
-    CancelFullSO --> RecalcDiscount[2. Tự động recalculate % chiết khấu nhóm đơn active trong 24h: BR-02]
-    MaskItem --> RecalcDiscount
-    RecalcDiscount --> SyncKHSX[3. Đồng bộ thông tin sang KHSX để hủy MO liên quan]
-    SyncKHSX --> FinishApprove([Hoàn tất quy trình duyệt])
+    SavePending --> SendBase[7. Bắn API sang Base Request - Nhóm YC chỉnh sửa đơn hàng Mã RQ: 18797]
+    SendBase --> WaitBase([Chờ Quản lý Phê duyệt trên Base Request])
     
-    BaseWebhook -->|TỪ CHỐI| WebhookReject[Xử lý Từ chối:]
-    WebhookReject --> RejectYCH[Đổi trạng thái YCH -> 'Từ chối' + Giữ nguyên SO hiện tại]
-    RejectYCH --> FinishReject([Kết thúc])
+    WaitBase --> BaseWebhook{Base Request trả Webhook kết quả}
     
-    %% Luồng KHSX chủ động gửi sang
-    KHSXEvent([KHSX duyệt Hủy MO]) -.-> SyncToQLDH[Gửi Webhook sang QLĐH]
-    SyncToQLDH -.-> CreateKHSXYCH[Tạo bản ghi với source = 'KHSX' & Hiển thị Badge thông báo trên Item cho Sale]
+    BaseWebhook -->|PHÊ DUYỆT| ApproveFlow[Xử lý Kết quả Duyệt:]
+    ApproveFlow --> UpdateYCHApproved[1. Đổi trạng thái YCH: 'Chờ duyệt' -> 'Đã duyệt' + Ghi log Người/Ngày duyệt]
+    UpdateYCHApproved --> UpdateSOCol[2. Bổ sung/Cập nhật cột 'SL hủy' trên danh sách & chi tiết đơn hàng SO]
+    
+    UpdateSOCol --> CheckFullCancel{Yêu cầu hủy là Toàn bộ đơn hay 1 phần?}
+    CheckFullCancel -->|Hủy toàn bộ đơn| SetSOStatusCancelled[3a. Chuyển trạng thái Đơn hàng SO -> 'Đã hủy']
+    CheckFullCancel -->|Hủy 1 phần Item/SL| KeepSOActive[3b. Đơn hàng giữ nguyên trạng thái & Cập nhật SL còn lại]
+    
+    SetSOStatusCancelled --> RecalcDiscount[4. Recalculate % chiết khấu nhóm đơn active trong 24h: BR-02]
+    KeepSOActive --> RecalcDiscount
+    
+    RecalcDiscount --> SyncKHSX[5. Gửi thông tin YC đã duyệt sang KHSX: Xử lý Hủy MO hoặc Chuyển SO khác]
+    SyncKHSX --> KHSXProcess([KHSX thực thi nghiệp vụ trong xưởng])
+    KHSXProcess --> KHSXDone[6. KHSX hoàn tất xử lý -> Đồng bộ trạng thái YCH -> 'Đã xử lý']
+    
+    BaseWebhook -->|TỪ CHỐI| RejectFlow[Đổi trạng thái YCH: 'Từ chối' + Giữ nguyên SO hiện tại]
+    
+    %% Nút Hủy thủ công từ Sale
+    SavePending -.->|Sale tự hủy yêu cầu| CancelBySale[Đổi trạng thái YCH: 'Đã hủy']
 ```
 
 ---
 
-## 3. TIÊU CHÍ CHẤP NHẬN (Acceptance Criteria - AC)
+## 3. TIÊU CHÍ CHẤP NHẬN (ACCEPTANCE CRITERIA - AC)
 
-### AC 2.1: Lọc Mã Item và hiển thị trực quan thông tin sản phẩm
-*   **Given (Biết rằng):** Người dùng đang ở màn hình tạo Yêu cầu hủy.
-*   **When (Khi):** Người dùng chọn `Mã SO cần hủy`, ví dụ: `"SO2608001"`.
-*   **Then (Thì):** Dropdown `Mã Item` $\rightarrow$ chỉ hiển thị các sản phẩm thuộc về đơn hàng `SO2608001`.
-*   **And (Và):** Các cột `Hình ảnh`, `Trọng lượng`, `Đơn giá`, `SL đặt trong SO` tự động hiển thị thông tin chính xác của sản phẩm được chọn.
+### AC 2.1: Hủy toàn bộ đơn hàng (Tính năng Chọn tất cả)
+*   **Given (Biết rằng):** Người dùng đang ở màn hình tạo Yêu cầu hủy và đã chọn mã SO (VD: `SO2608001` gồm 3 sản phẩm).
+*   **When (Khi):** Người dùng bật Switch *"Hủy toàn bộ đơn hàng"* hoặc click nút *"Chọn tất cả Item"*.
+*   **Then (Thì):** Hệ thống tự động nạp tất cả 3 sản phẩm vào bảng Subtable.
+*   **And (Và):** Cột `SL yêu cầu hủy` của mỗi dòng tự động gán bằng `SL đặt trong SO` (100% số lượng).
 
-### AC 2.2: Tự động tính Thành tiền hủy và Tổng giá trị hủy
-*   **Given (Biết rằng):** Sản phẩm `GY0RG000086...` có Đơn giá = `200.000 đ` (hoặc đơn giá niêm yết trong SO).
-*   **When (Khi):** Người dùng nhập `SL yêu cầu hủy = 2`.
-*   **Then (Thì):** Cột `Thành tiền hủy` hiển thị `400.000 đ` và dòng `Tổng cộng đợt hủy` ở chân bảng tự động cộng dồn giá trị tương ứng.
+### AC 2.2: Hủy từng Item & Mặc định số lượng hủy
+*   **Given (Biết rằng):** Người dùng thêm một dòng sản phẩm mới vào Subtable và chọn mã Item `GY0RG000086...` (có `SL đặt = 5 SP`).
+*   **When (Khi):** Item được chọn vào bảng.
+*   **Then (Thì):** Cột `SL yêu cầu hủy` mặc định hiển thị là `5 SP`.
+*   **And (Và):** Người dùng có thể chỉnh sửa số lượng hủy giảm xuống (VD: sửa thành `2 SP`) thỏa mãn điều kiện `1 <= SL hủy <= SL đặt`.
 
-### AC 2.3: Phê Duyệt / Từ Chối Hủy Đơn Từ Base Request
-*   **Given (Biết rằng):** Yêu cầu Hủy đơn được gửi duyệt Base.
-*   **When (Khi):** Base Request trả kết quả Webhook:
-    *   **Phê duyệt:** Cập nhật trạng thái yêu cầu sang `Đã duyệt`, đồng thời:
-        1. Đổi trạng thái SO sang `Đã hủy đơn` nếu hủy toàn bộ đơn; hoặc tô mờ item bị hủy trong đơn kèm cập nhật lại số lượng còn lại.
-        2. Tự động recalculate % chiết khấu của các đơn hàng active còn lại trong nhóm gộp chiết khấu (theo khung 24h).
-        3. Ghi nhận thông tin người duyệt, ngày duyệt và Audit Log lịch sử thay đổi.
-    *   **Từ chối:** Cập nhật trạng thái Yêu cầu sang `Từ chối`, đồng thời giữ nguyên đơn SO hiện tại.
+### AC 2.3: Khai báo Hướng xử lý (KHSX)
+*   **Given (Biết rằng):** Dòng sản phẩm đang hiển thị trong Subtable.
+*   **When (Khi):** Người dùng chọn cột `Hướng xử lý (KHSX)`.
+*   **Then (Thì):** Dropdown cung cấp 2 tùy chọn rõ ràng:
+    1.  `❌ Hủy luôn (Hủy MO)`: Định hướng KHSX hủy lệnh sản xuất, rã liệu, không giữ lại.
+    2.  `🔄 Chuyển SO khác (Giữ kho)`: Định hướng KHSX tiếp tục hoàn thiện để gán cho khách hàng khác hoặc nhập kho thương mại.
 
-### AC 2.4: Tiếp nhận kết quả duyệt Hủy MO từ KHSX
-*   **Given (Biết rằng):** KHSX yêu cầu Hủy MO được phê duyệt, thông tin được gửi sang QLĐH.
-*   **Then (Thì):** Hệ thống QTĐH ghi nhận thông tin từ KHSX, sau đó:
-    1. Tạo một bản ghi yêu cầu thay đổi với nguồn khởi tạo `source = 'KHSX'`.
-    2. Ghi nhận thông tin Yêu cầu Hủy MO tương ứng với item nào.
-    3. Trên lưới sản phẩm, dòng item tương ứng (chứa MO bị hủy) sẽ hiển thị **Badge thông báo** để Sale theo dõi kịp thời.
+### AC 2.4: Xử lý sau khi Base Request Phê duyệt
+*   **Given (Biết rằng):** Yêu cầu hủy đang ở trạng thái `Chờ duyệt` và được Quản lý duyệt trên Base Request.
+*   **When (Khi):** Webhook từ Base Request trả về kết quả `Approved`.
+*   **Then (Thì):** Hệ thống QLĐH thực hiện đồng thời các tác vụ:
+    1.  Cập nhật trạng thái Yêu cầu từ `Chờ duyệt` $\rightarrow$ `Đã duyệt`.
+    2.  Bổ sung/Cập nhật cột `SL hủy` trên màn hình Danh sách và Chi tiết đơn hàng SO gốc.
+    3.  Nếu yêu cầu là Hủy toàn bộ đơn $\rightarrow$ Chuyển trạng thái đơn hàng SO sang `Đã hủy`.
+    4.  Bắn thông tin yêu cầu đã duyệt sang module **KHSX** kèm Hướng xử lý tương ứng của từng Item.
+    5.  Tự động recalculate tỷ lệ (%) chiết khấu của nhóm đơn hàng active trong khung 24h (BR-02).
 
----
-
-## 4. QUY TẮC NGHIỆP VỤ (Business Rules)
-
-*   **BR-01 (Ràng buộc Yêu cầu):** Một đơn hàng hoặc dòng sản phẩm tại một thời điểm chỉ được phép tồn tại tối đa **1 yêu cầu chỉnh sửa** đang ở trạng thái *"Chờ duyệt"*. Hệ thống sẽ chặn tạo yêu cầu mới nếu yêu cầu trước đó chưa có kết quả phê duyệt.
-*   **BR-02 (Tính toán lại Tỷ lệ Chiết khấu Nhóm Đơn):** Khi yêu cầu hủy đơn / giảm số lượng được duyệt thành công, hệ thống tự động kiểm tra nhóm các đơn hàng active được gộp chiết khấu trong khung 24h. Hệ thống tự động tính lại tổng doanh thu đạt được và cập nhật lại mức % chiết khấu và số tiền chiết khấu chính xác cho các đơn hàng active còn lại.
-
----
-
-## 5. DANH MỤC DỮ LIỆU & RÀNG BUỘC (Data Catalog & Constraints)
-
-### 5.1 Danh sách Yêu cầu hủy
-| Tên trường (Field Name) | Kiểu dữ liệu (Type) | Bắt buộc (Required) | Quy tắc validation & Nghiệp vụ (Rules) |
-| :--- | :--- | :---: | :--- |
-| **Mã yêu cầu** | Chuỗi (Text) | Có | Mã định danh duy nhất (VD: `YCH-2026-001`), màu xanh `#005a46`, click để xem chi tiết. |
-| **Mã SO** | Chuỗi (Text) | Có | Mã đơn hàng gốc cần hủy (VD: `SO2608001`). |
-| **Tổng SL hủy** | Số nguyên | Có | Tổng số lượng sản phẩm hủy (tính tổng từ subtable). |
-| **Người yêu cầu** | Chuỗi (Text) | Có | Tên nhân viên tạo yêu cầu. |
-| **Ngày yêu cầu** | Ngày (Date) | Có | Định dạng `DD/MM/YYYY`. |
-| **Người phê duyệt** | Chuỗi (Text) | Không | Tên quản lý đã duyệt. Hiển thị `-` nếu đang chờ duyệt. |
-| **Ngày phê duyệt** | Ngày (Date) | Không | Định dạng `DD/MM/YYYY`. Hiển thị `-` nếu đang chờ duyệt. |
-| **Trạng thái** | Phân loại (Enum) | Có | Badge màu phân biệt: <br>• `Chờ phê duyệt` (Vàng - `bg-yellow-50 text-yellow-700`)<br>• `Đã phê duyệt` (Xanh lá - `bg-green-50 text-green-700`)<br>• `Từ chối` (Đỏ - `bg-red-50 text-red-700`) |
-| **Thao tác** | Hành động | Có | Icon Sửa ✏️ và Xóa 🗑️. |
+### AC 2.5: Đồng bộ trạng thái "Đã xử lý" từ KHSX
+*   **Given (Biết rằng):** Yêu cầu hủy đã ở trạng thái `Đã duyệt` và KHSX đã hoàn tất nghiệp vụ hủy MO / chuyển SO trong xưởng.
+*   **When (Khi):** KHSX gửi tín hiệu xác nhận hoàn tất sang QLĐH.
+*   **Then (Thì):** Trạng thái của Yêu cầu hủy trên QLĐH tự động chuyển thành `Đã xử lý` (Badge màu xanh dương nổi bật).
 
 ---
 
-### 5.2.1 Cấu trúc Form Thông tin chung
-| Tên trường (Field Name) | Kiểu dữ liệu (Type) | Bắt buộc (Required) | Quy tắc validation & Nghiệp vụ (Rules) |
+## 4. QUY TẮC NGHIỆP VỤ (BUSINESS RULES)
+
+*   **BR-01 (Ràng buộc Trạng thái Yêu cầu):** Một đơn hàng hoặc dòng sản phẩm tại một thời điểm chỉ được phép tồn tại tối đa **1 yêu cầu chỉnh sửa/hủy** đang ở trạng thái *"Chờ duyệt"*.
+*   **BR-02 (Tính toán lại Tỷ lệ Chiết khấu Nhóm Đơn):** Khi yêu cầu hủy đơn hoặc giảm số lượng được duyệt thành công, hệ thống tự động kiểm tra nhóm các đơn hàng active được gộp chiết khấu trong khung 24h, tính lại tổng doanh thu đạt được và cập nhật lại mức % chiết khấu chính xác cho các đơn hàng active còn lại.
+*   **BR-03 (Vòng đời 5 Trạng thái Yêu cầu):**
+    1.  `Chờ duyệt` (Vàng): Vừa tạo xong, đang chờ cấp quản lý duyệt trên Base Request.
+    2.  `Đã duyệt` (Xanh lá): Base Request đã phê duyệt thành công.
+    3.  `Từ chối` (Đỏ): Base Request từ chối phê duyệt.
+    4.  `Đã hủy` (Xám): Sale Admin chủ động hủy yêu cầu trước khi được duyệt.
+    5.  `Đã xử lý` (Xanh dương): KHSX đã thực thi và hoàn tất xử lý lệnh sản xuất MO trong xưởng.
+
+---
+
+## 5. DANH MỤC DỮ LIỆU & CẤU TRÚC SUBTABLE
+
+### 5.1 Cấu trúc Form Thông tin chung (Card 1)
+| Tên trường (Field Name) | Kiểu dữ liệu | Bắt buộc | Quy tắc validation & Nghiệp vụ |
 | :--- | :--- | :---: | :--- |
 | **Mã yêu cầu** | Text Input | Read-only | Tự động sinh theo quy tắc `YCH-YYYY-XXX`. |
-| **Mã SO cần hủy** | Select Dropdown | Có | Chỉ chọn các SO hợp lệ (VD: `SO2608001`, `SO2608002`...). |
-| **Mã - Tên Khách hàng** | Text Input | Read-only | Tự động lấy tên khách hàng từ SO gốc (VD: `2000001 - Công ty TNHH Vàng Bạc Kim Yến`). |
-| **Loại đơn** | Text / Badge | Read-only | Tự động hiển thị theo đơn hàng gốc (Đơn hàng Bán / Đơn hàng Gia công). |
-| **Nguyên liệu / Tuổi vàng** | Text / Badge | Read-only | Tự động hiển thị theo đơn hàng gốc (Vàng / 61Y, 41.6Y, 75W...). |
-| **Lý do hủy** | Text Input | Có | Nhập lý do tổng quát của đợt hủy (Max 500 ký tự). |
+| **Mã SO cần hủy** | Select Dropdown | Có | Chọn các SO hợp lệ (VD: `SO2608001`, `SO2608002`...). |
+| **Mã - Tên Khách hàng** | Text Input | Read-only | Tự động lấy tên khách hàng từ SO gốc. |
+| **Tùy chọn Hủy cả đơn** | Checkbox / Switch | Không | Bật để tự động chọn tất cả Item trong SO với `SL hủy = SL đặt`. |
+| **Loại đơn / Tuổi vàng** | Text / Badge | Read-only | Tự động hiển thị tóm tắt thông tin đơn hàng gốc. |
+| **Lý do hủy chung** | Text Input | **Bắt buộc (*)** | Nhập lý do tổng quát của đợt hủy (Max 500 ký tự). |
 
----
-
-### 5.2.2 Chi tiết sản phẩm (Subtable)
-| Tên trường (Field Name) | Kiểu dữ liệu (Type) | Bắt buộc (Required) | Quy tắc validation & Nghiệp vụ (Rules) |
+### 5.2 Chi tiết Bảng Subtable sản phẩm hủy (Card 2)
+| Cột dữ liệu | Kiểu dữ liệu | Bắt buộc | Quy tắc validation & Hiển thị |
 | :--- | :--- | :---: | :--- |
 | **Hình ảnh** | Image Thumbnail | Read-only | Ảnh mẫu thu nhỏ của sản phẩm vàng/trang sức. |
-| **Mã Item (Trong SO)** | Select Dropdown | Có | Chỉ hiển thị danh sách các Item thực tế có trong SO đã chọn. |
+| **Mã Item (Trong SO)** | Select Dropdown | **Bắt buộc (*)** | Chỉ hiển thị các Item thuộc về SO đã chọn. |
 | **Trọng lượng** | Text / Badge | Read-only | Trọng lượng sản phẩm (VD: `0.85 chỉ (3.19g)`). |
-| **Đơn giá** | Number / Currency | Read-only | Đơn giá niêm yết trong SO gốc (Định dạng VND). |
-| **SL đặt trong SO** | Text / Badge | Read-only | Số lượng đã đặt ban đầu để người dùng đối soát tránh nhập vượt quá. |
-| **SL yêu cầu hủy** | Number Input | Có | Số nguyên dương (`1 <= SL hủy <= SL đặt trong SO`). |
-| **Tổng tiền hủy** | Currency | Read-only | Tự động tính: `SL yêu cầu hủy × Đơn giá`. |
-| **Lý do hủy chi tiết** | Text Input | Không | Ghi chú cụ thể cho từng món nếu có (VD: Khách đổi ni tay, lỗi kỹ thuật...). |
-
----
-
-### 5.3 Thông tin Gửi module request Yêu cầu chỉnh sửa đơn hàng (Base Request Mapping)
-
-#### Thông tin đề xuất (Proposal Meta)
-| Tên trường (Field Name) | Quy tắc Mapping / Sinh dữ liệu | Ghi chú |
-| :--- | :--- | :--- |
-| **Tên đề xuất** | `Yêu cầu hủy [Item/Đơn hàng] - [Mã đơn hàng]` | VD: `Yêu cầu hủy Item - SO2608001` |
-| **Nhóm đề xuất** | `Yêu cầu chỉnh sửa đơn hàng` | Mã RQ: `18797` |
-| **Người đề xuất** | `[Tên + MSNV]` | Lấy từ tài khoản User đang đăng nhập. |
-| **Khách hàng** | `Mã khách hàng + Tên khách hàng` | VD: `2000001 - Công ty TNHH Vàng Bạc Kim Yến` |
-
-#### Thông tin bảng chi tiết hủy gửi Base Request (Items Subtable Payload)
-| Cột dữ liệu | Quy tắc Mapping | Chi tiết / Diễn giải |
-| :--- | :--- | :--- |
-| **Mã item** | Mã item muốn hủy | Lấy từ danh sách các Item được chọn trong Subtable. |
-| **Chủng loại** | Tên chủng loại / Tên SP | Lấy tên sản phẩm từ Master Data. |
-| **Số lượng đặt** | SL item | Số lượng đặt ban đầu của Item trong SO. |
-| **Số lượng hủy** | Số lượng hủy | Số lượng nhân viên đề xuất hủy. |
-| **Chi tiết đơn hàng** | Đường dẫn link | Đường dẫn URL link trực tiếp đến trang chi tiết đơn hàng trên hệ thống. |
-| **Lý do hủy** | `[Lý do thay đổi]` | Lấy từ trường `Lý do hủy chung` và `Lý do chi tiết`. |
+| **Đơn giá** | Currency | Read-only | Đơn giá niêm yết trong SO gốc (Định dạng VND). |
+| **SL đặt trong SO** | Number / Badge | Read-only | Số lượng đặt ban đầu của Item. |
+| **SL yêu cầu hủy** | Number Input | **Bắt buộc (*)** | **Mặc định = SL đặt** (Cho phép sửa: `1 <= SL hủy <= SL đặt`). |
+| **Thành tiền hủy** | Currency | Read-only | Tự động tính: `SL yêu cầu hủy × Đơn giá`. |
+| **Hướng xử lý (KHSX)** | Select Dropdown | **Bắt buộc (*)** | Lựa chọn: <br>• `Hủy luôn` (Mặc định)<br>• `Chuyển SO khác` |
+| **Lý do hủy chi tiết** | Text Input | Không | Ghi chú lý do cụ thể cho từng món nếu có. |
 
 ---
 
 ## 6. THIẾT KẾ (UX/UI) & PROTOTYPE
 
-*   **Form Tạo mới Yêu cầu hủy:** 👉 [http://localhost:3000/cancel-requests/create](http://localhost:3000/cancel-requests/create)
-*   **Bảng Danh sách Yêu cầu hủy:** 👉 [http://localhost:3000/cancel-requests](http://localhost:3000/cancel-requests)
-*   **Danh sách Đơn hàng gốc:** 👉 [http://localhost:3000/](http://localhost:3000/)
+*   🔗 **Form Tạo mới Yêu cầu hủy:** [http://localhost:3000/cancel-requests/create](http://localhost:3000/cancel-requests/create)
+*   🔗 **Bảng Danh sách Yêu cầu hủy (5 Tabs trạng thái):** [http://localhost:3000/cancel-requests](http://localhost:3000/cancel-requests)
+*   🔗 **Bảng Danh sách Đơn hàng gốc (Đã có cột SL hủy):** [http://localhost:3000/](http://localhost:3000/)
+*   🔗 **Kho lưu trữ GitHub:** [https://github.com/midumidu1213-collab/order-prototype](https://github.com/midumidu1213-collab/order-prototype)
 
 ---
 
 ## 7. TIÊU CHÍ HOÀN THÀNH (Definition of Done - DoD)
-
-- [x] Đầy đủ 5 phần theo chuẩn BA: User Story, Flowchart Mermaid, Acceptance Criteria Gherkin, Business Rules, Data Catalog.
-- [x] Đặc tả chi tiết luồng tích hợp Webhook Base Request (Mã RQ: 18797) và đồng bộ KHSX.
-- [x] Định nghĩa tường minh quy tắc Recalculate % chiết khấu nhóm đơn trong 24h (BR-02).
-- [x] Giao diện Prototype đã đồng bộ hiển thị Hình ảnh, Trọng lượng, Đơn giá, Thành tiền hủy.
-- [x] Đã đồng bộ lên GitHub Repository của dự án.
+- [x] Đã thiết kế trọn vẹn 3 luồng hủy (Hủy cả đơn / Hủy full item / Hủy giảm SL item).
+- [x] Đã cấu hình SL hủy mặc định bằng SL đặt và cho phép chỉnh sửa.
+- [x] Bổ sung cột "Hướng xử lý (KHSX)" với 2 lựa chọn `Hủy luôn` & `Chuyển SO khác`.
+- [x] Đặc tả và hiện thực 5 trạng thái vòng đời yêu cầu (Chờ duyệt, Đã duyệt, Từ chối, Đã hủy, Đã xử lý).
+- [x] Bổ sung cột "SL hủy" trên giao diện danh sách đơn hàng gốc.
+- [x] Đã verify trên Prototype localhost và đồng bộ lên GitHub.
