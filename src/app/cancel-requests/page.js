@@ -386,8 +386,7 @@ export default function CancelRequestList() {
                                   <thead className="bg-gray-100">
                                     <tr>
                                       <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase w-12">STT</th>
-                                      <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Mã Item</th>
-                                      <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Mã MO (Lệnh SX)</th>
+                                      <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Mã Item (Trong SO)</th>
                                       <th className="px-4 py-2 text-center font-semibold text-gray-600 uppercase w-28">SL hủy</th>
                                       <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Lý do hủy chi tiết</th>
                                     </tr>
@@ -397,13 +396,12 @@ export default function CancelRequestList() {
                                       <tr key={sub.id} className="hover:bg-gray-50">
                                         <td className="px-3 py-2.5 text-gray-500 text-center font-medium">{sIdx + 1}</td>
                                         <td className="px-4 py-2.5 font-semibold text-gray-900">{sub.itemCode}</td>
-                                        <td className="px-4 py-2.5 text-gray-600">{sub.moCode}</td>
                                         <td className="px-4 py-2.5 text-center font-bold text-red-600">
                                           <span className="px-2 py-0.5 bg-red-50 rounded border border-red-200">
-                                            {sub.qty}
+                                            {sub.qty} SP
                                           </span>
                                         </td>
-                                        <td className="px-4 py-2.5 text-gray-700">{sub.reason}</td>
+                                        <td className="px-4 py-2.5 text-gray-700">{sub.reason || "-"}</td>
                                       </tr>
                                     ))}
                                   </tbody>

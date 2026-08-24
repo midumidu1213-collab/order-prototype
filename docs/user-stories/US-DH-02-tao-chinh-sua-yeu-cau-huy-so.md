@@ -8,8 +8,8 @@
 
 ## 1. Tóm tắt User Story (User Story Statement)
 *   **AS A:** Nhân viên Kinh doanh
-*   **I WANT TO:** Tạo mới hoặc chỉnh sửa yêu cầu hủy SO với form thông tin tinh gọn và bảng Subtable kê khai chi tiết các mặt hàng cần hủy
-*   **SO THAT:** Tôi có thể gửi yêu cầu lên cấp quản lý phê duyệt với số lượng và lý do hủy minh bạch, chính xác.
+*   **I WANT TO:** Tạo mới hoặc chỉnh sửa yêu cầu hủy SO bằng cách chọn các sản phẩm trực thuộc đơn hàng gốc và nhập lý do hủy bắt buộc
+*   **SO THAT:** Tôi có thể gửi yêu cầu lên cấp quản lý phê duyệt với số lượng và lý do hủy minh bạch, chính xác mà không lo chọn nhầm mã sản phẩm ngoài đơn hàng.
 
 ---
 
@@ -19,27 +19,30 @@
 flowchart TD
     Start([Bấm '+ Tạo yêu cầu hủy' hoặc icon Sửa ✏️]) --> FormView[Hiển thị Màn hình Form: US-DH-02]
     
-    FormView --> Step1[1. Thông tin chung: Hệ thống tự sinh Mã YC & Chọn Mã SO]
-    Step1 --> Step2[2. Khai báo Subtable: Nhập Mã Item, Mã MO, SL hủy, Lý do hủy]
+    FormView --> Step1[1. Thông tin chung: Hệ thống tự sinh Mã YC & Chọn Mã SO cần hủy]
+    Step1 --> AutoLoad[Hệ thống tự động tải Tên khách hàng & Lọc danh sách Item thuộc SO đó]
     
-    Step2 --> RealtimeCalc[Hệ thống tự động cộng dồn Tổng SL hủy Real-time]
+    AutoLoad --> Step2[2. Nhập Lý do hủy chung * bắt buộc]
+    Step2 --> Step3[3. Khai báo Subtable: Chọn Mã Item trong SO, Nhập SL hủy, Nhập Lý do chi tiết]
+    
+    Step3 --> RealtimeCalc[Hệ thống tự động hiển thị SL đặt trong SO để so sánh đối soát]
     
     RealtimeCalc --> UserAction{Hành động người dùng}
     
-    UserAction -->|Bấm '+ Thêm dòng'| AddRow[Thêm dòng sản phẩm mới vào Subtable]
-    AddRow --> Step2
+    UserAction -->|Bấm '+ Thêm dòng'| AddRow[Thêm dòng Item mới thuộc SO vào Subtable]
+    AddRow --> Step3
     
     UserAction -->|Bấm icon Xóa dòng 🗑️| CheckCount{Số dòng > 1?}
-    CheckCount -->|Đúng| RemoveRow[Xóa dòng & Cập nhật lại Tổng SL hủy]
+    CheckCount -->|Đúng| RemoveRow[Xóa dòng sản phẩm]
     CheckCount -->|Sai| AlertMinRow[Cảnh báo: Yêu cầu cần tối thiểu 1 sản phẩm]
-    RemoveRow --> Step2
-    AlertMinRow --> Step2
+    RemoveRow --> Step3
+    AlertMinRow --> Step3
     
     UserAction -->|Bấm 'Hủy bỏ'| CancelForm[Hủy thao tác & Quay về Danh sách US-DH-01]
     
-    UserAction -->|Bấm 'Gửi yêu cầu phê duyệt'| ValidateForm{Kiểm tra dữ liệu bắt buộc?}
+    UserAction -->|Bấm 'Gửi yêu cầu phê duyệt'| ValidateForm{Kiểm tra 'Lý do hủy chung' & Dữ liệu bắt buộc?}
     ValidateForm -->|Hợp lệ| SaveRecord[Lưu yêu cầu với Trạng thái = 'Chờ phê duyệt']
-    ValidateForm -->|Thiếu thông tin| ShowError[Hiển thị cảnh báo điền đầy đủ trường *]
+    ValidateForm -->|Thiếu 'Lý do hủy chung'| ShowError[Báo lỗi: Bắt buộc nhập Lý do hủy chung]
     SaveRecord --> SuccessNotify[Hiển thị Toast thành công & Chuyển hướng sau 1.5s]
     SuccessNotify --> Done([Quay về Màn hình Danh sách US-DH-01])
 ```
@@ -48,53 +51,53 @@ flowchart TD
 
 ## 3. Quy tắc Nghiệp vụ & Ràng buộc Dữ liệu (Business Rules)
 
-### BR 2.1: Cấu trúc Form Thông tin chung
+### BR 2.1: Cấu trúc Form Thông tin chung (Card 1)
 | Trường dữ liệu | Loại Input | Ràng buộc / Validate | Ghi chú hiển thị |
 | :--- | :--- | :--- | :--- |
 | **Mã yêu cầu** | Text Input | Bắt buộc, Read-only | Tự động sinh theo quy tắc `YCH-YYYY-XXX`. |
 | **Mã SO cần hủy** | Select Dropdown | Bắt buộc | Chỉ chọn các SO hợp lệ (chưa xuất kho / chưa hoàn tất). |
-| **Tổng SL hủy** | Number Input | Bắt buộc, Read-only | Tự động cộng dồn từ cột `SL yêu cầu hủy` của Subtable. |
-| **Lý do / Ghi chú** | Text Input | Tùy chọn, Max 500 ký tự | Diễn giải lý do chung của đợt hủy. |
+| **Khách hàng & Loại đơn** | Text Input | Tự động (Read-only) | Tự động lấy tên khách hàng và loại đơn từ SO gốc (Đề xuất tối ưu). |
+| **Lý do hủy chung** | Text Input | **Bắt buộc (*)** | Nhập lý do tổng quát của đợt hủy (Max 500 ký tự). |
 
-### BR 2.2: Ràng buộc Bảng chi tiết (Subtable)
-*   **Tối thiểu 1 dòng:** Yêu cầu hủy phải có ít nhất 1 dòng sản phẩm chi tiết. Nếu chỉ còn 1 dòng, hệ thống không cho phép xóa.
-*   **Số lượng hủy hợp lệ:** `SL yêu cầu hủy` phải là số nguyên dương (`> 0`) và không được vượt quá số lượng đặt còn lại của Item đó trong SO gốc.
-*   **Cập nhật tự động (Real-time):** Mọi thao tác thêm/xóa dòng hoặc thay đổi số lượng ở Subtable sẽ lập tức cập nhật lại giá trị tại ô `Tổng SL hủy` ở Card 1 và dòng `Tổng cộng` ở chân bảng Subtable.
+### BR 2.2: Ràng buộc Bảng chi tiết sản phẩm (Card 2 - Subtable)
+| Cột dữ liệu | Loại Input | Ràng buộc / Validate | Ghi chú hiển thị |
+| :--- | :--- | :--- | :--- |
+| **Mã Item** | Select Dropdown | **Bắt buộc (*)** | **Chỉ hiển thị danh sách các Item thực tế có trong SO đã chọn.** |
+| **SL đặt trong SO** | Text / Badge | Tự động (Read-only) | Hiển thị số lượng đã đặt ban đầu để người dùng đối soát tránh nhập vượt quá. |
+| **SL yêu cầu hủy** | Number Input | **Bắt buộc (*)** | Số nguyên dương (`1 <= SL hủy <= SL đặt trong SO`). |
+| **Lý do hủy chi tiết** | Text Input | **Không bắt buộc (Optional)** | Ghi chú cụ thể cho từng món nếu có (VD: Khách đổi ni tay, lỗi kỹ thuật...). |
 
 ---
 
 ## 4. Tiêu chí Chấp nhận (Acceptance Criteria - Gherkin)
 
-### AC 2.1: Tự động cộng dồn Tổng số lượng hủy
+### AC 2.1: Lọc Mã Item theo SO đã chọn
 *   **Given:** Người dùng đang ở màn hình tạo mới `/cancel-requests/create`.
-*   **When:** Người dùng nhập `SL yêu cầu hủy` cho Dòng 1 = `2` và Dòng 2 = `3`.
-*   **Then:** Ô `Tổng SL hủy` ở Thông tin chung và dòng `Tổng cộng` ở Subtable lập tức hiển thị giá trị là `5 SP`.
+*   **When:** Người dùng chọn `Mã SO cần hủy = "CO2806 001"`.
+*   **Then:** Dropdown `Mã Item` ở Subtable chỉ hiển thị các sản phẩm thuộc về đơn hàng `CO2806 001`.
+*   **And:** Trường `SL đặt trong SO` tự động hiển thị số lượng đặt tương ứng của sản phẩm được chọn.
 
-### AC 2.2: Thêm dòng sản phẩm mới
-*   **Given:** Bảng Subtable đang có N dòng sản phẩm.
-*   **When:** Người dùng click vào nút `+ Thêm dòng sản phẩm`.
-*   **Then:** Hệ thống thêm một dòng trống mới vào cuối bảng với STT = `N + 1` và giá trị mặc định `SL hủy = 1`.
-
-### AC 2.3: Chặn xóa dòng cuối cùng (Edge Case)
-*   **Given:** Bảng Subtable chỉ còn đúng 1 dòng sản phẩm duy nhất.
-*   **When:** Người dùng click vào icon Xóa (🗑️) của dòng đó.
-*   **Then:** Hệ thống hiển thị cảnh báo: `"Yêu cầu hủy cần tối thiểu ít nhất 1 sản phẩm chi tiết!"` và giữ nguyên dòng sản phẩm.
-
-### AC 2.4: Gửi yêu cầu phê duyệt thành công
-*   **Given:** Người dùng đã điền đầy đủ các thông tin bắt buộc.
+### AC 2.2: Validate bắt buộc "Lý do hủy chung"
+*   **Given:** Người dùng đã chọn Item và số lượng hủy hợp lệ nhưng để trống ô `Lý do hủy chung`.
 *   **When:** Người dùng click nút `Gửi yêu cầu phê duyệt`.
-*   **Then:** Hệ thống tạo bản ghi mới với trạng thái `Chờ phê duyệt`.
-*   **And:** Hiển thị thông báo (Toast/Banner) thành công và chuyển hướng về `/cancel-requests` sau 1.5 giây.
+*   **Then:** Hệ thống hiển thị cảnh báo lỗi: `"Vui lòng nhập 'Lý do hủy chung' trước khi gửi phê duyệt!"` và chặn không lưu bản ghi.
 
-### AC 2.5: Nút Hủy bỏ
-*   **Given:** Người dùng đang nhập dở dữ liệu trên form.
-*   **When:** Người dùng click nút `Hủy bỏ` hoặc `Quay lại danh sách`.
-*   **Then:** Hệ thống điều hướng quay về màn hình danh sách `/cancel-requests` mà không lưu dữ liệu tạm.
+### AC 2.3: "Lý do hủy chi tiết" là trường không bắt buộc
+*   **Given:** Người dùng đã nhập `Lý do hủy chung` và để trống ô `Lý do hủy chi tiết` của từng Item.
+*   **When:** Người dùng click `Gửi yêu cầu phê duyệt`.
+*   **Then:** Hệ thống vẫn chấp nhận lưu dữ liệu và gửi phê duyệt thành công.
+
+### AC 2.4: Thêm và xóa dòng sản phẩm linh hoạt
+*   **Given:** Bảng Subtable đang có N dòng sản phẩm.
+*   **When:** Người dùng click nút `+ Thêm dòng sản phẩm`.
+*   **Then:** Hệ thống thêm một dòng mới với Mã Item mặc định thuộc SO và `SL hủy = 1`.
+*   **When:** Bảng chỉ còn 1 dòng duy nhất và người dùng click icon Xóa (🗑️).
+*   **Then:** Hệ thống cảnh báo: `"Yêu cầu hủy cần tối thiểu ít nhất 1 sản phẩm chi tiết!"` và giữ nguyên dòng.
 
 ---
 
 ## 5. Definition of Done (DoD)
-- [x] Giao diện Form đáp ứng đúng quy tắc ẩn 4 trường Audit.
-- [x] Logic tính tổng số lượng Real-time hoạt động không có độ trễ.
-- [x] Đầy đủ các thông báo xác thực (Validation error & Success message).
-- [x] Đã verify chạy hoàn hảo trên Prototype.
+- [x] Đã bỏ trường Tổng SL hủy ở Card 1 và cột Mã MO ở Card 2.
+- [x] Dropdown Mã Item chỉ tải các sản phẩm thuộc SO đang chọn.
+- [x] Kiểm tra validate: Bắt buộc Lý do hủy chung, không bắt buộc Lý do chi tiết.
+- [x] Đã verify chạy hoàn hảo trên Prototype và đồng bộ GitHub.

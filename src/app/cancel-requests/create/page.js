@@ -1,9 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Plus, Trash2, Save, Send, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Send, AlertCircle, CheckCircle2, Package } from "lucide-react";
+
+// Mock Database các SO và danh sách Item chi tiết tương ứng
+const SO_DATABASE = {
+  "CO2806 001": {
+    customerName: "Khách VIP 1 - Chi nhánh Hà Nội",
+    orderType: "Đơn bán lẻ",
+    items: [
+      { itemCode: "GY0RG000086A00A00CZGG3CZKK2008", itemName: "Nhẫn Kim Cương Vàng 61Y (Ni 48)", orderedQty: 5 },
+      { itemCode: "GY0BC000012B00B00CZGG3CZKK1002", itemName: "Lắc Tay Nữ Ý 61Y (Size 16cm)", orderedQty: 3 },
+      { itemCode: "GY0NE000099A00A00CZGG3CZKK3001", itemName: "Dây Chuyền Trơn 61Y (Dài 45cm)", orderedQty: 2 },
+    ],
+  },
+  "CO2806 002": {
+    customerName: "Nguyễn Văn An - Đại lý Cầu Giấy",
+    orderType: "Gia công",
+    items: [
+      { itemCode: "GY0RG000055A00A00CZGG3CZKK1001", itemName: "Nhẫn Nam Đính Đá Topaz 61Y", orderedQty: 3 },
+      { itemCode: "GY0EA000033B00B00CZGG3CZKK2005", itemName: "Bông Tai Nụ Hoa 61Y", orderedQty: 2 },
+    ],
+  },
+  "CO2806 003": {
+    customerName: "Đại lý Vàng Bạc Đá Quý X - TP.HCM",
+    orderType: "Đơn sỉ",
+    items: [
+      { itemCode: "GY0RG000088A00A00CZGG3CZKK4000", itemName: "Bộ Nhẫn Cưới Bạch Kim 75Y", orderedQty: 10 },
+      { itemCode: "GY0BC000077B00B00CZGG3CZKK5000", itemName: "Vòng Tay Rồng Phượng 75Y", orderedQty: 10 },
+    ],
+  },
+  "CO2806 004": {
+    customerName: "Chị Hạnh - Khách VIP",
+    orderType: "Gia công",
+    items: [
+      { itemCode: "GY0PD000021A00A00CZGG3CZKK1100", itemName: "Mặt Dây Chuyền Sapphire Xanh", orderedQty: 2 },
+    ],
+  },
+  "CO2806 005": {
+    customerName: "Anh Tú - Showroom Quận 1",
+    orderType: "Đơn bán lẻ",
+    items: [
+      { itemCode: "GY0RG000091A00A00CZGG3CZKK9901", itemName: "Nhẫn Đính Hôn Solitaire 61Y", orderedQty: 8 },
+      { itemCode: "GY0BR000044A00A00CZGG3CZKK8802", itemName: "Lắc Tay Tennis Kim Cương 61Y", orderedQty: 7 },
+    ],
+  },
+};
 
 export default function CreateCancelRequest() {
   const router = useRouter();
@@ -12,43 +56,63 @@ export default function CreateCancelRequest() {
   const [formData, setFormData] = useState({
     requestCode: "YCH-2026-006",
     soCode: "CO2806 001",
-    requester: "Nguyễn Văn An",
-    requestDate: new Date().toISOString().split("T")[0],
-    approver: "Trần Thị Bích",
-    approveDate: "",
-    generalReason: "Khách hàng yêu cầu thay đổi thiết kế và hủy các mã cũ",
+    generalReason: "",
   });
+
+  const selectedSO = SO_DATABASE[formData.soCode] || { customerName: "-", items: [] };
 
   // Subtable State
   const [items, setItems] = useState([
     {
       id: 1,
-      itemCode: "ITM-RING-61Y-01",
-      moCode: "MO-2026-8891",
+      itemCode: "GY0RG000086A00A00CZGG3CZKK2008",
+      orderedQty: 5,
       qty: 2,
-      reason: "Khách đổi sang ni 48",
+      reason: "Hàng thương hiệu",
     },
     {
       id: 2,
-      itemCode: "ITM-BRAC-75Y-04",
-      moCode: "MO-2026-8892",
+      itemCode: "GY0BC000012B00B00CZGG3CZKK1002",
+      orderedQty: 3,
       qty: 3,
-      reason: "Khách hủy mẫu lắc tay",
+      reason: "Khách yêu cầu giảm SL",
     },
   ]);
 
   const [notification, setNotification] = useState(null);
 
+  // Khi người dùng đổi SO ở Header -> Tự động reset và load các item thuộc SO đó vào Subtable
+  const handleSOChange = (newSOCode) => {
+    setFormData((prev) => ({ ...prev, soCode: newSOCode }));
+    const soData = SO_DATABASE[newSOCode];
+    if (soData && soData.items.length > 0) {
+      setItems([
+        {
+          id: Date.now(),
+          itemCode: soData.items[0].itemCode,
+          orderedQty: soData.items[0].orderedQty,
+          qty: 1,
+          reason: "",
+        },
+      ]);
+    } else {
+      setItems([]);
+    }
+  };
+
   // Tính tổng SL hủy từ Subtable
   const totalCancelQty = items.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
 
   const handleAddItem = () => {
+    const availableItems = selectedSO.items;
+    const defaultItem = availableItems[0] || { itemCode: "", orderedQty: 1 };
+    
     const newItem = {
       id: Date.now(),
-      itemCode: `ITM-ITEM-0${items.length + 1}`,
-      moCode: `MO-2026-889${items.length + 3}`,
+      itemCode: defaultItem.itemCode,
+      orderedQty: defaultItem.orderedQty,
       qty: 1,
-      reason: "Khách yêu cầu hủy",
+      reason: "",
     };
     setItems([...items, newItem]);
   };
@@ -62,13 +126,32 @@ export default function CreateCancelRequest() {
   };
 
   const handleItemChange = (id, field, value) => {
-    setItems(
-      items.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    );
+    if (field === "itemCode") {
+      // Khi chọn mã item mới từ dropdown -> cập nhật cả orderedQty tương ứng
+      const matchedItem = selectedSO.items.find((it) => it.itemCode === value);
+      const orderedQty = matchedItem ? matchedItem.orderedQty : 1;
+      setItems(
+        items.map((item) =>
+          item.id === id ? { ...item, itemCode: value, orderedQty: orderedQty, qty: 1 } : item
+        )
+      );
+    } else {
+      setItems(
+        items.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      );
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.generalReason.trim()) {
+      setNotification({
+        type: "error",
+        message: "Vui lòng nhập 'Lý do hủy chung' trước khi gửi phê duyệt!",
+      });
+      return;
+    }
+
     setNotification({
       type: "success",
       message: `Đã tạo thành công yêu cầu hủy "${formData.requestCode}" với tổng số lượng hủy là ${totalCancelQty} SP! Đang chuyển hướng...`,
@@ -101,10 +184,16 @@ export default function CreateCancelRequest() {
       {notification && (
         <div
           className={`p-4 rounded-md flex items-center space-x-3 ${
-            notification.type === "success" ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800"
+            notification.type === "success"
+              ? "bg-green-50 text-green-800 border border-green-200"
+              : "bg-red-50 text-red-800 border border-red-200"
           }`}
         >
-          <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+          {notification.type === "success" ? (
+            <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+          )}
           <p className="text-sm font-medium">{notification.message}</p>
         </div>
       )}
@@ -141,46 +230,45 @@ export default function CreateCancelRequest() {
             </label>
             <select
               value={formData.soCode}
-              onChange={(e) => setFormData({ ...formData, soCode: e.target.value })}
+              onChange={(e) => handleSOChange(e.target.value)}
               className="mt-1 block w-full border border-gray-300 bg-white rounded-md shadow-sm py-2 px-3 focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm font-medium"
             >
               <option value="CO2806 001">CO2806 001 (Khách VIP 1 - 10 SP)</option>
-              <option value="CO2806 002">CO2806 002 (Nguyễn Văn A - 5 SP)</option>
+              <option value="CO2806 002">CO2806 002 (Nguyễn Văn An - 5 SP)</option>
               <option value="CO2806 003">CO2806 003 (Đại lý X - 20 SP)</option>
               <option value="CO2806 004">CO2806 004 (Chị Hạnh - 2 SP)</option>
               <option value="CO2806 005">CO2806 005 (Anh Tú - 15 SP)</option>
             </select>
           </div>
 
-          {/* Tổng SL hủy */}
+          {/* Khách hàng (Đề xuất tối ưu: Tự động hiển thị theo SO) */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Tổng SL hủy <span className="text-red-500">*</span>
+              Khách hàng & Loại đơn (Tự động)
             </label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <input
-                type="number"
-                readOnly
-                value={totalCancelQty}
-                className="block w-full bg-emerald-50 border border-emerald-300 text-emerald-800 font-bold rounded-md py-2 px-3 text-sm focus:outline-none"
-              />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <span className="text-xs text-emerald-600 font-semibold">Sản phẩm</span>
-              </div>
-            </div>
-            <span className="text-xs text-gray-400">Tự động cộng dồn từ bảng Subtable</span>
-          </div>
-
-          {/* Ghi chú / Lý do chung */}
-          <div className="md:col-span-3">
-            <label className="block text-sm font-medium text-gray-700">Lý do tổng quan / Ghi chú</label>
             <input
               type="text"
+              readOnly
+              value={selectedSO.customerName}
+              className="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm text-gray-600 focus:outline-none cursor-not-allowed"
+            />
+            <span className="text-xs text-gray-400">Tự động lấy thông tin từ SO gốc</span>
+          </div>
+
+          {/* Lý do hủy chung (BẮT BUỘC theo yêu cầu) */}
+          <div className="md:col-span-3">
+            <label className="block text-sm font-medium text-gray-700">
+              Lý do hủy chung <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
               value={formData.generalReason}
               onChange={(e) => setFormData({ ...formData, generalReason: e.target.value })}
-              placeholder="Nhập lý do tổng thể của đợt hủy này..."
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm"
+              placeholder="VD: Khách hàng yêu cầu thay đổi thiết kế / Giảm ngân sách đặt hàng..."
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm font-medium text-gray-900"
             />
+            <span className="text-xs text-gray-400">Bắt buộc nhập lý do tổng quát cho đợt yêu cầu hủy này</span>
           </div>
         </div>
       </div>
@@ -192,7 +280,9 @@ export default function CreateCancelRequest() {
             <div className="h-2.5 w-2.5 rounded-full bg-[#005a46]"></div>
             <div>
               <h2 className="text-base font-semibold text-gray-900">2. Chi tiết danh sách sản phẩm hủy (Subtable)</h2>
-              <p className="text-xs text-gray-500">Khai báo chi tiết từng Item và Lệnh sản xuất (MO) cần hủy</p>
+              <p className="text-xs text-gray-500">
+                Chọn sản phẩm có trong đơn hàng <b>{formData.soCode}</b> và nhập số lượng cần hủy
+              </p>
             </div>
           </div>
 
@@ -212,16 +302,16 @@ export default function CreateCancelRequest() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-12">STT</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                  Mã Item <span className="text-red-500">*</span>
+                  Mã Item (Trong đơn hàng) <span className="text-red-500">*</span>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                  Mã MO (Lệnh SX) <span className="text-red-500">*</span>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-36">
+                  SL đặt trong SO
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-36">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-40">
                   SL yêu cầu hủy <span className="text-red-500">*</span>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                  Lý do hủy chi tiết <span className="text-red-500">*</span>
+                  Lý do hủy chi tiết <span className="text-xs text-gray-400 font-normal">(Không bắt buộc)</span>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-16">Xóa</th>
               </tr>
@@ -230,42 +320,53 @@ export default function CreateCancelRequest() {
               {items.map((item, index) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition">
                   <td className="px-4 py-3 text-sm text-gray-500 font-medium text-center">{index + 1}</td>
+                  
+                  {/* Mã Item: Dropdown hiển thị các Item có trong SO */}
                   <td className="px-4 py-3">
-                    <input
-                      type="text"
+                    <select
                       value={item.itemCode}
                       onChange={(e) => handleItemChange(item.id, "itemCode", e.target.value)}
-                      placeholder="VD: ITM-RING-01"
-                      className="w-full border border-gray-300 rounded-md py-1.5 px-2.5 text-sm focus:ring-[#005a46] focus:border-[#005a46]"
-                    />
+                      className="w-full border border-gray-300 rounded-md py-1.5 px-2.5 text-sm font-medium text-gray-900 focus:ring-[#005a46] focus:border-[#005a46] bg-white"
+                    >
+                      {selectedSO.items.map((soItem) => (
+                        <option key={soItem.itemCode} value={soItem.itemCode}>
+                          {soItem.itemCode} - {soItem.itemName}
+                        </option>
+                      ))}
+                    </select>
                   </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={item.moCode}
-                      onChange={(e) => handleItemChange(item.id, "moCode", e.target.value)}
-                      placeholder="VD: MO-2026-001"
-                      className="w-full border border-gray-300 rounded-md py-1.5 px-2.5 text-sm focus:ring-[#005a46] focus:border-[#005a46]"
-                    />
+
+                  {/* SL đặt trong SO (Đề xuất tối ưu: Read-only để tiện so sánh) */}
+                  <td className="px-4 py-3 text-center">
+                    <span className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-sm font-semibold">
+                      {item.orderedQty || selectedSO.items.find((it) => it.itemCode === item.itemCode)?.orderedQty || "-"} SP
+                    </span>
                   </td>
+
+                  {/* SL yêu cầu hủy */}
                   <td className="px-4 py-3">
                     <input
                       type="number"
                       min="1"
+                      max={item.orderedQty || 999}
                       value={item.qty}
                       onChange={(e) => handleItemChange(item.id, "qty", parseInt(e.target.value) || 0)}
-                      className="w-full border border-gray-300 rounded-md py-1.5 px-2.5 text-sm font-semibold text-gray-900 focus:ring-[#005a46] focus:border-[#005a46]"
+                      className="w-full border border-gray-300 rounded-md py-1.5 px-2.5 text-sm font-bold text-emerald-800 focus:ring-[#005a46] focus:border-[#005a46] bg-emerald-50/50"
                     />
                   </td>
+
+                  {/* Lý do hủy chi tiết (Không bắt buộc) */}
                   <td className="px-4 py-3">
                     <input
                       type="text"
                       value={item.reason}
                       onChange={(e) => handleItemChange(item.id, "reason", e.target.value)}
-                      placeholder="Nhập lý do cụ thể..."
+                      placeholder="VD: Khách đổi ni tay, lỗi kỹ thuật..."
                       className="w-full border border-gray-300 rounded-md py-1.5 px-2.5 text-sm focus:ring-[#005a46] focus:border-[#005a46]"
                     />
                   </td>
+
+                  {/* Xóa dòng */}
                   <td className="px-4 py-3 text-center">
                     <button
                       type="button"
@@ -279,10 +380,10 @@ export default function CreateCancelRequest() {
                 </tr>
               ))}
             </tbody>
-            <tfoot className="bg-gray-50 font-semibold text-gray-900">
+            <tfoot className="bg-gray-50 font-semibold text-gray-900 border-t border-gray-200">
               <tr>
                 <td colSpan={3} className="px-4 py-3 text-right text-sm">
-                  Tổng cộng:
+                  Tổng SL yêu cầu hủy:
                 </td>
                 <td className="px-4 py-3 text-sm text-[#005a46] font-bold">
                   {totalCancelQty} SP
@@ -298,7 +399,7 @@ export default function CreateCancelRequest() {
       <div className="fixed bottom-0 right-0 left-64 bg-white border-t border-gray-200 px-6 py-3.5 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)] z-10">
         <div className="flex items-center text-xs text-gray-500 space-x-1">
           <AlertCircle className="h-4 w-4 text-amber-500" />
-          <span>Vui lòng kiểm tra kỹ số lượng trước khi gửi duyệt</span>
+          <span>Kiểm tra chính xác danh sách mã Item trước khi gửi phê duyệt</span>
         </div>
 
         <div className="flex space-x-3">
