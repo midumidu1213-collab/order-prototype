@@ -23,40 +23,49 @@ export default function CreateOrder() {
           {/* Row 1 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Mã khách hàng <span className="text-red-500">*</span></label>
-            <input type="text" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm" defaultValue="05/2026" />
+            <input type="text" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm" defaultValue="2000001" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Tên khách hàng <span className="text-red-500">*</span></label>
-            <input type="text" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm" placeholder="-" />
+            <input type="text" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm" defaultValue="Công ty TNHH Vàng Bạc Kim Yến" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Đội/nhóm phụ trách <span className="text-red-500">*</span></label>
             <select className="mt-1 block w-full border border-gray-300 bg-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm">
-              <option>-</option>
+              <option>Sale A II Hà Nội</option>
+              <option>Sale B TP.HCM</option>
+              <option>Sale C Miền Trung</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Ngày đặt hàng <span className="text-red-500">*</span></label>
-            <input type="date" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm" defaultValue="2026-05-01" />
+            <input type="date" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm" defaultValue="2026-08-24" />
           </div>
 
           {/* Row 2 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Loại đơn hàng <span className="text-red-500">*</span></label>
             <select className="mt-1 block w-full border border-gray-300 bg-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm">
-              <option>-</option>
+              <option>Đơn hàng Bán</option>
+              <option>Đơn hàng Gia công</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Chất liệu <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700">Nguyên liệu / Chất liệu <span className="text-red-500">*</span></label>
             <select className="mt-1 block w-full border border-gray-300 bg-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm">
-              <option>-</option>
+              <option>Vàng</option>
+              <option>Bạc</option>
+              <option>Đồng</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Tuổi vàng <span className="text-red-500">*</span></label>
             <select className="mt-1 block w-full border border-gray-300 bg-white rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm">
-              <option>-</option>
+              <option>41.6Y (Vàng 10K)</option>
+              <option>61Y (Vàng 14K)</option>
+              <option>75W (Vàng trắng 18K)</option>
+              <option>75Y (Vàng vàng 18K)</option>
+              <option>999.9 (Vàng 24K)</option>
             </select>
           </div>
           <div>

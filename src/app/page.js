@@ -9,21 +9,21 @@ export default function OrderList() {
   ];
 
   const mockOrders = [
-    { id: 1, code: "CO2806 001", customer: "Khách VIP 1", team: "Sale A II Hà Nội", type: "Đơn", gold: "61Y", date: "01/08/2026", expectDate: "15/08/2026", qty: 10, total: "25.000.000", note: "Làm gấp", status: "Chờ cập nhật" },
-    { id: 2, code: "CO2806 002", customer: "Nguyễn Văn A", team: "Sale A II Hà Nội", type: "Gia công", gold: "61Y", date: "02/08/2026", expectDate: "16/08/2026", qty: 5, total: "12.500.000", note: "-", status: "Chờ Kỹ thuật" },
-    { id: 3, code: "CO2806 003", customer: "Đại lý X", team: "Sale B HCM", type: "Gia công", gold: "75Y", date: "02/08/2026", expectDate: "16/08/2026", qty: 20, total: "55.000.000", note: "-", status: "Chờ Kỹ thuật" },
-    { id: 4, code: "CO2806 004", customer: "Chị Hạnh", team: "Sale A II Hà Nội", type: "Gia công", gold: "61Y", date: "03/08/2026", expectDate: "17/08/2026", qty: 2, total: "6.000.000", note: "-", status: "Chờ xác nhận" },
-    { id: 5, code: "CO2806 005", customer: "Anh Tú", team: "Sale B HCM", type: "Đơn", gold: "61Y", date: "04/08/2026", expectDate: "18/08/2026", qty: 15, total: "35.000.000", note: "-", status: "Đã chuyển KHSX" },
-    { id: 6, code: "CO2806 006", customer: "-", team: "Sale A II Hà Nội", type: "Đơn", gold: "61Y", date: "05/08/2026", expectDate: "19/08/2026", qty: 10, total: "25.000.000", note: "-", status: "Đang SX" },
-    { id: 7, code: "CO2806 007", customer: "-", team: "Sale B HCM", type: "Đơn", gold: "61Y", date: "06/08/2026", expectDate: "20/08/2026", qty: 8, total: "20.000.000", note: "-", status: "Đang đóng gói" },
-    { id: 8, code: "CO2806 008", customer: "Khách Lẻ", team: "Sale A II Hà Nội", type: "Đơn", gold: "61Y", date: "07/08/2026", expectDate: "21/08/2026", qty: 1, total: "2.500.000", note: "-", status: "Chờ giao hàng" },
-    { id: 9, code: "CO2806 009", customer: "Khách VIP 2", team: "Sale A II Hà Nội", type: "Đơn", gold: "75Y", date: "08/08/2026", expectDate: "22/08/2026", qty: 50, total: "150.000.000", note: "Đóng hộp VIP", status: "Hoàn thành" },
-    { id: 10, code: "CO2806 010", customer: "Chị Ngọc", team: "Sale B HCM", type: "Gia công", gold: "61Y", date: "09/08/2026", expectDate: "23/08/2026", qty: 3, total: "7.500.000", note: "Hủy do đổi mẫu", status: "Đã hủy" },
-    { id: 11, code: "CO2806 011", customer: "-", team: "Sale A II Hà Nội", type: "Đơn", gold: "61Y", date: "10/08/2026", expectDate: "24/08/2026", qty: 12, total: "28.000.000", note: "-", status: "Chờ Kỹ thuật" },
-    { id: 12, code: "CO2806 012", customer: "-", team: "Sale A II Hà Nội", type: "Đơn", gold: "61Y", date: "11/08/2026", expectDate: "25/08/2026", qty: 10, total: "25.000.000", note: "-", status: "Đủ thông tin KT" },
-    { id: 13, code: "CO2806 013", customer: "-", team: "Sale B HCM", type: "Gia công", gold: "75Y", date: "12/08/2026", expectDate: "26/08/2026", qty: 5, total: "15.000.000", note: "-", status: "Đang SX" },
-    { id: 14, code: "CO2806 014", customer: "Anh Minh", team: "Sale A II Hà Nội", type: "Đơn", gold: "61Y", date: "13/08/2026", expectDate: "27/08/2026", qty: 1, total: "3.500.000", note: "-", status: "Hoàn thành" },
-    { id: 15, code: "CO2806 015", customer: "Đại lý Y", team: "Sale B HCM", type: "Đơn", gold: "61Y", date: "14/08/2026", expectDate: "28/08/2026", qty: 30, total: "75.000.000", note: "-", status: "Chờ xác nhận" },
+    { id: 1, code: "SO2608001", customer: "2000001 - Cty TNHH Vàng Bạc Kim Yến", team: "Sale A II Hà Nội", type: "Đơn hàng Bán", gold: "61Y", date: "01/08/2026", expectDate: "15/08/2026", qty: 10, total: "25.000.000", note: "Làm gấp", status: "Chờ cập nhật" },
+    { id: 2, code: "SO2608002", customer: "2000002 - DNTN Vàng Bạc Bảo Tín", team: "Sale A II Hà Nội", type: "Đơn hàng Gia công", gold: "41.6Y", date: "02/08/2026", expectDate: "16/08/2026", qty: 5, total: "12.500.000", note: "-", status: "Chờ Kỹ thuật" },
+    { id: 3, code: "SO2608003", customer: "2000003 - Tiệm Vàng Kim Thành Phát", team: "Sale B HCM", type: "Đơn hàng Bán", gold: "75W", date: "02/08/2026", expectDate: "16/08/2026", qty: 20, total: "55.000.000", note: "-", status: "Chờ Kỹ thuật" },
+    { id: 4, code: "SO2608004", customer: "2000004 - Cty CP Trang Sức PNJ Diamond", team: "Sale A II Hà Nội", type: "Đơn hàng Gia công", gold: "41.6Y", date: "03/08/2026", expectDate: "17/08/2026", qty: 2, total: "6.000.000", note: "-", status: "Chờ xác nhận" },
+    { id: 5, code: "SO2608005", customer: "2000005 - Cửa hàng VBĐQ Minh Châu", team: "Sale B HCM", type: "Đơn hàng Bán", gold: "61Y", date: "04/08/2026", expectDate: "18/08/2026", qty: 15, total: "35.000.000", note: "-", status: "Đã chuyển KHSX" },
+    { id: 6, code: "SO2608006", customer: "2000001 - Cty TNHH Vàng Bạc Kim Yến", team: "Sale A II Hà Nội", type: "Đơn hàng Bán", gold: "61Y", date: "05/08/2026", expectDate: "19/08/2026", qty: 10, total: "25.000.000", note: "-", status: "Đang SX" },
+    { id: 7, code: "SO2608007", customer: "2000003 - Tiệm Vàng Kim Thành Phát", team: "Sale B HCM", type: "Đơn hàng Bán", gold: "75W", date: "06/08/2026", expectDate: "20/08/2026", qty: 8, total: "20.000.000", note: "-", status: "Đang đóng gói" },
+    { id: 8, code: "SO2608008", customer: "2000002 - DNTN Vàng Bạc Bảo Tín", team: "Sale A II Hà Nội", type: "Đơn hàng Gia công", gold: "41.6Y", date: "07/08/2026", expectDate: "21/08/2026", qty: 1, total: "2.500.000", note: "-", status: "Chờ giao hàng" },
+    { id: 9, code: "SO2608009", customer: "2000004 - Cty CP Trang Sức PNJ Diamond", team: "Sale A II Hà Nội", type: "Đơn hàng Bán", gold: "75W", date: "08/08/2026", expectDate: "22/08/2026", qty: 50, total: "150.000.000", note: "Đóng hộp VIP", status: "Hoàn thành" },
+    { id: 10, code: "SO2608010", customer: "2000005 - Cửa hàng VBĐQ Minh Châu", team: "Sale B HCM", type: "Đơn hàng Gia công", gold: "61Y", date: "09/08/2026", expectDate: "23/08/2026", qty: 3, total: "7.500.000", note: "Hủy do đổi mẫu", status: "Đã hủy" },
+    { id: 11, code: "SO2608011", customer: "2000001 - Cty TNHH Vàng Bạc Kim Yến", team: "Sale A II Hà Nội", type: "Đơn hàng Bán", gold: "61Y", date: "10/08/2026", expectDate: "24/08/2026", qty: 12, total: "28.000.000", note: "-", status: "Chờ Kỹ thuật" },
+    { id: 12, code: "SO2608012", customer: "2000003 - Tiệm Vàng Kim Thành Phát", team: "Sale A II Hà Nội", type: "Đơn hàng Bán", gold: "75W", date: "11/08/2026", expectDate: "25/08/2026", qty: 10, total: "25.000.000", note: "-", status: "Đủ thông tin KT" },
+    { id: 13, code: "SO2608013", customer: "2000002 - DNTN Vàng Bạc Bảo Tín", team: "Sale B HCM", type: "Đơn hàng Gia công", gold: "41.6Y", date: "12/08/2026", expectDate: "26/08/2026", qty: 5, total: "15.000.000", note: "-", status: "Đang SX" },
+    { id: 14, code: "SO2608014", customer: "2000005 - Cửa hàng VBĐQ Minh Châu", team: "Sale A II Hà Nội", type: "Đơn hàng Bán", gold: "61Y", date: "13/08/2026", expectDate: "27/08/2026", qty: 1, total: "3.500.000", note: "-", status: "Hoàn thành" },
+    { id: 15, code: "SO2608015", customer: "2000004 - Cty CP Trang Sức PNJ Diamond", team: "Sale B HCM", type: "Đơn hàng Bán", gold: "75W", date: "14/08/2026", expectDate: "28/08/2026", qty: 30, total: "75.000.000", note: "-", status: "Chờ xác nhận" },
   ];
 
   const getStatusColor = (status) => {

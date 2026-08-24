@@ -1,47 +1,57 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Plus, Trash2, Send, AlertCircle, CheckCircle2, Package } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Send, AlertCircle, CheckCircle2 } from "lucide-react";
 
-// Mock Database các SO và danh sách Item chi tiết tương ứng
+// Database chuẩn hóa mẫu theo quy chuẩn mới
 const SO_DATABASE = {
-  "CO2806 001": {
-    customerName: "Khách VIP 1 - Chi nhánh Hà Nội",
-    orderType: "Đơn bán lẻ",
+  "SO2608001": {
+    customer: "2000001 - Công ty TNHH Vàng Bạc Kim Yến",
+    orderType: "Đơn hàng Bán",
+    material: "Vàng",
+    goldAge: "61Y",
     items: [
       { itemCode: "GY0RG000086A00A00CZGG3CZKK2008", itemName: "Nhẫn Kim Cương Vàng 61Y (Ni 48)", orderedQty: 5 },
       { itemCode: "GY0BC000012B00B00CZGG3CZKK1002", itemName: "Lắc Tay Nữ Ý 61Y (Size 16cm)", orderedQty: 3 },
       { itemCode: "GY0NE000099A00A00CZGG3CZKK3001", itemName: "Dây Chuyền Trơn 61Y (Dài 45cm)", orderedQty: 2 },
     ],
   },
-  "CO2806 002": {
-    customerName: "Nguyễn Văn An - Đại lý Cầu Giấy",
-    orderType: "Gia công",
+  "SO2608002": {
+    customer: "2000002 - DNTN Vàng Bạc Bảo Tín",
+    orderType: "Đơn hàng Gia công",
+    material: "Vàng",
+    goldAge: "41.6Y",
     items: [
-      { itemCode: "GY0RG000055A00A00CZGG3CZKK1001", itemName: "Nhẫn Nam Đính Đá Topaz 61Y", orderedQty: 3 },
-      { itemCode: "GY0EA000033B00B00CZGG3CZKK2005", itemName: "Bông Tai Nụ Hoa 61Y", orderedQty: 2 },
+      { itemCode: "GY0RG000055A00A00CZGG3CZKK1001", itemName: "Nhẫn Nam Đính Đá Topaz 41.6Y", orderedQty: 3 },
+      { itemCode: "GY0EA000033B00B00CZGG3CZKK2005", itemName: "Bông Tai Nụ Hoa 41.6Y", orderedQty: 2 },
     ],
   },
-  "CO2806 003": {
-    customerName: "Đại lý Vàng Bạc Đá Quý X - TP.HCM",
-    orderType: "Đơn sỉ",
+  "SO2608003": {
+    customer: "2000003 - Tiệm Vàng Kim Thành Phát",
+    orderType: "Đơn hàng Bán",
+    material: "Vàng",
+    goldAge: "75W",
     items: [
-      { itemCode: "GY0RG000088A00A00CZGG3CZKK4000", itemName: "Bộ Nhẫn Cưới Bạch Kim 75Y", orderedQty: 10 },
-      { itemCode: "GY0BC000077B00B00CZGG3CZKK5000", itemName: "Vòng Tay Rồng Phượng 75Y", orderedQty: 10 },
+      { itemCode: "GW0RG000088A00A00CZGG3CZKK4000", itemName: "Bộ Nhẫn Cưới Vàng Trắng 75W", orderedQty: 10 },
+      { itemCode: "GW0BC000077B00B00CZGG3CZKK5000", itemName: "Vòng Tay Bản Lớn 75W", orderedQty: 10 },
     ],
   },
-  "CO2806 004": {
-    customerName: "Chị Hạnh - Khách VIP",
-    orderType: "Gia công",
+  "SO2608004": {
+    customer: "2000004 - Công ty CP Trang Sức PNJ Diamond",
+    orderType: "Đơn hàng Gia công",
+    material: "Bạc",
+    goldAge: "Bạc Ý 925",
     items: [
-      { itemCode: "GY0PD000021A00A00CZGG3CZKK1100", itemName: "Mặt Dây Chuyền Sapphire Xanh", orderedQty: 2 },
+      { itemCode: "SV0PD000021A00A00CZGG3CZKK1100", itemName: "Mặt Dây Chuyền Bạc Đính Đá CZ", orderedQty: 2 },
     ],
   },
-  "CO2806 005": {
-    customerName: "Anh Tú - Showroom Quận 1",
-    orderType: "Đơn bán lẻ",
+  "SO2608005": {
+    customer: "2000005 - Cửa hàng Vàng Bạc Đá Quý Minh Châu",
+    orderType: "Đơn hàng Bán",
+    material: "Vàng",
+    goldAge: "61Y",
     items: [
       { itemCode: "GY0RG000091A00A00CZGG3CZKK9901", itemName: "Nhẫn Đính Hôn Solitaire 61Y", orderedQty: 8 },
       { itemCode: "GY0BR000044A00A00CZGG3CZKK8802", itemName: "Lắc Tay Tennis Kim Cương 61Y", orderedQty: 7 },
@@ -55,11 +65,17 @@ export default function CreateCancelRequest() {
   // Form State
   const [formData, setFormData] = useState({
     requestCode: "YCH-2026-006",
-    soCode: "CO2806 001",
+    soCode: "SO2608001",
     generalReason: "",
   });
 
-  const selectedSO = SO_DATABASE[formData.soCode] || { customerName: "-", items: [] };
+  const selectedSO = SO_DATABASE[formData.soCode] || {
+    customer: "-",
+    orderType: "-",
+    material: "-",
+    goldAge: "-",
+    items: [],
+  };
 
   // Subtable State
   const [items, setItems] = useState([
@@ -81,7 +97,7 @@ export default function CreateCancelRequest() {
 
   const [notification, setNotification] = useState(null);
 
-  // Khi người dùng đổi SO ở Header -> Tự động reset và load các item thuộc SO đó vào Subtable
+  // Khi đổi SO -> load item của SO đó
   const handleSOChange = (newSOCode) => {
     setFormData((prev) => ({ ...prev, soCode: newSOCode }));
     const soData = SO_DATABASE[newSOCode];
@@ -106,7 +122,7 @@ export default function CreateCancelRequest() {
   const handleAddItem = () => {
     const availableItems = selectedSO.items;
     const defaultItem = availableItems[0] || { itemCode: "", orderedQty: 1 };
-    
+
     const newItem = {
       id: Date.now(),
       itemCode: defaultItem.itemCode,
@@ -127,7 +143,6 @@ export default function CreateCancelRequest() {
 
   const handleItemChange = (id, field, value) => {
     if (field === "itemCode") {
-      // Khi chọn mã item mới từ dropdown -> cập nhật cả orderedQty tương ứng
       const matchedItem = selectedSO.items.find((it) => it.itemCode === value);
       const orderedQty = matchedItem ? matchedItem.orderedQty : 1;
       setItems(
@@ -154,7 +169,7 @@ export default function CreateCancelRequest() {
 
     setNotification({
       type: "success",
-      message: `Đã tạo thành công yêu cầu hủy "${formData.requestCode}" với tổng số lượng hủy là ${totalCancelQty} SP! Đang chuyển hướng...`,
+      message: `Đã tạo thành công yêu cầu hủy "${formData.requestCode}" cho đơn hàng "${formData.soCode}" với tổng số lượng hủy là ${totalCancelQty} SP! Đang chuyển hướng...`,
     });
     setTimeout(() => {
       router.push("/cancel-requests");
@@ -223,7 +238,7 @@ export default function CreateCancelRequest() {
             <span className="text-xs text-gray-400">Mã sinh tự động theo quy chuẩn</span>
           </div>
 
-          {/* Mã SO */}
+          {/* Mã SO cần hủy */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Mã SO cần hủy <span className="text-red-500">*</span>
@@ -231,31 +246,48 @@ export default function CreateCancelRequest() {
             <select
               value={formData.soCode}
               onChange={(e) => handleSOChange(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 bg-white rounded-md shadow-sm py-2 px-3 focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm font-medium"
+              className="mt-1 block w-full border border-gray-300 bg-white rounded-md shadow-sm py-2 px-3 focus:ring-[#005a46] focus:border-[#005a46] sm:text-sm font-semibold text-[#005a46]"
             >
-              <option value="CO2806 001">CO2806 001 (Khách VIP 1 - 10 SP)</option>
-              <option value="CO2806 002">CO2806 002 (Nguyễn Văn An - 5 SP)</option>
-              <option value="CO2806 003">CO2806 003 (Đại lý X - 20 SP)</option>
-              <option value="CO2806 004">CO2806 004 (Chị Hạnh - 2 SP)</option>
-              <option value="CO2806 005">CO2806 005 (Anh Tú - 15 SP)</option>
+              <option value="SO2608001">SO2608001 (2000001 - Vàng Kim Yến)</option>
+              <option value="SO2608002">SO2608002 (2000002 - Bảo Tín)</option>
+              <option value="SO2608003">SO2608003 (2000003 - Kim Thành Phát)</option>
+              <option value="SO2608004">SO2608004 (2000004 - PNJ Diamond)</option>
+              <option value="SO2608005">SO2608005 (2000005 - Minh Châu)</option>
             </select>
           </div>
 
-          {/* Khách hàng (Đề xuất tối ưu: Tự động hiển thị theo SO) */}
+          {/* Mã - Tên Khách hàng (Tự động từ SO) */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Khách hàng & Loại đơn (Tự động)
+              Mã - Tên Khách hàng (Tự động)
             </label>
             <input
               type="text"
               readOnly
-              value={selectedSO.customerName}
-              className="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm text-gray-600 focus:outline-none cursor-not-allowed"
+              value={selectedSO.customer}
+              className="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm font-medium text-gray-800 focus:outline-none cursor-not-allowed truncate"
+              title={selectedSO.customer}
             />
             <span className="text-xs text-gray-400">Tự động lấy thông tin từ SO gốc</span>
           </div>
 
-          {/* Lý do hủy chung (BẮT BUỘC theo yêu cầu) */}
+          {/* Thông tin đơn hàng gốc: Loại đơn & Chất liệu / Tuổi vàng */}
+          <div className="md:col-span-3 bg-emerald-50/50 border border-emerald-200 rounded-md p-3 flex flex-wrap gap-4 text-xs text-emerald-950 font-medium">
+            <div>
+              <span className="text-gray-500">Loại đơn hàng: </span>
+              <span className="font-bold text-[#005a46]">{selectedSO.orderType}</span>
+            </div>
+            <div>
+              <span className="text-gray-500">Nguyên liệu: </span>
+              <span className="font-bold text-[#005a46]">{selectedSO.material}</span>
+            </div>
+            <div>
+              <span className="text-gray-500">Tuổi vàng: </span>
+              <span className="font-bold text-[#005a46]">{selectedSO.goldAge}</span>
+            </div>
+          </div>
+
+          {/* Lý do hủy chung (BẮT BUỘC) */}
           <div className="md:col-span-3">
             <label className="block text-sm font-medium text-gray-700">
               Lý do hủy chung <span className="text-red-500">*</span>
@@ -320,7 +352,7 @@ export default function CreateCancelRequest() {
               {items.map((item, index) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition">
                   <td className="px-4 py-3 text-sm text-gray-500 font-medium text-center">{index + 1}</td>
-                  
+
                   {/* Mã Item: Dropdown hiển thị các Item có trong SO */}
                   <td className="px-4 py-3">
                     <select
@@ -336,7 +368,7 @@ export default function CreateCancelRequest() {
                     </select>
                   </td>
 
-                  {/* SL đặt trong SO (Đề xuất tối ưu: Read-only để tiện so sánh) */}
+                  {/* SL đặt trong SO */}
                   <td className="px-4 py-3 text-center">
                     <span className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-sm font-semibold">
                       {item.orderedQty || selectedSO.items.find((it) => it.itemCode === item.itemCode)?.orderedQty || "-"} SP
@@ -361,7 +393,7 @@ export default function CreateCancelRequest() {
                       type="text"
                       value={item.reason}
                       onChange={(e) => handleItemChange(item.id, "reason", e.target.value)}
-                      placeholder="VD: Khách đổi ni tay, lỗi kỹ thuật..."
+                      placeholder="VD: Khách đổi ni tay, giảm ngân sách..."
                       className="w-full border border-gray-300 rounded-md py-1.5 px-2.5 text-sm focus:ring-[#005a46] focus:border-[#005a46]"
                     />
                   </td>

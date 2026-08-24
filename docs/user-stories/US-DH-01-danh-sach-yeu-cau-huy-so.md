@@ -52,7 +52,7 @@ flowchart TD
 | :---: | :--- | :--- | :---: | :--- |
 | 1 | **STT** | Số nguyên | Có | Số thứ tự tăng dần (1, 2, 3...). |
 | 2 | **Mã yêu cầu** | Chuỗi (Text) | Có | Mã định danh duy nhất (VD: `YCH-2026-001`), màu xanh `#005a46`, click để xem chi tiết. |
-| 3 | **Mã SO** | Chuỗi (Text) | Có | Mã đơn hàng gốc cần hủy (VD: `CO2806 001`). |
+| 3 | **Mã SO** | Chuỗi (Text) | Có | Mã đơn hàng gốc cần hủy (VD: `SO2608001`). |
 | 4 | **Tổng SL hủy** | Số nguyên | Có | Tổng số lượng sản phẩm hủy (Cộng dồn từ Subtable), hiển thị dạng Badge nổi bật. |
 | 5 | **Người yêu cầu** | Chuỗi (Text) | Có | Tên nhân viên tạo yêu cầu (VD: `Nguyễn Văn An`). |
 | 6 | **Ngày yêu cầu** | Ngày (Date) | Có | Định dạng `DD/MM/YYYY`. |
@@ -78,7 +78,7 @@ flowchart TD
 *   **And:** Con số đếm trên Tab khớp chính xác với số lượng bản ghi hiển thị.
 
 ### AC 1.3: Tìm kiếm tức thì (Live Search)
-*   **Given:** Người dùng nhập từ khóa vào ô tìm kiếm (VD: "CO2806").
+*   **Given:** Người dùng nhập từ khóa vào ô tìm kiếm (VD: "SO2608").
 *   **When:** Chuỗi nhập có độ dài ≥ 1 ký tự.
 *   **Then:** Hệ thống tự động lọc danh sách không phân biệt hoa thường theo các trường `Mã yêu cầu`, `Mã SO`, `Người yêu cầu` với thời gian phản hồi ≤ 300ms.
 

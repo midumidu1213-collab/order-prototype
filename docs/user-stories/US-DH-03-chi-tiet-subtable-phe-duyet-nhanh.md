@@ -47,10 +47,9 @@ flowchart TD
 | STT | Cột hiển thị | Kiểu dữ liệu | Mô tả & Quy tắc hiển thị |
 | :---: | :--- | :--- | :--- |
 | 1 | **STT** | Số nguyên | Thứ tự các Item trong đợt hủy (1, 2, 3...). |
-| 2 | **Mã Item** | Chuỗi (Text) | Mã sản phẩm vàng/trang sức (VD: `ITM-RING-61Y-01`). |
-| 3 | **Mã MO** | Chuỗi (Text) | Mã lệnh sản xuất tương ứng trong xưởng (VD: `MO-2026-8891`). |
-| 4 | **SL hủy** | Số nguyên | Số lượng hủy của Item đó, bọc trong Badge đỏ nổi bật (`bg-red-50 text-red-600 font-bold`). |
-| 5 | **Lý do hủy chi tiết** | Chuỗi (Text) | Lý do cụ thể của từng món (VD: *"Khách đổi sang ni 48"*, *"Mặt dây chuyền lỗi đúc"*...). |
+| 2 | **Mã Item** | Chuỗi (Text) | Mã sản phẩm vàng/trang sức có trong SO (VD: `GY0RG000086A00A00CZGG3CZKK2008`). |
+| 3 | **SL hủy** | Số nguyên | Số lượng hủy của Item đó, bọc trong Badge đỏ nổi bật (`bg-red-50 text-red-600 font-bold`). |
+| 4 | **Lý do hủy chi tiết** | Chuỗi (Text) | Lý do cụ thể của từng món nếu có (Không bắt buộc). |
 
 ---
 

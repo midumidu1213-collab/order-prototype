@@ -73,8 +73,8 @@ flowchart TD
 
 ### AC 2.1: Lọc Mã Item theo SO đã chọn
 *   **Given:** Người dùng đang ở màn hình tạo mới `/cancel-requests/create`.
-*   **When:** Người dùng chọn `Mã SO cần hủy = "CO2806 001"`.
-*   **Then:** Dropdown `Mã Item` ở Subtable chỉ hiển thị các sản phẩm thuộc về đơn hàng `CO2806 001`.
+*   **When:** Người dùng chọn `Mã SO cần hủy = "SO2608001"`.
+*   **Then:** Dropdown `Mã Item` ở Subtable chỉ hiển thị các sản phẩm thuộc về đơn hàng `SO2608001`.
 *   **And:** Trường `SL đặt trong SO` tự động hiển thị số lượng đặt tương ứng của sản phẩm được chọn.
 
 ### AC 2.2: Validate bắt buộc "Lý do hủy chung"
