@@ -35,8 +35,26 @@ export default function CancelRequestList() {
       status: "Đã phê duyệt",
       note: "Khách đổi sang chất liệu 75W",
       subItems: [
-        { id: 101, itemCode: "GY0RG000086A00A00CZGG3CZKK2008 - Nhẫn Kim Cương 61Y", qty: 2, reason: "Khách đổi sang ni 48" },
-        { id: 102, itemCode: "GY0BC000012B00B00CZGG3CZKK1002 - Lắc Tay Ý 61Y", qty: 3, reason: "Khách hủy mẫu lắc tay" },
+        {
+          id: 101,
+          itemCode: "GY0RG000086A00A00CZGG3CZKK2008",
+          name: "Nhẫn Kim Cương Vàng 61Y (Ni 48)",
+          image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&auto=format&fit=crop&q=60",
+          weight: "0.85 chỉ (3.19g)",
+          price: 5200000,
+          qty: 2,
+          reason: "Khách đổi sang ni 48",
+        },
+        {
+          id: 102,
+          itemCode: "GY0BC000012B00B00CZGG3CZKK1002",
+          name: "Lắc Tay Nữ Ý 61Y (Size 16cm)",
+          image: "https://images.unsplash.com/photo-1611591475166-4190b2170366?w=100&auto=format&fit=crop&q=60",
+          weight: "1.42 chỉ (5.33g)",
+          price: 8600000,
+          qty: 3,
+          reason: "Khách hủy mẫu lắc tay",
+        },
       ],
     },
     {
@@ -52,7 +70,16 @@ export default function CancelRequestList() {
       status: "Chờ phê duyệt",
       note: "Sai kích thước ni tay",
       subItems: [
-        { id: 201, itemCode: "GY0RG000055A00A00CZGG3CZKK1001 - Nhẫn Nam Đá Topaz 41.6Y", qty: 2, reason: "Sai kích thước ni tay 52" },
+        {
+          id: 201,
+          itemCode: "GY0RG000055A00A00CZGG3CZKK1001",
+          name: "Nhẫn Nam Đính Đá Topaz 41.6Y",
+          image: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=100&auto=format&fit=crop&q=60",
+          weight: "1.15 chỉ (4.31g)",
+          price: 4800000,
+          qty: 2,
+          reason: "Sai kích thước ni tay 52",
+        },
       ],
     },
     {
@@ -68,8 +95,26 @@ export default function CancelRequestList() {
       status: "Chờ phê duyệt",
       note: "Khách giảm ngân sách đợt 1",
       subItems: [
-        { id: 301, itemCode: "GW0RG000088A00A00CZGG3CZKK4000 - Bộ Nhẫn Cưới 75W", qty: 4, reason: "Khách giảm ngân sách" },
-        { id: 302, itemCode: "GW0BC000077B00B00CZGG3CZKK5000 - Vòng Tay Bản Lớn 75W", qty: 6, reason: "Hủy theo yêu cầu đại lý" },
+        {
+          id: 301,
+          itemCode: "GW0RG000088A00A00CZGG3CZKK4000",
+          name: "Bộ Nhẫn Cưới Vàng Trắng 75W",
+          image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&auto=format&fit=crop&q=60",
+          weight: "1.80 chỉ (6.75g)",
+          price: 15200000,
+          qty: 4,
+          reason: "Khách giảm ngân sách",
+        },
+        {
+          id: 302,
+          itemCode: "GW0BC000077B00B00CZGG3CZKK5000",
+          name: "Vòng Tay Bản Lớn 75W",
+          image: "https://images.unsplash.com/photo-1611591475166-4190b2170366?w=100&auto=format&fit=crop&q=60",
+          weight: "3.50 chỉ (13.12g)",
+          price: 28500000,
+          qty: 6,
+          reason: "Hủy theo yêu cầu đại lý",
+        },
       ],
     },
     {
@@ -85,7 +130,16 @@ export default function CancelRequestList() {
       status: "Đã phê duyệt",
       note: "Hủy theo yêu cầu Sale",
       subItems: [
-        { id: 401, itemCode: "SV0PD000021A00A00CZGG3CZKK1100 - Mặt Dây Bạc Đá CZ", qty: 1, reason: "Mặt dây chuyền lỗi đúc" },
+        {
+          id: 401,
+          itemCode: "SV0PD000021A00A00CZGG3CZKK1100",
+          name: "Mặt Dây Chuyền Bạc Đính Đá CZ",
+          image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=100&auto=format&fit=crop&q=60",
+          weight: "0.95 chỉ (3.56g)",
+          price: 1200000,
+          qty: 1,
+          reason: "Mặt dây chuyền lỗi đúc",
+        },
       ],
     },
     {
@@ -101,7 +155,16 @@ export default function CancelRequestList() {
       status: "Từ chối",
       note: "Hàng đã hoàn thiện xong, không thể hủy",
       subItems: [
-        { id: 501, itemCode: "GY0RG000091A00A00CZGG3CZKK9901 - Nhẫn Solitaire 61Y", qty: 3, reason: "Khách trễ hạn thanh toán" },
+        {
+          id: 501,
+          itemCode: "GY0RG000091A00A00CZGG3CZKK9901",
+          name: "Nhẫn Đính Hôn Solitaire 61Y",
+          image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&auto=format&fit=crop&q=60",
+          weight: "0.78 chỉ (2.93g)",
+          price: 6500000,
+          qty: 3,
+          reason: "Khách trễ hạn thanh toán",
+        },
       ],
     },
   ]);
@@ -390,25 +453,55 @@ export default function CancelRequestList() {
                                 <table className="min-w-full divide-y divide-gray-200 text-xs">
                                   <thead className="bg-gray-100">
                                     <tr>
-                                      <th className="px-3 py-2 text-left font-semibold text-gray-600 uppercase w-12">STT</th>
-                                      <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Mã Item (Trong SO)</th>
-                                      <th className="px-4 py-2 text-center font-semibold text-gray-600 uppercase w-28">SL hủy</th>
+                                      <th className="px-3 py-2 text-center font-semibold text-gray-600 uppercase w-10">STT</th>
+                                      <th className="px-3 py-2 text-center font-semibold text-gray-600 uppercase w-14">Hình ảnh</th>
+                                      <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Mã Item & Tên SP</th>
+                                      <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase w-28">Trọng lượng</th>
+                                      <th className="px-4 py-2 text-right font-semibold text-gray-600 uppercase w-28">Đơn giá</th>
+                                      <th className="px-3 py-2 text-center font-semibold text-gray-600 uppercase w-20">SL hủy</th>
+                                      <th className="px-4 py-2 text-right font-semibold text-gray-600 uppercase w-28">Thành tiền</th>
                                       <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase">Lý do hủy chi tiết</th>
                                     </tr>
                                   </thead>
                                   <tbody className="bg-white divide-y divide-gray-100">
-                                    {req.subItems?.map((sub, sIdx) => (
-                                      <tr key={sub.id} className="hover:bg-gray-50">
-                                        <td className="px-3 py-2.5 text-gray-500 text-center font-medium">{sIdx + 1}</td>
-                                        <td className="px-4 py-2.5 font-semibold text-gray-900">{sub.itemCode}</td>
-                                        <td className="px-4 py-2.5 text-center font-bold text-red-600">
-                                          <span className="px-2 py-0.5 bg-red-50 rounded border border-red-200">
-                                            {sub.qty} SP
-                                          </span>
-                                        </td>
-                                        <td className="px-4 py-2.5 text-gray-700">{sub.reason || "-"}</td>
-                                      </tr>
-                                    ))}
+                                    {req.subItems?.map((sub, sIdx) => {
+                                      const amount = (Number(sub.qty) || 0) * (Number(sub.price) || 0);
+                                      return (
+                                        <tr key={sub.id} className="hover:bg-gray-50">
+                                          <td className="px-3 py-2.5 text-gray-500 text-center font-medium">{sIdx + 1}</td>
+                                          <td className="px-3 py-2.5 text-center">
+                                            {sub.image ? (
+                                              <img
+                                                src={sub.image}
+                                                alt={sub.itemCode}
+                                                className="h-8 w-8 object-cover rounded border border-gray-200 mx-auto"
+                                              />
+                                            ) : (
+                                              <span className="text-gray-300">-</span>
+                                            )}
+                                          </td>
+                                          <td className="px-4 py-2.5">
+                                            <div className="font-semibold text-gray-900">{sub.itemCode}</div>
+                                            <div className="text-gray-500 text-[11px]">{sub.name || "-"}</div>
+                                          </td>
+                                          <td className="px-4 py-2.5 text-gray-700 font-medium whitespace-nowrap">
+                                            {sub.weight || "-"}
+                                          </td>
+                                          <td className="px-4 py-2.5 text-right font-medium text-gray-800 whitespace-nowrap">
+                                            {sub.price ? `${sub.price.toLocaleString("vi-VN")} đ` : "-"}
+                                          </td>
+                                          <td className="px-3 py-2.5 text-center font-bold text-red-600">
+                                            <span className="px-2 py-0.5 bg-red-50 rounded border border-red-200">
+                                              {sub.qty} SP
+                                            </span>
+                                          </td>
+                                          <td className="px-4 py-2.5 text-right font-bold text-red-600 whitespace-nowrap">
+                                            {amount ? `${amount.toLocaleString("vi-VN")} đ` : "-"}
+                                          </td>
+                                          <td className="px-4 py-2.5 text-gray-700">{sub.reason || "-"}</td>
+                                        </tr>
+                                      );
+                                    })}
                                   </tbody>
                                 </table>
                               </div>
