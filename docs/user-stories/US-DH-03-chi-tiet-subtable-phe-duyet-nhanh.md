@@ -49,11 +49,12 @@ flowchart TD
 | 1 | **STT** | Số nguyên | Thứ tự các Item trong đợt hủy (1, 2, 3...). |
 | 2 | **Hình ảnh** | Image Thumbnail | Ảnh mẫu thu nhỏ của sản phẩm. |
 | 3 | **Mã Item & Tên SP** | Chuỗi (Text) | Mã và tên sản phẩm vàng/trang sức có trong SO. |
-| 4 | **Trọng lượng** | Text / Badge | Trọng lượng sản phẩm (VD: `0.85 chỉ (3.19g)`). |
+| 4 | **Trọng lượng** | Text / Badge | Trọng lượng sản phẩm dạng số thuần (VD: `0,2248`). |
 | 5 | **Đơn giá** | Currency | Đơn giá sản phẩm niêm yết trong đơn hàng gốc. |
 | 6 | **SL hủy** | Số nguyên | Số lượng hủy của Item đó, bọc trong Badge đỏ nổi bật (`bg-red-50 text-red-600 font-bold`). |
 | 7 | **Thành tiền** | Currency | Tự động tính: `SL hủy × Đơn giá`. |
-| 8 | **Lý do hủy chi tiết** | Chuỗi (Text) | Lý do cụ thể của từng món nếu có (Không bắt buộc). |
+| 8 | **Hướng xử lý** | Text / Badge | `Chuyển SO` (Mặc định) hoặc `Hủy luôn`. |
+| 9 | **Lý do hủy chi tiết** | Chuỗi (Text) | Lý do cụ thể của từng món nếu có (Không bắt buộc). |
 
 ---
 

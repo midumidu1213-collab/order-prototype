@@ -11,10 +11,11 @@
 
 *   **Là một (As a):** Admin / Sale Admin
 *   **Tôi muốn (I want):** Tạo yêu cầu hủy đơn hàng (SO) sau khi đơn đã được xác nhận với 3 hình thức linh hoạt:
-    1.  **Hủy toàn bộ đơn hàng (Full SO):** Có tính năng "Chọn tất cả Item trong SO" và tự động gán `SL hủy = SL đặt`.
+    1.  **Hủy toàn bộ đơn hàng (Full SO):** Có nút *"Chọn toàn bộ Item SO"* trên thanh công cụ Subtable để nạp tất cả Item kèm `SL hủy = SL đặt`.
     2.  **Hủy toàn bộ 1 dòng Item (Full Item):** `SL hủy` mặc định bằng `SL đặt` ban đầu (cho phép chỉnh sửa).
     3.  **Hủy giảm số lượng Item (Partial Item Qty):** Cho phép nhập số lượng giảm trừ (`1 <= SL hủy <= SL đặt`).
-    *   Khai báo chi tiết **Hướng xử lý hàng hủy** (`Hủy luôn` hoặc `Chuyển SO khác`) để định hướng cho KHSX.
+    *   Khai báo chi tiết **Hướng xử lý hàng hủy** (Mặc định là **`Chuyển SO`**, tùy chọn **`Hủy luôn`**) để định hướng cho KHSX.
+    *   Hiển thị **Trọng lượng dạng số thập phân thuần** (VD: `0,2248` - không quy đổi sang chỉ).
     *   Tích hợp gửi duyệt qua **Base Request** và đồng bộ thông tin sang **KHSX**.
 *   **Để (So that):**
     *   Gửi đề xuất lên cấp Quản lý phê duyệt với đầy đủ hình ảnh, trọng lượng, đơn giá, giá trị giảm trừ và hướng xử lý sản xuất minh bạch.
@@ -34,13 +35,13 @@ flowchart TD
     
     InputGeneralReason --> ChooseMode{Chọn hình thức hủy}
     
-    ChooseMode -->|Hủy toàn bộ đơn hàng| CheckAll[Bật Switch 'Hủy toàn bộ đơn' hoặc bấm 'Chọn tất cả Item']
-    CheckAll --> LoadAllItems[Hệ thống nạp toàn bộ Item của SO vào Subtable với SL hủy = SL đặt]
+    ChooseMode -->|Hủy toàn bộ đơn hàng| CheckAll[Bấm nút 'Chọn toàn bộ Item SO' trên Subtable]
+    CheckAll --> LoadAllItems[Hệ thống nạp toàn bộ Item của SO vào Subtable với SL hủy = SL đặt & Hướng xử lý = 'Chuyển SO']
     
     ChooseMode -->|Hủy theo từng Item| PickItem[Chọn từng Mã Item cần hủy vào Subtable]
-    PickItem --> DefaultQty[Hệ thống tự động điền SL hủy = SL đặt & cho phép sửa]
+    PickItem --> DefaultQty[Hệ thống tự động điền SL hủy = SL đặt & Hướng xử lý mặc định = 'Chuyển SO']
     
-    LoadAllItems --> ConfigSubtable[4. Khai báo Hướng xử lý KHSX & Lý do chi tiết cho từng món]
+    LoadAllItems --> ConfigSubtable[4. Khai báo Hướng xử lý & Lý do chi tiết cho từng món nếu có]
     DefaultQty --> ConfigSubtable
     
     ConfigSubtable --> AutoCalc[5. Tự động tính Thành tiền hủy & Tổng giá trị giảm trừ]
@@ -67,7 +68,7 @@ flowchart TD
     SetSOStatusCancelled --> RecalcDiscount[4. Recalculate % chiết khấu nhóm đơn active trong 24h: BR-02]
     KeepSOActive --> RecalcDiscount
     
-    RecalcDiscount --> SyncKHSX[5. Gửi thông tin YC đã duyệt sang KHSX: Xử lý Hủy MO hoặc Chuyển SO khác]
+    RecalcDiscount --> SyncKHSX[5. Gửi thông tin YC đã duyệt sang KHSX: Xử lý Hủy MO hoặc Chuyển SO]
     SyncKHSX --> KHSXProcess([KHSX thực thi nghiệp vụ trong xưởng])
     KHSXProcess --> KHSXDone[6. KHSX hoàn tất xử lý -> Đồng bộ trạng thái YCH -> 'Đã xử lý']
     
@@ -81,24 +82,24 @@ flowchart TD
 
 ## 3. TIÊU CHÍ CHẤP NHẬN (ACCEPTANCE CRITERIA - AC)
 
-### AC 2.1: Hủy toàn bộ đơn hàng (Tính năng Chọn tất cả)
+### AC 2.1: Hủy toàn bộ đơn hàng (Tính năng Chọn toàn bộ Item SO)
 *   **Given (Biết rằng):** Người dùng đang ở màn hình tạo Yêu cầu hủy và đã chọn mã SO (VD: `SO2608001` gồm 3 sản phẩm).
-*   **When (Khi):** Người dùng bật Switch *"Hủy toàn bộ đơn hàng"* hoặc click nút *"Chọn tất cả Item"*.
+*   **When (Khi):** Người dùng click nút *"Chọn toàn bộ Item SO"* ở góc trên bên phải Subtable.
 *   **Then (Thì):** Hệ thống tự động nạp tất cả 3 sản phẩm vào bảng Subtable.
-*   **And (Và):** Cột `SL yêu cầu hủy` của mỗi dòng tự động gán bằng `SL đặt trong SO` (100% số lượng).
+*   **And (Và):** Cột `SL yêu cầu hủy` của mỗi dòng tự động gán bằng `SL đặt trong SO` (100% số lượng) và `Hướng xử lý` mặc định là `Chuyển SO`.
 
 ### AC 2.2: Hủy từng Item & Mặc định số lượng hủy
-*   **Given (Biết rằng):** Người dùng thêm một dòng sản phẩm mới vào Subtable và chọn mã Item `GY0RG000086...` (có `SL đặt = 5 SP`).
+*   **Given (Biết rằng):** Người dùng thêm một dòng sản phẩm mới vào Subtable và chọn mã Item `GY0RG000086...` (có `SL đặt = 5 SP`, Trọng lượng = `0,2248`).
 *   **When (Khi):** Item được chọn vào bảng.
 *   **Then (Thì):** Cột `SL yêu cầu hủy` mặc định hiển thị là `5 SP`.
+*   **And (Và):** Cột `Trọng lượng` hiển thị dạng số thập phân thuần: `0,2248` (không kèm chữ chỉ hay gram).
 *   **And (Và):** Người dùng có thể chỉnh sửa số lượng hủy giảm xuống (VD: sửa thành `2 SP`) thỏa mãn điều kiện `1 <= SL hủy <= SL đặt`.
 
-### AC 2.3: Khai báo Hướng xử lý (KHSX)
+### AC 2.3: Khai báo Hướng xử lý (Mặc định: Chuyển SO)
 *   **Given (Biết rằng):** Dòng sản phẩm đang hiển thị trong Subtable.
-*   **When (Khi):** Người dùng chọn cột `Hướng xử lý (KHSX)`.
-*   **Then (Thì):** Dropdown cung cấp 2 tùy chọn rõ ràng:
-    1.  `❌ Hủy luôn (Hủy MO)`: Định hướng KHSX hủy lệnh sản xuất, rã liệu, không giữ lại.
-    2.  `🔄 Chuyển SO khác (Giữ kho)`: Định hướng KHSX tiếp tục hoàn thiện để gán cho khách hàng khác hoặc nhập kho thương mại.
+*   **When (Khi):** Item được nạp vào bảng.
+*   **Then (Thì):** Cột `Hướng xử lý` mặc định chọn là **`🔄 Chuyển SO`**.
+*   **And (Và):** Người dùng có thể đổi sang **`❌ Hủy luôn`** nếu mẫu đó không thể tái sử dụng hoặc bán cho đơn khác.
 
 ### AC 2.4: Xử lý sau khi Base Request Phê duyệt
 *   **Given (Biết rằng):** Yêu cầu hủy đang ở trạng thái `Chờ duyệt` và được Quản lý duyệt trên Base Request.
@@ -138,7 +139,6 @@ flowchart TD
 | **Mã yêu cầu** | Text Input | Read-only | Tự động sinh theo quy tắc `YCH-YYYY-XXX`. |
 | **Mã SO cần hủy** | Select Dropdown | Có | Chọn các SO hợp lệ (VD: `SO2608001`, `SO2608002`...). |
 | **Mã - Tên Khách hàng** | Text Input | Read-only | Tự động lấy tên khách hàng từ SO gốc. |
-| **Tùy chọn Hủy cả đơn** | Checkbox / Switch | Không | Bật để tự động chọn tất cả Item trong SO với `SL hủy = SL đặt`. |
 | **Loại đơn / Tuổi vàng** | Text / Badge | Read-only | Tự động hiển thị tóm tắt thông tin đơn hàng gốc. |
 | **Lý do hủy chung** | Text Input | **Bắt buộc (*)** | Nhập lý do tổng quát của đợt hủy (Max 500 ký tự). |
 
@@ -147,12 +147,12 @@ flowchart TD
 | :--- | :--- | :---: | :--- |
 | **Hình ảnh** | Image Thumbnail | Read-only | Ảnh mẫu thu nhỏ của sản phẩm vàng/trang sức. |
 | **Mã Item (Trong SO)** | Select Dropdown | **Bắt buộc (*)** | Chỉ hiển thị các Item thuộc về SO đã chọn. |
-| **Trọng lượng** | Text / Badge | Read-only | Trọng lượng sản phẩm (VD: `0.85 chỉ (3.19g)`). |
+| **Trọng lượng** | Text / Badge | Read-only | Trọng lượng dạng số thuần (VD: `0,2248` - không quy đổi chỉ). |
 | **Đơn giá** | Currency | Read-only | Đơn giá niêm yết trong SO gốc (Định dạng VND). |
 | **SL đặt trong SO** | Number / Badge | Read-only | Số lượng đặt ban đầu của Item. |
 | **SL yêu cầu hủy** | Number Input | **Bắt buộc (*)** | **Mặc định = SL đặt** (Cho phép sửa: `1 <= SL hủy <= SL đặt`). |
 | **Thành tiền hủy** | Currency | Read-only | Tự động tính: `SL yêu cầu hủy × Đơn giá`. |
-| **Hướng xử lý (KHSX)** | Select Dropdown | **Bắt buộc (*)** | Lựa chọn: <br>• `Hủy luôn` (Mặc định)<br>• `Chuyển SO khác` |
+| **Hướng xử lý** | Select Dropdown | **Bắt buộc (*)** | **Mặc định là `Chuyển SO`**. Tùy chọn gồm:<br>• `Chuyển SO`<br>• `Hủy luôn` |
 | **Lý do hủy chi tiết** | Text Input | Không | Ghi chú lý do cụ thể cho từng món nếu có. |
 
 ---
@@ -167,9 +167,8 @@ flowchart TD
 ---
 
 ## 7. TIÊU CHÍ HOÀN THÀNH (Definition of Done - DoD)
-- [x] Đã thiết kế trọn vẹn 3 luồng hủy (Hủy cả đơn / Hủy full item / Hủy giảm SL item).
-- [x] Đã cấu hình SL hủy mặc định bằng SL đặt và cho phép chỉnh sửa.
-- [x] Bổ sung cột "Hướng xử lý (KHSX)" với 2 lựa chọn `Hủy luôn` & `Chuyển SO khác`.
-- [x] Đặc tả và hiện thực 5 trạng thái vòng đời yêu cầu (Chờ duyệt, Đã duyệt, Từ chối, Đã hủy, Đã xử lý).
-- [x] Bổ sung cột "SL hủy" trên giao diện danh sách đơn hàng gốc.
+- [x] Đã bỏ banner khoanh đỏ ở Card 1, giữ giao diện thanh thoát và gọn gàng.
+- [x] Nút "Chọn toàn bộ Item SO" bố trí trực tiếp trên thanh công cụ Subtable.
+- [x] Cột Trọng lượng hiển thị dạng số thập phân thuần (ví dụ `0,2248`).
+- [x] Hướng xử lý mặc định là `Chuyển SO`.
 - [x] Đã verify trên Prototype localhost và đồng bộ lên GitHub.

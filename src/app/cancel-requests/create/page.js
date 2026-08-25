@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Plus, Trash2, Send, AlertCircle, CheckCircle2, Image as ImageIcon, CheckSquare, Layers } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Send, AlertCircle, CheckCircle2, Image as ImageIcon, Layers } from "lucide-react";
 
-// Database chuẩn hóa mẫu theo quy chuẩn mới ngành kim hoàn
+// Database chuẩn hóa mẫu theo quy chuẩn ngành kim hoàn
 const SO_DATABASE = {
   "SO2608001": {
     customer: "2000001 - Công ty TNHH Vàng Bạc Kim Yến",
@@ -17,7 +17,7 @@ const SO_DATABASE = {
         itemCode: "GY0RG000086A00A00CZGG3CZKK2008",
         itemName: "Nhẫn Kim Cương Vàng 61Y (Ni 48)",
         image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&auto=format&fit=crop&q=60",
-        weight: "0.85 chỉ (3.19g)",
+        weight: "0,2248",
         price: 5200000,
         orderedQty: 5,
       },
@@ -25,7 +25,7 @@ const SO_DATABASE = {
         itemCode: "GY0BC000012B00B00CZGG3CZKK1002",
         itemName: "Lắc Tay Nữ Ý 61Y (Size 16cm)",
         image: "https://images.unsplash.com/photo-1611591475166-4190b2170366?w=100&auto=format&fit=crop&q=60",
-        weight: "1.42 chỉ (5.33g)",
+        weight: "0,3512",
         price: 8600000,
         orderedQty: 3,
       },
@@ -33,7 +33,7 @@ const SO_DATABASE = {
         itemCode: "GY0NE000099A00A00CZGG3CZKK3001",
         itemName: "Dây Chuyền Trơn 61Y (Dài 45cm)",
         image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=100&auto=format&fit=crop&q=60",
-        weight: "2.10 chỉ (7.88g)",
+        weight: "0,5280",
         price: 12500000,
         orderedQty: 2,
       },
@@ -49,7 +49,7 @@ const SO_DATABASE = {
         itemCode: "GY0RG000055A00A00CZGG3CZKK1001",
         itemName: "Nhẫn Nam Đính Đá Topaz 41.6Y",
         image: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=100&auto=format&fit=crop&q=60",
-        weight: "1.15 chỉ (4.31g)",
+        weight: "0,2850",
         price: 4800000,
         orderedQty: 3,
       },
@@ -57,7 +57,7 @@ const SO_DATABASE = {
         itemCode: "GY0EA000033B00B00CZGG3CZKK2005",
         itemName: "Bông Tai Nụ Hoa 41.6Y",
         image: "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=100&auto=format&fit=crop&q=60",
-        weight: "0.60 chỉ (2.25g)",
+        weight: "0,1520",
         price: 2900000,
         orderedQty: 2,
       },
@@ -73,7 +73,7 @@ const SO_DATABASE = {
         itemCode: "GW0RG000088A00A00CZGG3CZKK4000",
         itemName: "Bộ Nhẫn Cưới Vàng Trắng 75W",
         image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&auto=format&fit=crop&q=60",
-        weight: "1.80 chỉ (6.75g)",
+        weight: "0,4500",
         price: 15200000,
         orderedQty: 10,
       },
@@ -81,7 +81,7 @@ const SO_DATABASE = {
         itemCode: "GW0BC000077B00B00CZGG3CZKK5000",
         itemName: "Vòng Tay Bản Lớn 75W",
         image: "https://images.unsplash.com/photo-1611591475166-4190b2170366?w=100&auto=format&fit=crop&q=60",
-        weight: "3.50 chỉ (13.12g)",
+        weight: "0,8750",
         price: 28500000,
         orderedQty: 10,
       },
@@ -97,7 +97,7 @@ const SO_DATABASE = {
         itemCode: "SV0PD000021A00A00CZGG3CZKK1100",
         itemName: "Mặt Dây Chuyền Bạc Đính Đá CZ",
         image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=100&auto=format&fit=crop&q=60",
-        weight: "0.95 chỉ (3.56g)",
+        weight: "0,2375",
         price: 1200000,
         orderedQty: 2,
       },
@@ -113,7 +113,7 @@ const SO_DATABASE = {
         itemCode: "GY0RG000091A00A00CZGG3CZKK9901",
         itemName: "Nhẫn Đính Hôn Solitaire 61Y",
         image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&auto=format&fit=crop&q=60",
-        weight: "0.78 chỉ (2.93g)",
+        weight: "0,1950",
         price: 6500000,
         orderedQty: 8,
       },
@@ -121,7 +121,7 @@ const SO_DATABASE = {
         itemCode: "GY0BR000044A00A00CZGG3CZKK8802",
         itemName: "Lắc Tay Tennis Kim Cương 61Y",
         image: "https://images.unsplash.com/photo-1611591475166-4190b2170366?w=100&auto=format&fit=crop&q=60",
-        weight: "2.45 chỉ (9.18g)",
+        weight: "0,6125",
         price: 18500000,
         orderedQty: 7,
       },
@@ -136,7 +136,6 @@ export default function CreateCancelRequest() {
   const [formData, setFormData] = useState({
     requestCode: "YCH-2026-006",
     soCode: "SO2608001",
-    isCancelFullOrder: false, // Tính năng Hủy toàn bộ đơn hàng
     generalReason: "",
   });
 
@@ -148,29 +147,40 @@ export default function CreateCancelRequest() {
     items: [],
   };
 
-  // Subtable State - Mặc định SL hủy = SL đặt
+  // Subtable State - Mặc định SL hủy = SL đặt, Hướng xử lý mặc định = 'Chuyển SO'
   const [items, setItems] = useState([
     {
       id: 1,
       itemCode: "GY0RG000086A00A00CZGG3CZKK2008",
       image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&auto=format&fit=crop&q=60",
-      weight: "0.85 chỉ (3.19g)",
+      weight: "0,2248",
       price: 5200000,
       orderedQty: 5,
       qty: 5, // Mặc định = SL đặt
-      disposition: "Hủy luôn", // Hướng xử lý: 'Hủy luôn' | 'Chuyển SO khác'
-      reason: "Khách đổi ý sang mẫu khác",
+      disposition: "Chuyển SO", // Hướng xử lý mặc định: 'Chuyển SO'
+      reason: "",
     },
     {
       id: 2,
       itemCode: "GY0BC000012B00B00CZGG3CZKK1002",
       image: "https://images.unsplash.com/photo-1611591475166-4190b2170366?w=100&auto=format&fit=crop&q=60",
-      weight: "1.42 chỉ (5.33g)",
+      weight: "0,3512",
       price: 8600000,
       orderedQty: 3,
       qty: 3, // Mặc định = SL đặt
-      disposition: "Chuyển SO khác", // Hướng xử lý: 'Hủy luôn' | 'Chuyển SO khác'
-      reason: "Chuyển gán cho đơn đại lý",
+      disposition: "Chuyển SO", // Hướng xử lý mặc định: 'Chuyển SO'
+      reason: "",
+    },
+    {
+      id: 3,
+      itemCode: "GY0NE000099A00A00CZGG3CZKK3001",
+      image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=100&auto=format&fit=crop&q=60",
+      weight: "0,5280",
+      price: 12500000,
+      orderedQty: 2,
+      qty: 2, // Mặc định = SL đặt
+      disposition: "Chuyển SO", // Hướng xử lý mặc định: 'Chuyển SO'
+      reason: "",
     },
   ]);
 
@@ -186,16 +196,15 @@ export default function CreateCancelRequest() {
       price: it.price,
       orderedQty: it.orderedQty,
       qty: it.orderedQty, // Mặc định hủy hết
-      disposition: "Hủy luôn",
-      reason: "Hủy toàn bộ theo yêu cầu khách",
+      disposition: "Chuyển SO", // Mặc định Chuyển SO
+      reason: "Hủy toàn bộ theo yêu cầu",
     }));
     setItems(allSOItems);
-    setFormData((prev) => ({ ...prev, isCancelFullOrder: true }));
   };
 
   // Khi đổi SO -> load item của SO đó
   const handleSOChange = (newSOCode) => {
-    setFormData((prev) => ({ ...prev, soCode: newSOCode, isCancelFullOrder: false }));
+    setFormData((prev) => ({ ...prev, soCode: newSOCode }));
     const soData = SO_DATABASE[newSOCode];
     if (soData && soData.items.length > 0) {
       const first = soData.items[0];
@@ -208,20 +217,12 @@ export default function CreateCancelRequest() {
           price: first.price,
           orderedQty: first.orderedQty,
           qty: first.orderedQty, // Mặc định = SL đặt
-          disposition: "Hủy luôn",
+          disposition: "Chuyển SO", // Mặc định Chuyển SO
           reason: "",
         },
       ]);
     } else {
       setItems([]);
-    }
-  };
-
-  // Toggle Hủy cả đơn
-  const handleToggleCancelFullOrder = (checked) => {
-    setFormData((prev) => ({ ...prev, isCancelFullOrder: checked }));
-    if (checked) {
-      handleSelectAllSOItems();
     }
   };
 
@@ -237,7 +238,7 @@ export default function CreateCancelRequest() {
     const defaultItem = availableItems[0] || {
       itemCode: "",
       image: "",
-      weight: "-",
+      weight: "0,0000",
       price: 0,
       orderedQty: 1,
     };
@@ -250,7 +251,7 @@ export default function CreateCancelRequest() {
       price: defaultItem.price,
       orderedQty: defaultItem.orderedQty,
       qty: defaultItem.orderedQty, // Mặc định = SL đặt
-      disposition: "Hủy luôn",
+      disposition: "Chuyển SO", // Mặc định Chuyển SO
       reason: "",
     };
     setItems([...items, newItem]);
@@ -301,11 +302,9 @@ export default function CreateCancelRequest() {
       return;
     }
 
-    const cancelTypeStr = formData.isCancelFullOrder ? "Hủy toàn bộ đơn hàng" : "Hủy chi tiết Item";
-
     setNotification({
       type: "success",
-      message: `Đã tạo thành công yêu cầu [${cancelTypeStr}] "${formData.requestCode}" cho đơn "${formData.soCode}"! Đang gửi duyệt Base Request (Mã RQ: 18797)...`,
+      message: `Đã tạo thành công yêu cầu hủy "${formData.requestCode}" cho đơn "${formData.soCode}"! Đang gửi duyệt Base Request (Mã RQ: 18797)...`,
     });
     setTimeout(() => {
       router.push("/cancel-requests");
@@ -349,7 +348,7 @@ export default function CreateCancelRequest() {
         </div>
       )}
 
-      {/* Card 1: Thông tin chung & Tùy chọn Hủy cả đơn */}
+      {/* Card 1: Thông tin chung */}
       <div className="bg-white shadow rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -407,36 +406,6 @@ export default function CreateCancelRequest() {
             <span className="text-xs text-gray-400">Tự động lấy thông tin từ SO gốc</span>
           </div>
 
-          {/* Banner Tùy chọn Hủy cả đơn hàng */}
-          <div className="md:col-span-3 bg-amber-50/80 border border-amber-300 rounded-lg p-4 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                id="cancelFullOrderCheck"
-                checked={formData.isCancelFullOrder}
-                onChange={(e) => handleToggleCancelFullOrder(e.target.checked)}
-                className="h-5 w-5 text-[#005a46] rounded border-gray-300 focus:ring-[#005a46] cursor-pointer"
-              />
-              <label htmlFor="cancelFullOrderCheck" className="cursor-pointer">
-                <span className="text-sm font-bold text-amber-900 block">
-                  🔴 Hủy toàn bộ đơn hàng (Hủy tất cả {selectedSO.items?.length || 0} sản phẩm)
-                </span>
-                <span className="text-xs text-amber-700 block">
-                  Khi bật tùy chọn này, hệ thống sẽ tự động đưa toàn bộ các mã Item trong đơn vào danh sách hủy với SL hủy = SL đặt.
-                </span>
-              </label>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleSelectAllSOItems}
-              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-semibold shadow-sm transition flex items-center"
-            >
-              <CheckSquare className="h-3.5 w-3.5 mr-1" />
-              Chọn tất cả Item
-            </button>
-          </div>
-
           {/* Thông tin đơn hàng gốc: Loại đơn & Chất liệu / Tuổi vàng */}
           <div className="md:col-span-3 bg-emerald-50/50 border border-emerald-200 rounded-md p-3 flex flex-wrap gap-6 text-xs text-emerald-950 font-medium">
             <div>
@@ -471,7 +440,7 @@ export default function CreateCancelRequest() {
         </div>
       </div>
 
-      {/* Card 2: Subtable - Chi tiết sản phẩm hủy (Đầy đủ Hướng xử lý, Hình ảnh, Trọng lượng, Đơn giá) */}
+      {/* Card 2: Subtable - Chi tiết sản phẩm hủy */}
       <div className="bg-white shadow rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -479,7 +448,7 @@ export default function CreateCancelRequest() {
             <div>
               <h2 className="text-base font-semibold text-gray-900">2. Chi tiết danh sách sản phẩm hủy (Subtable)</h2>
               <p className="text-xs text-gray-500">
-                Mặc định số lượng hủy bằng SL đặt (cho phép chỉnh sửa) kèm Hướng xử lý định hướng cho KHSX
+                Mặc định số lượng hủy bằng SL đặt (cho phép chỉnh sửa) kèm Hướng xử lý (mặc định Chuyển SO)
               </p>
             </div>
           </div>
@@ -488,9 +457,9 @@ export default function CreateCancelRequest() {
             <button
               type="button"
               onClick={handleSelectAllSOItems}
-              className="flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-md border border-gray-300 shadow-sm transition"
+              className="flex items-center px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold rounded-md border border-amber-300 shadow-sm transition"
             >
-              <Layers className="h-3.5 w-3.5 mr-1 text-[#005a46]" />
+              <Layers className="h-3.5 w-3.5 mr-1 text-amber-700" />
               Chọn toàn bộ Item SO
             </button>
             <button
@@ -513,7 +482,7 @@ export default function CreateCancelRequest() {
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase min-w-[200px]">
                   Mã Item (Trong đơn hàng) <span className="text-red-500">*</span>
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-28">
+                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase w-28">
                   Trọng lượng
                 </th>
                 <th className="px-3 py-3 text-right text-xs font-semibold text-gray-600 uppercase w-28">
@@ -528,8 +497,8 @@ export default function CreateCancelRequest() {
                 <th className="px-3 py-3 text-right text-xs font-semibold text-gray-600 uppercase w-32">
                   Thành tiền hủy
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-40">
-                  Hướng xử lý (KHSX) <span className="text-red-500">*</span>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-36">
+                  Hướng xử lý <span className="text-red-500">*</span>
                 </th>
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase min-w-[150px]">
                   Lý do hủy chi tiết
@@ -574,10 +543,10 @@ export default function CreateCancelRequest() {
                       </select>
                     </td>
 
-                    {/* 3. Trọng lượng */}
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded">
-                        {item.weight || "-"}
+                    {/* 3. Trọng lượng (Hiển thị dạng số thập phân thuần, không quy đổi chỉ) */}
+                    <td className="px-3 py-3 text-center whitespace-nowrap">
+                      <span className="text-xs font-semibold text-gray-800 bg-gray-100 px-2 py-1 rounded font-mono">
+                        {item.weight || "0,0000"}
                       </span>
                     </td>
 
@@ -610,19 +579,19 @@ export default function CreateCancelRequest() {
                       {itemAmount ? `${itemAmount.toLocaleString("vi-VN")} đ` : "0 đ"}
                     </td>
 
-                    {/* 8. Hướng xử lý (KHSX): Hủy luôn | Chuyển SO khác */}
+                    {/* 8. Hướng xử lý: Mặc định là 'Chuyển SO' */}
                     <td className="px-3 py-3">
                       <select
-                        value={item.disposition || "Hủy luôn"}
+                        value={item.disposition || "Chuyển SO"}
                         onChange={(e) => handleItemChange(item.id, "disposition", e.target.value)}
                         className={`w-full border rounded-md py-1.5 px-2 text-xs font-bold focus:ring-[#005a46] focus:border-[#005a46] ${
-                          item.disposition === "Chuyển SO khác"
-                            ? "bg-blue-50 text-blue-800 border-blue-300"
-                            : "bg-red-50 text-red-800 border-red-300"
+                          item.disposition === "Hủy luôn"
+                            ? "bg-red-50 text-red-800 border-red-300"
+                            : "bg-blue-50 text-blue-800 border-blue-300"
                         }`}
                       >
-                        <option value="Hủy luôn">❌ Hủy luôn (Hủy MO)</option>
-                        <option value="Chuyển SO khác">🔄 Chuyển SO khác (Giữ kho)</option>
+                        <option value="Chuyển SO">🔄 Chuyển SO</option>
+                        <option value="Hủy luôn">❌ Hủy luôn</option>
                       </select>
                     </td>
 
