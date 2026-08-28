@@ -1135,15 +1135,24 @@ export default function DeliveryOrdersPage() {
                                   </thead>
                                   <tbody className="divide-y divide-gray-100 bg-white">
                                     {d.bags.map((b, idx) => (
-                                      <tr key={idx}>
-                                        <td className="px-2 py-1.5 font-bold font-mono text-[#005a46]">{b.bagCode}</td>
-                                        <td className="px-2 py-1.5">{b.itemCode} ({b.category})</td>
-                                        <td className="px-2 py-1.5 text-right font-bold text-gray-900">{b.exportQty}</td>
-                                        <td className="px-2 py-1.5 text-right font-mono text-amber-900 bg-amber-50/10">{b.exportGoldWeight ? b.exportGoldWeight.toFixed(4) : (b.exportQty * b.goldWeightPerPsc).toFixed(4)}</td>
-                                        <td className="px-2 py-1.5 text-right font-mono text-gray-600">{b.exportStoneWeight ? b.exportStoneWeight.toFixed(4) : (b.exportQty * (b.stoneWeightPerPsc || 0)).toFixed(4)}</td>
-                                        <td className="px-2 py-1.5 text-right font-mono font-bold text-purple-900 bg-purple-50/10">{b.exportTotalWeight ? b.exportTotalWeight.toFixed(4) : (b.exportQty * (b.goldWeightPerPsc + (b.stoneWeightPerPsc || 0))).toFixed(4)}</td>
-                                        <td className="px-2 py-1.5 text-right text-gray-600">{b.laborPrice?.toLocaleString("vi-VN")} đ</td>
-                                        <td className="px-2 py-1.5 text-right font-bold text-[#005a46]">
+                                      <tr key={idx} className="hover:bg-gray-50/80 transition">
+                                        <td className="px-2 py-2 font-bold font-mono text-[#005a46]">{b.bagCode}</td>
+                                        <td className="px-2 py-2 font-bold text-gray-900">
+                                          <span>{b.itemCode}</span>{" "}
+                                          <span className="text-gray-700 font-semibold">({b.category})</span>
+                                        </td>
+                                        <td className="px-2 py-2 text-right font-bold text-gray-900">{b.exportQty}</td>
+                                        <td className="px-2 py-2 text-right font-mono font-bold text-amber-950 bg-amber-50/30">
+                                          {b.exportGoldWeight ? b.exportGoldWeight.toFixed(4) : (b.exportQty * b.goldWeightPerPsc).toFixed(4)}
+                                        </td>
+                                        <td className="px-2 py-2 text-right font-mono font-bold text-gray-800">
+                                          {b.exportStoneWeight ? b.exportStoneWeight.toFixed(4) : (b.exportQty * (b.stoneWeightPerPsc || 0)).toFixed(4)}
+                                        </td>
+                                        <td className="px-2 py-2 text-right font-mono font-bold text-purple-950 bg-purple-50/30">
+                                          {b.exportTotalWeight ? b.exportTotalWeight.toFixed(4) : (b.exportQty * (b.goldWeightPerPsc + (b.stoneWeightPerPsc || 0))).toFixed(4)}
+                                        </td>
+                                        <td className="px-2 py-2 text-right font-medium text-gray-800">{b.laborPrice?.toLocaleString("vi-VN")} đ</td>
+                                        <td className="px-2 py-2 text-right font-bold text-[#005a46]">
                                           {b.laborAmountAfter?.toLocaleString("vi-VN")} đ
                                         </td>
                                       </tr>
