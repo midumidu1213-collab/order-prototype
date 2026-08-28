@@ -1,13 +1,27 @@
-import { Bell, ShoppingCart } from "lucide-react";
+"use client";
+
+import Link from "next/link";
+import { Bell, ShoppingCart, Sparkles } from "lucide-react";
 
 export default function Topbar() {
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-6">
-      <div className="flex items-center">
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600 text-white mr-2">
-          <ShoppingCart className="h-4 w-4" />
+      <div className="flex items-center space-x-3">
+        <div className="flex items-center">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-600 text-white mr-2">
+            <ShoppingCart className="h-4 w-4" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900">Bán Hàng</h1>
         </div>
-        <h1 className="text-xl font-bold text-gray-900">Bán Hàng</h1>
+
+        {/* Quick Link to E-Catalogue */}
+        <Link
+          href="/catalogue"
+          className="hidden sm:flex items-center space-x-1.5 bg-[#00594c] hover:bg-[#004737] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-xs transition-colors"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+          <span>Mở E-Catalogue Chào Hàng</span>
+        </Link>
       </div>
 
       <div className="flex items-center space-x-4">
