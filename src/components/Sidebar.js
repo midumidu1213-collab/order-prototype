@@ -15,18 +15,15 @@ import {
   BookOpen
 } from "lucide-react";
 
+import SubsystemSwitcher from "@/components/SubsystemSwitcher";
+
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
     <aside className="w-64 bg-[#005a46] text-white flex flex-col h-full overflow-y-auto">
-      {/* Brand Header */}
-      <div className="p-4 border-b border-[#004737] flex items-center justify-between">
-        <div>
-          <h2 className="font-serif text-lg font-bold tracking-widest text-emerald-100">SEVAGO</h2>
-          <p className="text-[10px] tracking-widest text-emerald-300">JEWELRY ERP</p>
-        </div>
-      </div>
+      {/* Cục chuyển đổi phân hệ thay thế cho SEVAGO jewelry ERP bên trái */}
+      <SubsystemSwitcher />
 
       {/* Special Quick Action for E-Catalogue */}
       <div className="px-3 pt-3">
@@ -157,6 +154,24 @@ export default function Sidebar() {
             Cấu hình
           </div>
           <ChevronDown className="h-4 w-4" />
+        </Link>
+
+        {/* Phân hệ Hướng dẫn sử dụng */}
+        <Link
+          href="/user-guide"
+          className={`flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+            pathname?.startsWith("/user-guide")
+              ? "bg-white/20 text-white font-semibold"
+              : "hover:bg-[#004737] text-emerald-200 hover:text-white"
+          }`}
+        >
+          <div className="flex items-center">
+            <BookOpen className="mr-3 h-5 w-5 text-amber-400" />
+            Hướng dẫn sử dụng
+          </div>
+          <span className="text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 px-1.5 py-0.5 rounded">
+            SOP
+          </span>
         </Link>
       </nav>
 

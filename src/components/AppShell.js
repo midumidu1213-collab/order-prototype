@@ -8,10 +8,19 @@ import Topbar from "@/components/Topbar";
 export default function AppShell({ children }) {
   const pathname = usePathname();
   const isCatalogue = pathname?.startsWith("/catalogue");
+  const isUserGuide = pathname?.startsWith("/user-guide");
 
   if (isCatalogue) {
     return (
       <div className="w-full min-h-screen">
+        {children}
+      </div>
+    );
+  }
+
+  if (isUserGuide) {
+    return (
+      <div className="h-full w-full overflow-hidden bg-[#f4f7f6]">
         {children}
       </div>
     );
