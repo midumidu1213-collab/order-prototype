@@ -1145,17 +1145,10 @@ export default function UserGuidePage() {
 
       {/* 3. Khung Nội Dung Chi Tiết HDSD (Tầng 4 - SOP) */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* THANH TÌM KIẾM TOÀN CỤC + Cụm User (Đã bỏ breadcrumb để giao diện thông thoáng) */}
+        {/* THANH TÌM KIẾM TOÀN CỤC + Cụm User (Tinh gọn, hiện đại theo First Principles) */}
         <div className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between shrink-0 shadow-2xs gap-4">
-          <div className="flex items-center space-x-2 shrink-0">
-            <BookOpen className="h-4 w-4 text-emerald-700" />
-            <span className="font-bold text-xs uppercase tracking-wider text-gray-700">
-              HDSD Tác Nghiệp Hệ Thống
-            </span>
-          </div>
-
           {/* KHUNG TÌM KIẾM TOÀN CỤC XUYÊN MODULE (GLOBAL SEARCH BAR) */}
-          <div ref={searchContainerRef} className="relative flex-1 max-w-md">
+          <div ref={searchContainerRef} className="relative flex-1 max-w-xl">
             <div className="relative flex items-center">
               <Search className="h-4 w-4 absolute left-3 text-gray-400 pointer-events-none" />
               <input
@@ -1166,8 +1159,8 @@ export default function UserGuidePage() {
                   setGlobalSearchQuery(e.target.value);
                   setIsSearchOpen(true);
                 }}
-                placeholder="Tìm kiếm trên tất cả module... (Ctrl + K)"
-                className="w-full pl-9 pr-8 py-1.5 text-xs bg-gray-100 hover:bg-gray-50 focus:bg-white border border-gray-200 focus:border-emerald-600 rounded-lg transition-all focus:outline-hidden text-gray-800 placeholder-gray-400 font-medium"
+                placeholder="Tìm kiếm hướng dẫn trên tất cả module... (Ctrl + K)"
+                className="w-full pl-9 pr-8 py-2 text-xs bg-gray-100 hover:bg-gray-50 focus:bg-white border border-gray-200 focus:border-emerald-600 rounded-xl transition-all focus:outline-hidden text-gray-800 placeholder-gray-400 font-medium shadow-2xs"
               />
               {globalSearchQuery && (
                 <button
@@ -1417,9 +1410,6 @@ export default function UserGuidePage() {
                     <h2 className="text-2xl font-bold text-gray-900 leading-tight">
                       {currentGuide.title}
                     </h2>
-                    <span className="text-xs text-gray-500 font-medium">
-                      Người tạo: <strong className="text-gray-800">{currentGuide.author || "Administrator"}</strong>
-                    </span>
                   </div>
                 </div>
 
@@ -1593,30 +1583,6 @@ export default function UserGuidePage() {
                 </div>
               </div>
 
-              {/* 5. Quy trình các bước thực hiện */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 mr-2" />
-                  Quy trình các bước thực hiện
-                </h4>
-                <div className="space-y-2.5">
-                  {currentGuide.steps &&
-                    currentGuide.steps.map((s) => (
-                      <div
-                        key={s.stepNum}
-                        className="flex items-start space-x-3 p-3.5 rounded-lg border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-colors"
-                      >
-                        <div className="w-6 h-6 rounded-full bg-emerald-800 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                          {s.stepNum}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-gray-900">{s.title}</p>
-                          <p className="text-xs text-gray-700 mt-1 leading-relaxed">{s.action}</p>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
 
               {/* 6. Kết quả mong đợi */}
               <div className="space-y-2">
@@ -1697,6 +1663,21 @@ export default function UserGuidePage() {
                   </div>
                 </div>
               )}
+
+              {/* FOOTER BÀI VIẾT: TÁC GIẢ & THỜI GIAN CẬP NHẬT */}
+              <div className="pt-5 mt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 gap-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-[10px]">
+                    {currentGuide.author ? currentGuide.author.charAt(0).toUpperCase() : "S"}
+                  </div>
+                  <span>
+                    Tác giả: <strong className="text-gray-800 font-semibold">{currentGuide.author || "Sevago Jewelry"}</strong>
+                  </span>
+                </div>
+                <div className="text-[11px] text-gray-400">
+                  Cập nhật lần cuối: <strong>{currentGuide.updatedAt || "03/09/2026"}</strong>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="max-w-md mx-auto my-16 text-center p-8 bg-white rounded-xl border border-gray-200 shadow-xs">
