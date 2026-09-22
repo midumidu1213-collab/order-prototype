@@ -15,12 +15,14 @@ import {
   Check,
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
-  Sparkles
+  Sparkles,
+  FileSpreadsheet
 } from "lucide-react";
 import { JEWELRY_CATEGORIES, JEWELRY_PRODUCTS } from "@/data/catalogueData";
 import { useCatalogueCart } from "@/context/CatalogueCartContext";
 import JewelryVisual from "@/components/catalogue/JewelryVisual";
 import FilterModal from "@/components/catalogue/FilterModal";
+import QuotationExportModal from "@/components/catalogue/QuotationExportModal";
 
 function CatalogueContent() {
   const router = useRouter();
@@ -35,7 +37,9 @@ function CatalogueContent() {
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
   const [sortBy, setSortBy] = useState("default"); // "default" | "price-asc" | "price-desc"
 
-  const { addToCart } = useCatalogueCart();
+  const [isQuotationModalOpen, setIsQuotationModalOpen] = useState(false);
+
+  const { addToCart, cartItems, orderInfo, totalQuantity, totalWeight } = useCatalogueCart();
 
   // Filter Categories
   const filteredCategories = useMemo(() => {
@@ -420,6 +424,42 @@ function CatalogueContent() {
           </div>
         )}
       </div>
+
+      {/* Floating Quick Action Bar when Cart has items */}
+      {totalQuantity > 0 && (
+        <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3 bg-white/95 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-emerald-200/80 animate-slideUp">
+          <div className="text-xs font-semibold text-gray-700 hidden sm:block">
+            Giỏ hàng: <span className="text-[#00594c] font-bold">{totalQuantity} món</span>
+          </div>
+
+          <button
+            onClick={() => setIsQuotationModalOpen(true)}
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs transition-colors cursor-pointer"
+            title="Xuất Báo Giá Chào Hàng trực tiếp"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            <span>Xuất Báo Giá</span>
+          </button>
+
+          <Link
+            href="/catalogue/cart"
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#00594c] hover:bg-[#004737] text-white shadow-xs transition-colors"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            <span>Xem Giỏ hàng</span>
+          </Link>
+        </div>
+      )}
+
+      {/* Quotation Export Modal */}
+      <QuotationExportModal
+        isOpen={isQuotationModalOpen}
+        onClose={() => setIsQuotationModalOpen(false)}
+        cartItems={cartItems}
+        orderInfo={orderInfo}
+        totalQuantity={totalQuantity}
+        totalWeight={totalWeight}
+      />
 
       {/* Filter Modal */}
       <FilterModal

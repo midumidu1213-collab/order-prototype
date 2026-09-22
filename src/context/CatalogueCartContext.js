@@ -9,6 +9,7 @@ const initialCartItems = [
   {
     id: "cart-set-bridal",
     isSet: true,
+    category: "Bộ trang sức",
     productCode: "ST000004A00",
     productName: "Bộ Trang Sức Cưới Kim Cương (4 Món)",
     goldColor: "Trắng",
@@ -23,6 +24,7 @@ const initialCartItems = [
       {
         id: "comp-set-ring",
         itemType: "ring",
+        category: "Nhẫn nữ",
         name: "Nhẫn nữ",
         sku: "GY0RG000095A00A00CZBB3CZXX1017",
         weight: 0.010,
@@ -36,6 +38,7 @@ const initialCartItems = [
       {
         id: "comp-set-neck",
         itemType: "necklace",
+        category: "Dây chuyền nữ",
         name: "Dây chuyền",
         sku: "GY0NE000004B00B00000000000000420",
         weight: 0.018,
@@ -49,6 +52,7 @@ const initialCartItems = [
       {
         id: "comp-set-earr",
         itemType: "earrings",
+        category: "Bông tai",
         name: "Bông tai",
         sku: "GY0EG000095A00A000000000000000",
         weight: 0.006,
@@ -62,6 +66,7 @@ const initialCartItems = [
       {
         id: "comp-set-brac",
         itemType: "bracelet",
+        category: "Lắc tay nữ",
         name: "Vòng tay",
         sku: "GY0BE000095A00A00CZBB3CZXX1560",
         weight: 0.014,
@@ -79,6 +84,7 @@ const initialCartItems = [
   {
     id: "cart-item-single-ring",
     isSet: false,
+    category: "Nhẫn nữ",
     productCode: "GY0RG000095A00A00CZBB3CZXX1017",
     productName: "Nhẫn nữ (Mua lẻ ngoài bộ)",
     mainStoneColor: "Trắng / Đỏ",
@@ -99,6 +105,7 @@ const initialCartItems = [
   {
     id: "cart-item-kitty",
     isSet: false,
+    category: "Lắc tay nữ",
     productCode: "GY0BE000104A00A00000000000560",
     productName: "Lắc tay charm mèo Kitty",
     mainStoneColor: "000",
@@ -169,6 +176,7 @@ export function CatalogueCartProvider({ children }) {
       const newSetItem = {
         id: `cart-set-${Date.now()}`,
         isSet: true,
+        category: itemConfig.category || itemConfig.categoryName || "Bộ trang sức",
         productCode: itemConfig.productCode,
         productName: itemConfig.productName,
         goldColor: itemConfig.goldColor,
@@ -191,6 +199,7 @@ export function CatalogueCartProvider({ children }) {
     const newItem = {
       id: `cart-${Date.now()}`,
       isSet: false,
+      category: itemConfig.category || itemConfig.categoryName || "Nhẫn nữ",
       productCode: itemConfig.productCode || "GY0RG000095A00A00CZBB3CZXX1017",
       productName: itemConfig.productName || "Trang sức cao cấp SEVAGO",
       mainStoneColor: itemConfig.mainStoneColor || "Trắng / Đỏ",

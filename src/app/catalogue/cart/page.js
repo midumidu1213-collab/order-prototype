@@ -18,9 +18,13 @@ import {
   Sparkles,
   X,
   CornerDownRight,
-  Layers
+  Layers,
+  FileSpreadsheet,
+  Printer,
+  Download
 } from "lucide-react";
 import { useCatalogueCart } from "@/context/CatalogueCartContext";
+import QuotationExportModal from "@/components/catalogue/QuotationExportModal";
 
 export default function CatalogueCartPage() {
   const router = useRouter();
@@ -40,6 +44,7 @@ export default function CatalogueCartPage() {
   const [editingItem, setEditingItem] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
+  const [isQuotationModalOpen, setIsQuotationModalOpen] = useState(false);
 
   const handleCopy = (id, text) => {
     navigator.clipboard.writeText(text);
@@ -75,6 +80,15 @@ export default function CatalogueCartPage() {
             >
               <ListOrdered className="h-4 w-4 mr-1.5" />
               Xem danh sách giỏ hàng
+            </button>
+
+            <button
+              onClick={() => setIsQuotationModalOpen(true)}
+              className="flex items-center px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs transition-colors cursor-pointer"
+              title="Xuất Báo Giá Chào Hàng (PDF & Excel)"
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+              Xuất Báo Giá
             </button>
 
             <button
@@ -569,6 +583,17 @@ export default function CatalogueCartPage() {
           </div>
         </div>
       )}
+
+      {/* Quotation Export Modal (Báo Giá E-Catalogue) */}
+      <QuotationExportModal
+        isOpen={isQuotationModalOpen}
+        onClose={() => setIsQuotationModalOpen(false)}
+        cartItems={cartItems}
+        orderInfo={orderInfo}
+        totalQuantity={totalQuantity}
+        totalWeight={totalWeight}
+        onConvertToOrder={() => handleConfirmOrder()}
+      />
 
     </div>
   );
