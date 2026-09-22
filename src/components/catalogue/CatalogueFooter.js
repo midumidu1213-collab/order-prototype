@@ -2,121 +2,133 @@
 
 import React from "react";
 import Link from "next/link";
-import { MapPin, Mail, Phone, QrCode } from "lucide-react";
+import SevagoLogo from "./SevagoLogo";
+import { MapPin, Mail, Phone } from "lucide-react";
 
 export default function CatalogueFooter() {
   return (
-    <footer className="relative bg-gradient-to-b from-[#01352a] via-[#004737] to-[#012820] text-emerald-100 overflow-hidden border-t border-emerald-600/30">
-      {/* Radiant Diamond Halo Background Effect matching screenshot */}
-      <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-30">
-        <div className="w-[500px] h-[500px] bg-emerald-400/20 rounded-full blur-3xl" />
-        <div className="absolute top-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-300/10 via-transparent to-transparent" />
-      </div>
-
-      {/* Radiant sparkling diamond center graphic */}
-      <div className="relative pt-8 pb-4 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-center mb-6">
-          <div className="relative flex items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-400/40 shadow-[0_0_25px_rgba(52,211,153,0.3)] animate-pulse">
-              <svg viewBox="0 0 100 100" className="w-10 h-10 text-emerald-200">
-                <polygon points="50,15 85,45 50,85 15,45" fill="none" stroke="currentColor" strokeWidth="3" />
-                <polygon points="50,25 75,45 50,75 25,45" fill="none" stroke="#6ee7b7" strokeWidth="2" />
-                <line x1="15" y1="45" x2="85" y2="45" stroke="#a7f3d0" strokeWidth="2" />
-                <line x1="50" y1="15" x2="50" y2="85" stroke="#a7f3d0" strokeWidth="1.5" />
-              </svg>
-            </div>
-            {/* Horizontal glowing ring curve */}
-            <div className="absolute -left-32 -right-32 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent top-1/2" />
-          </div>
+    <footer className="bg-white text-slate-700 border-t border-emerald-100/90 pt-12 pb-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Top Logo */}
+        <div className="mb-8 pb-6 border-b border-slate-100">
+          <SevagoLogo />
         </div>
 
-        {/* 3-Column Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-6 border-t border-emerald-700/40 text-sm">
-          {/* Col 1: Contact Info */}
+        {/* 3-Column Footer Grid matching Screenshot 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-10 text-sm">
+          {/* Cột 1: LIÊN HỆ */}
           <div className="space-y-3">
-            <h4 className="text-white font-semibold text-base tracking-wide border-b border-emerald-600/30 pb-2 inline-block">
-              Thông tin liên hệ
+            <h4 className="text-[#004737] font-bold text-sm uppercase tracking-wider">
+              LIÊN HỆ
             </h4>
-            <div className="space-y-2 text-emerald-200/90 text-xs sm:text-sm">
-              <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-emerald-400 shrink-0" />
+            <div className="space-y-2.5 text-xs sm:text-sm text-slate-600">
+              <div className="flex items-center space-x-2.5">
+                <Phone className="h-4 w-4 text-[#00594c] shrink-0" />
                 <span>Hotline: 0996.618.618 | 08:00 AM - 05:00 PM</span>
               </div>
-              <div className="flex items-start space-x-2">
-                <MapPin className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="flex items-start space-x-2.5">
+                <MapPin className="h-4 w-4 text-[#00594c] shrink-0 mt-0.5" />
                 <span>Trụ sở chính: 76 Tăng Nhơn Phú, phường Tăng Nhơn Phú, Tp. Hồ Chí Minh.</span>
               </div>
-              <div className="flex items-start space-x-2">
-                <MapPin className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="flex items-start space-x-2.5">
+                <MapPin className="h-4 w-4 text-[#00594c] shrink-0 mt-0.5" />
                 <span>Chi nhánh: 200 Nguyễn Văn Bá, phường Thủ Đức, Tp. Hồ Chí Minh.</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <Mail className="h-4 w-4 text-emerald-400 shrink-0" />
+              <div className="flex items-center space-x-2.5">
+                <Mail className="h-4 w-4 text-[#00594c] shrink-0" />
                 <span>Email: sales@sevago.com.vn</span>
               </div>
             </div>
           </div>
 
-          {/* Col 2: About / Quick Links */}
-          <div className="space-y-3 md:text-center">
-            <h4 className="text-white font-semibold text-base tracking-wide border-b border-emerald-600/30 pb-2 inline-block">
-              Về Sen Vàng
+          {/* Cột 2: VỀ SEVAGO */}
+          <div className="space-y-3 md:pl-8">
+            <h4 className="text-[#004737] font-bold text-sm uppercase tracking-wider">
+              VỀ SEVAGO
             </h4>
-            <ul className="space-y-2 text-emerald-200/90 text-xs sm:text-sm">
+            <ul className="space-y-2 text-xs sm:text-sm text-slate-600">
               <li>
-                <Link href="/catalogue" className="hover:text-white hover:underline transition-colors">
+                <Link href="/catalogue/about" className="hover:text-[#00594c] hover:underline transition-colors">
+                  Về chúng tôi &amp; Hồ sơ năng lực
+                </Link>
+              </li>
+              <li>
+                <Link href="/catalogue" className="hover:text-[#00594c] hover:underline transition-colors">
                   Trang chủ E-Catalogue
                 </Link>
               </li>
               <li>
-                <Link href="/catalogue/cart" className="hover:text-white hover:underline transition-colors">
+                <Link href="/catalogue/cart" className="hover:text-[#00594c] hover:underline transition-colors">
                   Danh sách giỏ chào hàng
-                </Link>
-              </li>
-              <li>
-                <Link href="/catalogue/about" className="hover:text-white hover:underline transition-colors">
-                  Về chúng tôi &amp; Cam kết chất lượng
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 3: QR Code Box */}
-          <div className="flex flex-col items-start md:items-end justify-center space-y-2">
-            <div className="text-white font-semibold text-sm">Quét QR Code</div>
-            <div className="p-2.5 bg-white rounded-xl shadow-lg border border-emerald-400/30 flex items-center justify-center">
-              {/* QR Code Graphic matching screenshot */}
-              <svg viewBox="0 0 100 100" className="w-20 h-20 text-[#00594c]">
-                <rect x="0" y="0" width="30" height="30" fill="currentColor" rx="4"/>
-                <rect x="5" y="5" width="20" height="20" fill="white" rx="2"/>
-                <rect x="9" y="9" width="12" height="12" fill="currentColor" rx="1"/>
-
-                <rect x="70" y="0" width="30" height="30" fill="currentColor" rx="4"/>
-                <rect x="75" y="5" width="20" height="20" fill="white" rx="2"/>
-                <rect x="79" y="9" width="12" height="12" fill="currentColor" rx="1"/>
-
-                <rect x="0" y="70" width="30" height="30" fill="currentColor" rx="4"/>
-                <rect x="5" y="75" width="20" height="20" fill="white" rx="2"/>
-                <rect x="9" y="79" width="12" height="12" fill="currentColor" rx="1"/>
-
-                {/* Pattern dots */}
-                <rect x="36" y="8" width="8" height="8" fill="currentColor"/>
-                <rect x="50" y="14" width="8" height="8" fill="currentColor"/>
-                <rect x="38" y="38" width="10" height="10" fill="currentColor" rx="2"/>
-                <rect x="56" y="42" width="12" height="12" fill="currentColor"/>
-                <rect x="42" y="60" width="8" height="8" fill="currentColor"/>
-                <rect x="70" y="70" width="10" height="10" fill="currentColor"/>
-                <rect x="85" y="85" width="12" height="12" fill="currentColor"/>
-                <rect x="70" y="45" width="8" height="8" fill="currentColor"/>
-              </svg>
+          {/* Cột 3: THEO DÕI CHÚNG TÔI (Social Media SVG Icons) */}
+          <div className="space-y-3 md:pl-8">
+            <h4 className="text-[#004737] font-bold text-sm uppercase tracking-wider">
+              THEO DÕI CHÚNG TÔI
+            </h4>
+            <div className="flex items-center space-x-3 pt-1">
+              {/* Facebook */}
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#00594c] text-slate-700 hover:text-white flex items-center justify-center transition-all shadow-xs"
+                title="Facebook"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+              </a>
+              {/* YouTube */}
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#00594c] text-slate-700 hover:text-white flex items-center justify-center transition-all shadow-xs"
+                title="Youtube"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+              </a>
+              {/* TikTok */}
+              <a
+                href="https://tiktok.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#00594c] text-slate-700 hover:text-white flex items-center justify-center transition-all shadow-xs"
+                title="TikTok"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                </svg>
+              </a>
+              {/* Instagram */}
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-[#00594c] text-slate-700 hover:text-white flex items-center justify-center transition-all shadow-xs"
+                title="Instagram"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+              </a>
             </div>
-            <span className="text-[11px] text-emerald-300">Quét để xem trên iPad/Điện thoại</span>
+            <p className="text-xs text-slate-500 pt-2 leading-relaxed">
+              Cập nhật những bộ sưu tập trang sức mới nhất từ Sevago Jewelry.
+            </p>
           </div>
         </div>
 
         {/* Bottom Copyright */}
-        <div className="pt-4 pb-2 border-t border-emerald-800/40 text-center text-xs text-emerald-400 font-light">
-          @Bản quyền thuộc công ty SEVAGO.JEWELRY
+        <div className="pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
+          © Bản quyền thuộc Công ty TNHH MTV Sen Vàng Việt Nam (SEVAGO)
         </div>
       </div>
     </footer>
