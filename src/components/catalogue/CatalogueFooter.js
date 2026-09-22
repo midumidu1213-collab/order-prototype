@@ -40,19 +40,19 @@ export default function CatalogueFooter() {
             <div className="space-y-2 text-emerald-200/90 text-xs sm:text-sm">
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-emerald-400 shrink-0" />
-                <span>Hotline: 0996 618 618 (08:00 - 17:30)</span>
+                <span>Hotline: 0996.618.618 | 08:00 AM - 05:00 PM</span>
               </div>
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>Trụ sở: 76 Tăng Nhơn Phú, P. Tăng Nhơn Phú B, TP. Thủ Đức, TP. HCM</span>
+                <span>Trụ sở chính: 76 Tăng Nhơn Phú, phường Tăng Nhơn Phú, Tp. Hồ Chí Minh.</span>
               </div>
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>CN1: 200 Nguyễn Văn Bá, P. Trường Thọ, TP. Thủ Đức, TP. HCM</span>
+                <span>Chi nhánh: 200 Nguyễn Văn Bá, phường Thủ Đức, Tp. Hồ Chí Minh.</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-emerald-400 shrink-0" />
-                <span>Email: order@sevago.com.vn</span>
+                <span>Email: sales@sevago.com.vn</span>
               </div>
             </div>
           </div>
