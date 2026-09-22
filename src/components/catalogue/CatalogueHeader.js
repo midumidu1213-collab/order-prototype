@@ -114,6 +114,19 @@ export default function CatalogueHeader() {
                 </Link>
 
                 <Link
+                  href="/catalogue/about"
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                    pathname === "/catalogue/about"
+                      ? "bg-emerald-600/40 text-white font-semibold border border-emerald-400/30"
+                      : "text-emerald-100 hover:bg-white/10"
+                  }`}
+                >
+                  <Gem className="h-5 w-5 mr-3 text-emerald-300" />
+                  Về chúng tôi &amp; Năng lực
+                </Link>
+
+                <Link
                   href="/"
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center px-4 py-3 rounded-xl text-sm font-medium text-emerald-200 hover:bg-white/10 transition-all mt-4 border-t border-emerald-700/50 pt-5"

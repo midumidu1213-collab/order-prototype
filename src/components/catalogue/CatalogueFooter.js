@@ -40,15 +40,19 @@ export default function CatalogueFooter() {
             <div className="space-y-2 text-emerald-200/90 text-xs sm:text-sm">
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-emerald-400 shrink-0" />
-                <span>Hotline: 1900 8888 (Hỗ trợ 24/7)</span>
+                <span>Hotline: 0996 618 618 (08:00 - 17:30)</span>
               </div>
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>Số 200, Đ.Nguyễn Văn Bá, P.Trường Thọ, Tp.Thủ Đức, Tp.HCM</span>
+                <span>Trụ sở: 76 Tăng Nhơn Phú, P. Tăng Nhơn Phú B, TP. Thủ Đức, TP. HCM</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <MapPin className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span>CN1: 200 Nguyễn Văn Bá, P. Trường Thọ, TP. Thủ Đức, TP. HCM</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-emerald-400 shrink-0" />
-                <span>Email: sipcorp@sip.com.vn</span>
+                <span>Email: order@sevago.com.vn</span>
               </div>
             </div>
           </div>
@@ -70,9 +74,9 @@ export default function CatalogueFooter() {
                 </Link>
               </li>
               <li>
-                <span className="cursor-pointer hover:text-white hover:underline transition-colors">
-                  Về chúng tôi & Cam kết chất lượng
-                </span>
+                <Link href="/catalogue/about" className="hover:text-white hover:underline transition-colors">
+                  Về chúng tôi &amp; Cam kết chất lượng
+                </Link>
               </li>
             </ul>
           </div>
