@@ -194,13 +194,7 @@ export default function ProductDetailPage({ params }) {
     }));
   };
 
-  const [componentStates, setComponentStates] = useState(() => {
-    return (product.components || []).map(comp => ({
-      ...comp,
-      selected: true,
-      selectedOption: comp.defaultOption
-    }));
-  });
+
 
   // Wholesale Stone Rows allocation
   const [stoneRows, setStoneRows] = useState(() => [
@@ -330,36 +324,18 @@ export default function ProductDetailPage({ params }) {
     return roundUp5k(totalBaseWage + totalSurcharge);
   }, [totalBaseWage, totalSurcharge]);
 
-  // Toggle component selection in Set
-  const toggleComponentSelection = (compId) => {
-    setComponentStates(prev => prev.map(c => 
-      c.id === compId ? { ...c, selected: !c.selected } : c
-    ));
-  };
 
-  // Change individual component option (Size Ni, Length, etc.)
-  const changeComponentOption = (compId, val) => {
-    setComponentStates(prev => prev.map(c => 
-      c.id === compId ? { ...c, selectedOption: val } : c
-    ));
-  };
 
-  // Select all / Deselect all components
-  const handleSelectAllComps = (selectAll) => {
-    setComponentStates(prev => prev.map(c => ({ ...c, selected: selectAll })));
-  };
-
-  // Set Calculations (tính theo từng nhóm Bộ trong setSizeGroups)
+  // Set Calculations (auto là cả bộ, tính theo từng nhóm Bộ trong setSizeGroups)
+  const allComps = useMemo(() => product.components || [], [product.components]);
+  const singleSetWeight = useMemo(() => allComps.reduce((s, c) => s + (c.weight || 0), 0), [allComps]);
+  const singleSetWage = useMemo(() => allComps.reduce((s, c) => s + (c.wagePrice || 0), 0), [allComps]);
   const totalSetOrderQty = useMemo(() => {
     return setSizeGroups.reduce((sum, g) => sum + (parseInt(g.quantity) || 0), 0);
   }, [setSizeGroups]);
-
-  const selectedComps = useMemo(() => componentStates.filter(c => c.selected), [componentStates]);
-  const singleSetWeight = useMemo(() => selectedComps.reduce((s, c) => s + (c.weight || 0), 0), [selectedComps]);
-  const singleSetWage = useMemo(() => selectedComps.reduce((s, c) => s + (c.wagePrice || 0), 0), [selectedComps]);
   const totalSetWeight = useMemo(() => singleSetWeight * totalSetOrderQty, [singleSetWeight, totalSetOrderQty]);
   const totalSetWage = useMemo(() => roundUp5k(singleSetWage * totalSetOrderQty), [singleSetWage, totalSetOrderQty]);
-  const totalSetItemCount = useMemo(() => selectedComps.length * totalSetOrderQty, [selectedComps, totalSetOrderQty]);
+  const totalSetItemCount = useMemo(() => allComps.length * totalSetOrderQty, [allComps, totalSetOrderQty]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(product.productCode);
@@ -369,10 +345,6 @@ export default function ProductDetailPage({ params }) {
 
   const handleAddToCart = () => {
     if (product.isSet) {
-      if (selectedComps.length === 0) {
-        alert("Chị đẹp vui lòng chọn ít nhất 1 món trong bộ ạ!");
-        return;
-      }
       if (totalSetOrderQty === 0) {
         alert("Chị đẹp vui lòng nhập số lượng cho ít nhất 1 bộ ạ!");
         return;
@@ -402,7 +374,7 @@ export default function ProductDetailPage({ params }) {
             note: note ? `[${group.nameLabel}] ${note}` : `[${group.nameLabel}]`,
             imageType: product.imageType,
             setNameLabel: group.nameLabel,
-            components: selectedComps.map(c => ({
+            components: allComps.map(c => ({
               name: c.name,
               sku: c.sku,
               selectedOption: group.sizes[c.id] || c.defaultOption || c.options?.[0] || "—",
@@ -645,70 +617,7 @@ export default function ProductDetailPage({ params }) {
                     )}
                   </div>
 
-                  {/* TẦNG 2: CÁC MÓN TRONG BỘ */}
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
-                        <Layers className="h-4 w-4 mr-1.5 text-[#00594c]" />
-                        Các món trong bộ ({selectedComps.length} / {componentStates.length})
-                      </div>
-                      <div className="space-x-2 text-[11px]">
-                        <button
-                          onClick={() => handleSelectAllComps(true)}
-                          className="text-[#00594c] font-bold hover:underline"
-                        >
-                          Chọn cả bộ
-                        </button>
-                        <span className="text-gray-300">|</span>
-                        <button
-                          onClick={() => handleSelectAllComps(false)}
-                          className="text-gray-500 hover:text-red-600 font-medium"
-                        >
-                          Bỏ chọn hết
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Danh sách các món trong bộ (tinh gọn, chỉ tick chọn, không đặt size ở đây) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {componentStates.map((comp) => {
-                        const isChecked = comp.selected;
-                        return (
-                          <div
-                            key={comp.id}
-                            onClick={() => toggleComponentSelection(comp.id)}
-                            className={`p-3 rounded-2xl border transition-all cursor-pointer select-none flex items-start space-x-3 ${
-                              isChecked
-                                ? "bg-white border-emerald-400/90 shadow-2xs ring-1 ring-emerald-500/20"
-                                : "bg-gray-50/70 border-gray-200 opacity-60 hover:opacity-80"
-                            }`}
-                          >
-                            <div className="mt-0.5 shrink-0">
-                              {isChecked ? (
-                                <CheckCircle2 className="h-4 w-4 text-[#00594c] fill-emerald-100" />
-                              ) : (
-                                <Circle className="h-4 w-4 text-gray-400" />
-                              )}
-                            </div>
-                            <div className="space-y-0.5 min-w-0 flex-1">
-                              <div className="text-xs font-bold text-gray-900 flex items-center space-x-1.5 truncate">
-                                <span>{comp.icon}</span>
-                                <span className="truncate">{comp.name}</span>
-                              </div>
-                              <div className="text-[10px] font-mono text-gray-500 truncate">
-                                {comp.sku}
-                              </div>
-                              <div className="text-[10px] text-gray-600 font-medium pt-0.5">
-                                TL: <strong className="text-gray-900 font-mono">{Number(comp.weight || 0).toFixed(4)} Lượng</strong> &bull; Công: <strong className="text-[#00594c]">{roundUp5k(comp.wagePrice).toLocaleString()}đ</strong>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* TẦNG 3: PHÂN BỔ THEO KÍCH THƯỚC BỘ */}
+                  {/* PHÂN BỔ THEO KÍCH THƯỚC BỘ (Auto là cả bộ, chỉ cần chọn kích thước cho từng chủng loại) */}
                   <div className="space-y-3 pt-1">
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
@@ -735,18 +644,18 @@ export default function ProductDetailPage({ params }) {
                       {setSizeGroups.map((group, groupIdx) => (
                         <div
                           key={group.id}
-                          className="bg-white rounded-2xl border border-gray-200/90 hover:border-emerald-300/80 p-3.5 space-y-3 shadow-2xs transition-all"
+                          className="bg-white rounded-2xl border border-gray-200/90 hover:border-emerald-300/80 p-3.5 space-y-2.5 shadow-2xs transition-all"
                         >
                           {/* Header nhóm: Badge Bộ + Nhập SL Bộ + Nút xóa */}
-                          <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
                               <span className="bg-[#00594c] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-2xs">
                                 {group.nameLabel || `Bộ ${groupIdx + 1}`}
                               </span>
 
                               <div className="flex items-center space-x-1.5">
-                                <span className="text-[11px] font-semibold text-gray-600">SL:</span>
-                                <div className="flex items-center border border-gray-300 rounded-lg bg-gray-50/50 overflow-hidden shadow-2xs">
+                                <span className="text-[11px] font-semibold text-gray-500">Số lượng:</span>
+                                <div className="flex items-center border border-gray-300 rounded-lg bg-gray-50/60 overflow-hidden shadow-2xs">
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateGroupQty(group.id, Math.max(1, (parseInt(group.quantity) || 1) - 1))}
@@ -786,26 +695,30 @@ export default function ProductDetailPage({ params }) {
                             )}
                           </div>
 
-                          {/* Grid dropdown kích thước các món trong bộ */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                            {selectedComps.filter(c => c.options && c.options.length > 0).map(comp => (
-                              <div key={comp.id} className="bg-gray-50/90 rounded-xl p-2 border border-gray-200/80">
-                                <div className="flex items-center space-x-1 text-[11px] font-semibold text-gray-700 mb-1 truncate">
+                          {/* Chọn kích thước cho từng chủng loại (gọn hơn, không lồng box xám, hiển thị rõ ràng) */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-gray-100">
+                            {(product.components || []).filter(c => c.options && c.options.length > 0).map(comp => (
+                              <div key={comp.id} className="space-y-1">
+                                <label className="block text-[11px] font-bold text-gray-700 truncate flex items-center space-x-1">
                                   <span>{comp.icon}</span>
                                   <span className="truncate">{comp.name}</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <span className="text-[10px] text-gray-400 font-medium shrink-0">{comp.optionType}:</span>
-                                  <select
-                                    value={group.sizes[comp.id] || comp.defaultOption || comp.options[0]}
-                                    onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
-                                    className="w-full bg-white px-1.5 py-1 border border-gray-300 rounded-lg text-xs font-bold text-[#00594c] focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
-                                  >
-                                    {comp.options.map(opt => (
-                                      <option key={opt} value={opt}>{opt}</option>
-                                    ))}
-                                  </select>
-                                </div>
+                                </label>
+                                <select
+                                  value={group.sizes[comp.id] || comp.defaultOption || comp.options[0]}
+                                  onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
+                                  className="w-full bg-white px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-bold text-[#00594c] focus:ring-2 focus:ring-[#00594c] focus:border-[#00594c] outline-none shadow-2xs cursor-pointer truncate"
+                                >
+                                  {comp.options.map(opt => {
+                                    const label = (comp.optionType === "Size Ni" && !opt.toLowerCase().includes("ni"))
+                                      ? `Ni ${opt}`
+                                      : opt;
+                                    return (
+                                      <option key={opt} value={opt}>
+                                        {label}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
                               </div>
                             ))}
                           </div>
@@ -814,7 +727,7 @@ export default function ProductDetailPage({ params }) {
                     </div>
                   </div>
 
-                  {/* TẦNG 4: GHI CHÚ TRÊN SẢN PHẨM */}
+                  {/* GHI CHÚ TRÊN SẢN PHẨM */}
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">
                       Ghi chú trên sản phẩm
@@ -828,7 +741,7 @@ export default function ProductDetailPage({ params }) {
                     />
                   </div>
 
-                  {/* TẦNG 5: TẠM TÍNH & NÚT THÊM VÀO GIỎ */}
+                  {/* TẠM TÍNH & NÚT THÊM VÀO GIỎ */}
                   <div className="p-4 bg-[#f0f7f4] border border-emerald-200/90 rounded-2xl shadow-xs space-y-3">
                     <div className="flex items-center justify-between text-xs pb-2 border-b border-emerald-200/60">
                       <span className="font-bold text-sm text-gray-900 tracking-tight">Tạm tính:</span>
@@ -850,11 +763,11 @@ export default function ProductDetailPage({ params }) {
 
                     <button
                       onClick={handleAddToCart}
-                      disabled={selectedComps.length === 0 || totalSetOrderQty === 0}
+                      disabled={totalSetOrderQty === 0}
                       className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center space-x-2 shadow-sm ${
                         addedSuccess
                           ? "bg-emerald-600 text-white"
-                          : (selectedComps.length === 0 || totalSetOrderQty === 0)
+                          : totalSetOrderQty === 0
                           ? "bg-gray-200 cursor-not-allowed text-gray-400"
                           : "bg-[#00594c] hover:bg-[#004737] text-white active:scale-98 shadow-md"
                       }`}
