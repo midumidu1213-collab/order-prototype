@@ -335,8 +335,8 @@ export const JEWELRY_PRODUCTS = [
     availableNiSizes: ["50", "52", "54", "56", "58", "60"],
     availableStoneColors: ["Xám", "Trắng", "Xanh Emerald", "Đỏ Ruby", "Tím Sapphire"],
     availableChangeRequests: [
-      "Chọn loại thay đổi",
       "Không thay đổi",
+      "Thay kiểu bào ball",
       "Đổi sang đá tấm CZ loại 1",
       "Đổi tuổi vàng 10K lên 18K",
       "Khắc laser chữ/ký hiệu riêng"

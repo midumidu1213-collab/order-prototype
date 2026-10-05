@@ -61,6 +61,27 @@ export const roundUp5k = (val) => {
   return Math.ceil(num / 5000) * 5000;
 };
 
+// Cấu hình danh mục chi tiết tương ứng với từng Yêu cầu thay đổi
+export const CHANGE_REQUEST_CONFIGS = {
+  "Không thay đổi": null,
+  "Thay kiểu bào ball": {
+    subLabel: "Kiểu bào",
+    options: ["Cross 45", "Cross 90", "Star 6", "Star 8", "Micro Pave", "Bào hạt lựu"]
+  },
+  "Đổi sang đá tấm CZ loại 1": {
+    subLabel: "Loại đá tấm",
+    options: ["CZ Trắng Star Cut", "CZ Swarovski Heart & Arrow", "CZ Đỏ Ruby", "CZ Xanh Emerald"]
+  },
+  "Đổi tuổi vàng 10K lên 18K": {
+    subLabel: "Tuổi vàng chuyển đổi",
+    options: ["Vàng 18K (75Y)", "Vàng 14K (58.5Y)", "Vàng 24K (99.9Y)"]
+  },
+  "Khắc laser chữ/ký hiệu riêng": {
+    subLabel: "Kiểu chữ khắc laser",
+    options: ["Font In hoa hiện đại (Elegance)", "Font Chữ ký nghệ thuật (Signature)", "Khắc Ngày & Tên lồng trái tim"]
+  }
+};
+
 export default function ProductDetailPage({ params }) {
   const router = useRouter();
   const unwrappedParams = use(params);
@@ -75,6 +96,21 @@ export default function ProductDetailPage({ params }) {
   const [goldColor, setGoldColor] = useState(product.defaultOptions?.goldColor || "Vàng");
   const [mainStoneColor, setMainStoneColor] = useState(product.defaultOptions?.mainStoneColor || "Xám");
   const [changeRequest, setChangeRequest] = useState(product.defaultOptions?.changeRequest || "Không thay đổi");
+  const [changeRequestDetail, setChangeRequestDetail] = useState(() => {
+    const defaultCr = product.defaultOptions?.changeRequest;
+    return CHANGE_REQUEST_CONFIGS[defaultCr]?.options?.[0] || "Cross 45";
+  });
+
+  const handleSelectChangeRequest = (val) => {
+    setChangeRequest(val);
+    const config = CHANGE_REQUEST_CONFIGS[val];
+    if (config && config.options?.length > 0) {
+      setChangeRequestDetail(config.options[0]);
+    } else {
+      setChangeRequestDetail("");
+    }
+  };
+
   const [note, setNote] = useState(product.defaultOptions?.note || "");
   const [activePreviewType, setActivePreviewType] = useState(product.imageType);
   const [copied, setCopied] = useState(false);
@@ -179,7 +215,10 @@ export default function ProductDetailPage({ params }) {
             productName: product.productName,
             mainStoneColor: row.stoneColor,
             goldColor: goldColor,
-            changeRequest: changeRequest,
+            changeRequest: (changeRequest && changeRequest !== "Không thay đổi" && changeRequestDetail) 
+              ? `${changeRequest} (${changeRequestDetail})` 
+              : changeRequest,
+            changeRequestDetail: changeRequestDetail,
             niSize: size,
             quantity: numQty,
             weight: product.weight,
@@ -194,7 +233,7 @@ export default function ProductDetailPage({ params }) {
       });
     });
     return items;
-  }, [stoneRows, goldColor, changeRequest, note, product]);
+  }, [stoneRows, goldColor, changeRequest, changeRequestDetail, note, product]);
 
   const totalWholesaleQty = useMemo(() => {
     return wholesaleItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -455,13 +494,43 @@ export default function ProductDetailPage({ params }) {
                         <label className="block text-[11px] font-semibold text-gray-600 mb-1">Yêu cầu thay đổi</label>
                         <select
                           value={changeRequest}
-                          onChange={(e) => setChangeRequest(e.target.value)}
+                          onChange={(e) => handleSelectChangeRequest(e.target.value)}
                           className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs"
                         >
-                          {(product.availableChangeRequests || ["Không thay đổi"]).map(req => <option key={req} value={req}>{req}</option>)}
+                          {(product.availableChangeRequests || [
+                            "Không thay đổi",
+                            "Thay kiểu bào ball",
+                            "Đổi sang đá tấm CZ loại 1",
+                            "Đổi tuổi vàng 10K lên 18K",
+                            "Khắc laser chữ/ký hiệu riêng"
+                          ]).map(req => (
+                            <option key={req} value={req}>
+                              {req !== "Không thay đổi" ? `💎 ${req}` : req}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
+
+                    {/* Chi tiết thay đổi tương ứng cho Bộ */}
+                    {CHANGE_REQUEST_CONFIGS[changeRequest] && (
+                      <div className="p-3 bg-white/80 rounded-xl border border-emerald-300/80 mt-2 animate-in fade-in duration-200">
+                        <label className="block text-[11px] font-semibold text-[#00594c] mb-1.5">
+                          {CHANGE_REQUEST_CONFIGS[changeRequest].subLabel}
+                        </label>
+                        <select
+                          value={changeRequestDetail}
+                          onChange={(e) => setChangeRequestDetail(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-xs cursor-pointer"
+                        >
+                          {CHANGE_REQUEST_CONFIGS[changeRequest].options.map((opt) => (
+                            <option key={opt} value={opt}>
+                              💎 {opt}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   {/* TẦNG 2: KÍCH THƯỚC SẢN PHẨM */}
@@ -664,7 +733,7 @@ export default function ProductDetailPage({ params }) {
                   </div>
 
                   {/* Cấu hình chung: Màu xi & Yêu cầu thay đổi */}
-                  <div className="bg-[#f8faf9] p-3.5 rounded-2xl border border-gray-200/70">
+                  <div className="bg-[#f8faf9] p-3.5 rounded-2xl border border-gray-200/70 space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       {/* Màu xi */}
                       <div>
@@ -690,17 +759,43 @@ export default function ProductDetailPage({ params }) {
                         <label className="block text-[11px] font-semibold text-gray-700 mb-1">Yêu cầu thay đổi:</label>
                         <select
                           value={changeRequest}
-                          onChange={(e) => setChangeRequest(e.target.value)}
+                          onChange={(e) => handleSelectChangeRequest(e.target.value)}
                           className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
                         >
-                          {(product.availableChangeRequests || ["Không thay đổi", "Đổi sang đá tấm CZ loại 1", "Đổi tuổi vàng 10K lên 18K", "Khắc laser chữ/ký hiệu riêng"]).map((req) => (
+                          {(product.availableChangeRequests || [
+                            "Không thay đổi",
+                            "Thay kiểu bào ball",
+                            "Đổi sang đá tấm CZ loại 1",
+                            "Đổi tuổi vàng 10K lên 18K",
+                            "Khắc laser chữ/ký hiệu riêng"
+                          ]).map((req) => (
                             <option key={req} value={req}>
-                              {req}
+                              {req !== "Không thay đổi" ? `💎 ${req}` : req}
                             </option>
                           ))}
                         </select>
                       </div>
                     </div>
+
+                    {/* Chi tiết thay đổi tương ứng xổ ra khi chọn */}
+                    {CHANGE_REQUEST_CONFIGS[changeRequest] && (
+                      <div className="p-3 bg-[#f0f9f6] rounded-xl border border-emerald-200/90 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <label className="block text-[11px] font-semibold text-[#00594c] mb-1.5">
+                          {CHANGE_REQUEST_CONFIGS[changeRequest].subLabel}
+                        </label>
+                        <select
+                          value={changeRequestDetail}
+                          onChange={(e) => setChangeRequestDetail(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-xs cursor-pointer"
+                        >
+                          {CHANGE_REQUEST_CONFIGS[changeRequest].options.map((opt) => (
+                            <option key={opt} value={opt}>
+                              💎 {opt}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   {/* Phân bổ theo Màu đá & Dải Ni */}
