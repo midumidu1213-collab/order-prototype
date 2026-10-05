@@ -191,9 +191,9 @@ export const JEWELRY_PRODUCTS = [
         weight: 0.006,
         wagePrice: 850000,
         priceDisplay: "850,000đ",
-        defaultOption: "Chốt vặn",
-        optionType: "Kiểu chốt",
-        options: ["Chốt vặn", "Chốt bấm", "Khuyên tròn"],
+        defaultOption: "0",
+        optionType: "Size Ni",
+        options: null,
         imageType: "earrings-heart",
         icon: "✨"
       },
@@ -279,8 +279,8 @@ export const JEWELRY_PRODUCTS = [
         weight: 0.006,
         wagePrice: 900000,
         priceDisplay: "900,000đ",
-        defaultOption: null,
-        optionType: null,
+        defaultOption: "0",
+        optionType: "Size Ni",
         options: null,
         imageType: "earrings-heart",
         icon: "✨"

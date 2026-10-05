@@ -374,12 +374,15 @@ export default function ProductDetailPage({ params }) {
             note: note ? `[${group.nameLabel}] ${note}` : `[${group.nameLabel}]`,
             imageType: product.imageType,
             setNameLabel: group.nameLabel,
-            components: allComps.map(c => ({
-              name: c.name,
-              sku: c.sku,
-              selectedOption: group.sizes[c.id] || c.defaultOption || c.options?.[0] || "—",
-              optionType: c.optionType
-            }))
+            components: allComps.map(c => {
+              const isEarring = c.itemType === "earrings" || c.name?.toLowerCase().includes("bông tai");
+              return {
+                name: c.name,
+                sku: c.sku,
+                selectedOption: isEarring ? "0" : (group.sizes[c.id] || c.defaultOption || c.options?.[0] || "—"),
+                optionType: isEarring ? "Size Ni" : c.optionType
+              };
+            })
           });
         }
       });
@@ -695,9 +698,9 @@ export default function ProductDetailPage({ params }) {
                             )}
                           </div>
 
-                          {/* Chọn kích thước cho từng chủng loại (gọn hơn, không lồng box xám, hiển thị rõ ràng) */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-gray-100">
-                            {(product.components || []).filter(c => c.options && c.options.length > 0).map(comp => (
+                          {/* Chọn kích thước cho từng chủng loại có size (Bông tai mặc định ni = 0 nên không cần chọn) */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-gray-100">
+                            {(product.components || []).filter(c => c.options && c.options.length > 0 && c.itemType !== "earrings" && !c.name?.toLowerCase().includes("bông tai")).map(comp => (
                               <div key={comp.id} className="space-y-1">
                                 <label className="block text-[11px] font-bold text-gray-700 truncate flex items-center space-x-1">
                                   <span>{comp.icon}</span>
@@ -706,7 +709,7 @@ export default function ProductDetailPage({ params }) {
                                 <select
                                   value={group.sizes[comp.id] || comp.defaultOption || comp.options[0]}
                                   onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
-                                  className="w-full bg-white px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-bold text-[#00594c] focus:ring-2 focus:ring-[#00594c] focus:border-[#00594c] outline-none shadow-2xs cursor-pointer truncate"
+                                  className="w-full bg-white px-2.5 py-2 border border-gray-300 rounded-xl text-xs font-bold text-[#00594c] focus:ring-2 focus:ring-[#00594c] focus:border-[#00594c] outline-none shadow-2xs cursor-pointer truncate"
                                 >
                                   {comp.options.map(opt => {
                                     const label = (comp.optionType === "Size Ni" && !opt.toLowerCase().includes("ni"))
