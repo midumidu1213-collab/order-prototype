@@ -212,12 +212,43 @@ export function CatalogueCartProvider({ children }) {
       quantity: singleQty,
       weight: itemConfig.weight || 0.010,
       wagePrice: itemConfig.wagePrice || 1500000,
+      baseWage: itemConfig.baseWage || itemConfig.wagePrice || 1500000,
+      itemDelta: itemConfig.itemDelta || 0,
       note: itemConfig.note || "",
       imageType: itemConfig.imageType || "loose-diamond"
     };
 
     setCartItems(prev => [newItem, ...prev]);
     showToast(`✨ Đã thêm món lẻ ${newItem.productCode.substring(0, 16)}... vào giỏ chào hàng!`);
+  };
+
+  const addBatchToCart = (items) => {
+    if (!items || items.length === 0) return;
+    const newItems = items.map((itemConfig, idx) => ({
+      id: `cart-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`,
+      isSet: false,
+      category: itemConfig.category || itemConfig.categoryName || "Trang sức lẻ",
+      productCode: itemConfig.productCode || "GY0RG000095A00A00CZBB3CZXX1017",
+      productName: itemConfig.productName || "Trang sức cao cấp SEVAGO",
+      mainStoneColor: itemConfig.mainStoneColor || "Trắng",
+      goldColor: itemConfig.goldColor || "Trắng",
+      yckh: itemConfig.changeRequest || "—",
+      carvingStyle: itemConfig.carvingStyle || "—",
+      htjAccessory: itemConfig.htjAccessory || "—",
+      techGroup: itemConfig.techGroup || "—",
+      niSize: itemConfig.niSize || "54",
+      quantity: Number(itemConfig.quantity) || 1,
+      weight: itemConfig.weight || 0.010,
+      wagePrice: itemConfig.wagePrice || 1500000,
+      baseWage: itemConfig.baseWage || itemConfig.wagePrice || 1500000,
+      itemDelta: itemConfig.itemDelta || 0,
+      note: itemConfig.note || "",
+      imageType: itemConfig.imageType || "loose-diamond"
+    }));
+
+    setCartItems(prev => [...newItems, ...prev]);
+    const totalAddedQty = newItems.reduce((sum, item) => sum + item.quantity, 0);
+    showToast(`✨ Đã thêm cả lô ${totalAddedQty} sản phẩm vào giỏ chào hàng thành công!`);
   };
 
   const removeFromCart = (id) => {
@@ -271,6 +302,11 @@ export function CatalogueCartProvider({ children }) {
     return sum + ((Number(item.weight) || 0) * (Number(item.quantity) || 1));
   }, 0);
 
+  // Total Wage
+  const totalWagePrice = cartItems.reduce((sum, item) => {
+    return sum + ((Number(item.wagePrice) || 0) * (Number(item.quantity) || 1));
+  }, 0);
+
   return (
     <CatalogueCartContext.Provider
       value={{
@@ -278,12 +314,14 @@ export function CatalogueCartProvider({ children }) {
         orderInfo,
         setOrderInfo,
         addToCart,
+        addBatchToCart,
         removeFromCart,
         removeSetComponent,
         updateCartItem,
         clearCart,
         totalQuantity,
         totalWeight,
+        totalWagePrice,
         toastMessage,
         showToast
       }}

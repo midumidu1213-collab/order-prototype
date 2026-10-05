@@ -37,6 +37,7 @@ export default function CatalogueCartPage() {
     clearCart,
     totalQuantity, 
     totalWeight,
+    totalWagePrice,
     showToast
   } = useCatalogueCart();
 
@@ -171,7 +172,7 @@ export default function CatalogueCartPage() {
             </div>
             <div>
               <span className="text-gray-500 font-medium">Giá tạm tính:</span>{" "}
-              <span className="font-bold text-gray-700">{orderInfo.provisionalPrice}</span>
+              <span className="font-bold text-[#00594c] font-mono">{totalWagePrice > 0 ? `${totalWagePrice.toLocaleString()}đ` : orderInfo.provisionalPrice}</span>
             </div>
             <div>
               <span className="text-gray-500 font-medium">Chiết khấu:</span>{" "}
@@ -360,22 +361,37 @@ export default function CatalogueCartPage() {
                                   {copiedId === item.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                                 </button>
                               </div>
-                              <div className="text-[11px] text-gray-500 font-sans font-normal mt-0.5">
-                                {item.productName}
+                              <div className="text-[11px] text-gray-500 font-sans font-normal mt-0.5 flex flex-wrap items-center gap-1.5">
+                                <span>{item.productName}</span>
+                                {item.goldColor && <span className="text-gray-400">&bull; {item.goldColor}</span>}
+                                {item.itemDelta > 0 && (
+                                  <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded">
+                                    +{(item.itemDelta / 1000).toLocaleString()}k tùy biến
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="py-3.5 px-3 text-xs">{item.mainStoneColor || "000"}</td>
                         <td className="py-3.5 px-3 text-xs font-medium">
-                          {item.yckh && item.yckh !== "—" ? (
+                          {(item.changeRequest && item.changeRequest !== "—" && item.changeRequest !== "Chọn loại thay đổi") ? (
+                            <span className="text-[#00594c] font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                              {item.changeRequest}
+                            </span>
+                          ) : (item.yckh && item.yckh !== "—") ? (
                             <span className="text-[#00594c] font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                               {item.yckh}
                             </span>
                           ) : "—"}
                         </td>
                         <td className="py-3.5 px-3 text-xs font-bold text-gray-800">
-                          {item.niSize ? `Size Ni: ${item.niSize}` : "—"}
+                          <div>{item.niSize ? `Size Ni: ${item.niSize}` : "—"}</div>
+                          {item.wagePrice && (
+                            <div className="text-[10px] text-[#00594c] font-mono font-bold mt-0.5">
+                              Tiền công: {Number(item.wagePrice).toLocaleString()}đ
+                            </div>
+                          )}
                         </td>
                         <td className="py-3.5 px-3 text-center font-bold text-emerald-800 text-xs font-mono">
                           {item.quantity}

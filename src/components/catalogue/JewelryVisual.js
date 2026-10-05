@@ -2,8 +2,41 @@
 
 import React from "react";
 
+const RENDER_IMAGE_MAP = {
+  "gold-chain-bracelet": "/images/products/gold-chain-bracelet.jpg",
+  "bracelet-gold": "/images/products/gold-chain-bracelet.jpg",
+  "cat-charm-bracelet": "/images/products/gold-chain-bracelet.jpg",
+  "bracelet-female": "/images/products/gold-chain-bracelet.jpg",
+  "bracelet-male": "/images/products/gold-chain-bracelet.jpg",
+  "set-royal-emerald": "/images/products/set-royal-emerald.jpg",
+  "set-diamond-bridal": "/images/products/set-diamond-bridal.jpg",
+  "ring-snake": "/images/products/ring-solitaire.jpg",
+  "ring-solitaire": "/images/products/ring-solitaire.jpg",
+  "wedding-rings": "/images/products/ring-solitaire.jpg",
+  "ring-men-black": "/images/products/ring-solitaire.jpg",
+  "ring-kim-tien": "/images/products/ring-solitaire.jpg",
+  "necklace-emerald": "/images/products/necklace-emerald.jpg",
+  "necklace-men": "/images/products/necklace-emerald.jpg",
+  "kieng-co": "/images/products/necklace-emerald.jpg",
+  "pendant-female": "/images/products/necklace-emerald.jpg",
+  "pendant-male": "/images/products/necklace-emerald.jpg",
+};
+
 export default function JewelryVisual({ type = "bracelet-gold", className = "w-full h-full" }) {
-  // Renders high-fidelity luxury jewelry vector art matching SEVAGO catalog photos
+  // Ưu tiên hiển thị ảnh 3D Render chân thực cao cấp
+  if (RENDER_IMAGE_MAP[type]) {
+    return (
+      <div className={`relative flex items-center justify-center p-2 rounded-2xl overflow-hidden bg-white ${className}`}>
+        <img
+          src={RENDER_IMAGE_MAP[type]}
+          alt="Trang sức SEVAGO"
+          className="w-full h-full object-contain rounded-xl select-none"
+        />
+      </div>
+    );
+  }
+
+  // Renders high-fidelity luxury jewelry vector art matching SEVAGO catalog photos as fallback
   switch (type) {
     case "set-royal-emerald":
       return (
