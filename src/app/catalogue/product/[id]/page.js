@@ -117,8 +117,83 @@ export default function ProductDetailPage({ params }) {
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
-  // Set-specific state
-  const [setOrderQty, setSetOrderQty] = useState(1);
+  // Set-specific state: Nhóm kích thước và số lượng từng Bộ (Bộ 1, Bộ 2, +Thêm kích thước cho Bộ 3...)
+  const getDefaultCompSizes = () => {
+    return (product.components || []).reduce((acc, comp) => {
+      if (comp.options && comp.options.length > 0) {
+        acc[comp.id] = comp.defaultOption || comp.options[0];
+      }
+      return acc;
+    }, {});
+  };
+
+  const [setSizeGroups, setSetSizeGroups] = useState(() => [
+    {
+      id: "set-group-1",
+      nameLabel: "Bộ 1",
+      quantity: 1,
+      sizes: (product.components || []).reduce((acc, comp) => {
+        if (comp.options && comp.options.length > 0) {
+          acc[comp.id] = comp.defaultOption || comp.options[0];
+        }
+        return acc;
+      }, {})
+    },
+    {
+      id: "set-group-2",
+      nameLabel: "Bộ 2",
+      quantity: 1,
+      sizes: (product.components || []).reduce((acc, comp) => {
+        if (comp.options && comp.options.length > 0) {
+          acc[comp.id] = comp.defaultOption || comp.options[0];
+        }
+        return acc;
+      }, {})
+    }
+  ]);
+
+  const handleAddSetSizeGroup = () => {
+    const nextNum = setSizeGroups.length + 1;
+    setSetSizeGroups(prev => [
+      ...prev,
+      {
+        id: `set-group-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        nameLabel: `Bộ ${nextNum}`,
+        quantity: 1,
+        sizes: getDefaultCompSizes()
+      }
+    ]);
+  };
+
+  const handleRemoveSetSizeGroup = (groupId) => {
+    if (setSizeGroups.length <= 1) return;
+    setSetSizeGroups(prev => {
+      const filtered = prev.filter(g => g.id !== groupId);
+      return filtered.map((g, idx) => ({
+        ...g,
+        nameLabel: `Bộ ${idx + 1}`
+      }));
+    });
+  };
+
+  const handleUpdateGroupQty = (groupId, newQty) => {
+    const val = Math.max(1, parseInt(newQty) || 1);
+    setSetSizeGroups(prev => prev.map(g => g.id === groupId ? { ...g, quantity: val } : g));
+  };
+
+  const handleUpdateGroupSize = (groupId, compId, sizeVal) => {
+    setSetSizeGroups(prev => prev.map(g => {
+      if (g.id !== groupId) return g;
+      return {
+        ...g,
+        sizes: {
+          ...g.sizes,
+          [compId]: sizeVal
+        }
+      };
+    }));
+  };
+
   const [componentStates, setComponentStates] = useState(() => {
     return (product.components || []).map(comp => ({
       ...comp,
@@ -274,13 +349,17 @@ export default function ProductDetailPage({ params }) {
     setComponentStates(prev => prev.map(c => ({ ...c, selected: selectAll })));
   };
 
-  // Set Calculations (nhân theo Số lượng Bộ)
+  // Set Calculations (tính theo từng nhóm Bộ trong setSizeGroups)
+  const totalSetOrderQty = useMemo(() => {
+    return setSizeGroups.reduce((sum, g) => sum + (parseInt(g.quantity) || 0), 0);
+  }, [setSizeGroups]);
+
   const selectedComps = useMemo(() => componentStates.filter(c => c.selected), [componentStates]);
   const singleSetWeight = useMemo(() => selectedComps.reduce((s, c) => s + (c.weight || 0), 0), [selectedComps]);
   const singleSetWage = useMemo(() => selectedComps.reduce((s, c) => s + (c.wagePrice || 0), 0), [selectedComps]);
-  const totalSetWeight = useMemo(() => singleSetWeight * setOrderQty, [singleSetWeight, setOrderQty]);
-  const totalSetWage = useMemo(() => singleSetWage * setOrderQty, [singleSetWage, setOrderQty]);
-  const totalSetItemCount = useMemo(() => selectedComps.length * setOrderQty, [selectedComps, setOrderQty]);
+  const totalSetWeight = useMemo(() => singleSetWeight * totalSetOrderQty, [singleSetWeight, totalSetOrderQty]);
+  const totalSetWage = useMemo(() => roundUp5k(singleSetWage * totalSetOrderQty), [singleSetWage, totalSetOrderQty]);
+  const totalSetItemCount = useMemo(() => selectedComps.length * totalSetOrderQty, [selectedComps, totalSetOrderQty]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(product.productCode);
@@ -294,25 +373,43 @@ export default function ProductDetailPage({ params }) {
         alert("Chị đẹp vui lòng chọn ít nhất 1 món trong bộ ạ!");
         return;
       }
-      addToCart({
-        isSet: true,
-        productCode: product.productCode,
-        productName: product.productName,
-        category: product.categoryName,
-        goldColor,
-        mainStoneColor,
-        changeRequest,
-        quantity: setOrderQty,
-        weight: totalSetWeight,
-        wagePrice: totalSetWage,
-        note,
-        imageType: product.imageType,
-        components: selectedComps.map(c => ({
-          name: c.name,
-          sku: c.sku,
-          selectedOption: c.selectedOption,
-          optionType: c.optionType
-        }))
+      if (totalSetOrderQty === 0) {
+        alert("Chị đẹp vui lòng nhập số lượng cho ít nhất 1 bộ ạ!");
+        return;
+      }
+
+      // Thêm từng nhóm bộ vào giỏ hàng với thông tin kích thước tương ứng
+      setSizeGroups.forEach((group) => {
+        const groupQty = parseInt(group.quantity) || 0;
+        if (groupQty > 0) {
+          const groupWeight = singleSetWeight * groupQty;
+          const groupWage = roundUp5k(singleSetWage * groupQty);
+
+          addToCart({
+            isSet: true,
+            productCode: product.productCode,
+            productName: product.productName,
+            category: product.categoryName,
+            goldColor,
+            mainStoneColor,
+            changeRequest: (changeRequest && changeRequest !== "Không thay đổi" && changeRequestDetail) 
+              ? `${changeRequest} (${changeRequestDetail})` 
+              : changeRequest,
+            changeRequestDetail,
+            quantity: groupQty,
+            weight: groupWeight,
+            wagePrice: groupWage,
+            note: note ? `[${group.nameLabel}] ${note}` : `[${group.nameLabel}]`,
+            imageType: product.imageType,
+            setNameLabel: group.nameLabel,
+            components: selectedComps.map(c => ({
+              name: c.name,
+              sku: c.sku,
+              selectedOption: group.sizes[c.id] || c.defaultOption || c.options?.[0] || "—",
+              optionType: c.optionType
+            }))
+          });
+        }
       });
     } else {
       if (wholesaleItems.length === 0) {
@@ -456,7 +553,22 @@ export default function ProductDetailPage({ params }) {
               {/* =============================================================== */}
               {product.isSet ? (
                 <div className="space-y-5">
-                  
+                  {/* Specs Bar cho Bộ (2 cột: Trọng lượng & Giá công 1 bộ) */}
+                  <div className="grid grid-cols-2 gap-3 py-3 px-6 bg-[#f4f9f7] rounded-2xl border border-emerald-100 text-center items-center">
+                    <div>
+                      <div className="text-[11px] text-gray-500 font-medium">Trọng lượng (1 bộ)</div>
+                      <div className="text-base font-bold text-gray-900 mt-0.5 font-mono">
+                        {Number(singleSetWeight || 0).toFixed(4)} <span className="text-xs font-normal text-gray-500">Lượng</span>
+                      </div>
+                    </div>
+                    <div className="border-l border-emerald-200/60">
+                      <div className="text-[11px] text-gray-500 font-medium">Giá công (1 bộ)</div>
+                      <div className="text-base font-bold text-[#00594c] mt-0.5 font-mono">
+                        {roundUp5k(singleSetWage).toLocaleString()}đ
+                      </div>
+                    </div>
+                  </div>
+
                   {/* TẦNG 1: THUỘC TÍNH CHUNG */}
                   <div className="bg-[#f2f8f6] p-4 rounded-2xl border border-emerald-200/80 space-y-2.5">
                     <div className="text-xs font-bold text-[#00594c] uppercase tracking-wider flex items-center">
@@ -471,7 +583,7 @@ export default function ProductDetailPage({ params }) {
                         <select
                           value={goldColor}
                           onChange={(e) => setGoldColor(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs"
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
                         >
                           {product.availableGoldColors?.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -483,7 +595,7 @@ export default function ProductDetailPage({ params }) {
                         <select
                           value={mainStoneColor}
                           onChange={(e) => setMainStoneColor(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs"
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
                         >
                           {product.availableStoneColors?.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
@@ -495,7 +607,7 @@ export default function ProductDetailPage({ params }) {
                         <select
                           value={changeRequest}
                           onChange={(e) => handleSelectChangeRequest(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs"
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
                         >
                           {(product.availableChangeRequests || [
                             "Không thay đổi",
@@ -533,12 +645,12 @@ export default function ProductDetailPage({ params }) {
                     )}
                   </div>
 
-                  {/* TẦNG 2: KÍCH THƯỚC SẢN PHẨM */}
+                  {/* TẦNG 2: CÁC MÓN TRONG BỘ */}
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
                         <Layers className="h-4 w-4 mr-1.5 text-[#00594c]" />
-                        Kích thước sản phẩm ({selectedComps.length} / {componentStates.length})
+                        Các món trong bộ ({selectedComps.length} / {componentStates.length})
                       </div>
                       <div className="space-x-2 text-[11px]">
                         <button
@@ -557,58 +669,38 @@ export default function ProductDetailPage({ params }) {
                       </div>
                     </div>
 
-                    {/* Component Cards List with Size */}
-                    <div className="space-y-2.5">
+                    {/* Danh sách các món trong bộ (tinh gọn, chỉ tick chọn, không đặt size ở đây) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {componentStates.map((comp) => {
                         const isChecked = comp.selected;
                         return (
                           <div
                             key={comp.id}
-                            className={`p-3.5 rounded-2xl border transition-all ${
+                            onClick={() => toggleComponentSelection(comp.id)}
+                            className={`p-3 rounded-2xl border transition-all cursor-pointer select-none flex items-start space-x-3 ${
                               isChecked
-                                ? "bg-white border-emerald-400/90 shadow-xs ring-1 ring-emerald-500/20"
-                                : "bg-gray-50/70 border-gray-200 opacity-60"
+                                ? "bg-white border-emerald-400/90 shadow-2xs ring-1 ring-emerald-500/20"
+                                : "bg-gray-50/70 border-gray-200 opacity-60 hover:opacity-80"
                             }`}
                           >
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                              {/* Left: Checkbox + Name + SKU + TL & Công */}
-                              <div className="flex items-start space-x-3 cursor-pointer select-none flex-1" onClick={() => toggleComponentSelection(comp.id)}>
-                                <div className="mt-0.5">
-                                  {isChecked ? (
-                                    <CheckCircle2 className="h-5 w-5 text-[#00594c] fill-emerald-100" />
-                                  ) : (
-                                    <Circle className="h-5 w-5 text-gray-400" />
-                                  )}
-                                </div>
-                                <div className="space-y-0.5">
-                                  <div className="text-xs sm:text-sm font-bold text-gray-900 flex items-center space-x-1.5">
-                                    <span>{comp.icon}</span>
-                                    <span>{comp.name}</span>
-                                  </div>
-                                  <div className="text-[11px] font-mono text-gray-500 tracking-tight">
-                                    {comp.sku}
-                                  </div>
-                                  <div className="text-[11px] text-gray-600 font-medium pt-0.5">
-                                    Trọng lượng: <strong className="text-gray-900 font-mono">{Number(comp.weight || 0).toFixed(4)} Lượng</strong> &bull; Công: <strong className="text-[#00594c]">{roundUp5k(comp.wagePrice).toLocaleString()}đ</strong>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Right: Kích thước (nếu có) */}
-                              {isChecked && comp.options && comp.options.length > 0 && (
-                                <div className="shrink-0 flex items-center space-x-1.5 bg-emerald-50/80 px-2.5 py-1.5 rounded-xl border border-emerald-200 self-start sm:self-auto">
-                                  <span className="text-[11px] font-semibold text-gray-600">{comp.optionType}:</span>
-                                  <select
-                                    value={comp.selectedOption}
-                                    onChange={(e) => changeComponentOption(comp.id, e.target.value)}
-                                    className="bg-transparent text-xs font-bold text-[#00594c] outline-none cursor-pointer"
-                                  >
-                                    {comp.options.map(opt => (
-                                      <option key={opt} value={opt}>{opt}</option>
-                                    ))}
-                                  </select>
-                                </div>
+                            <div className="mt-0.5 shrink-0">
+                              {isChecked ? (
+                                <CheckCircle2 className="h-4 w-4 text-[#00594c] fill-emerald-100" />
+                              ) : (
+                                <Circle className="h-4 w-4 text-gray-400" />
                               )}
+                            </div>
+                            <div className="space-y-0.5 min-w-0 flex-1">
+                              <div className="text-xs font-bold text-gray-900 flex items-center space-x-1.5 truncate">
+                                <span>{comp.icon}</span>
+                                <span className="truncate">{comp.name}</span>
+                              </div>
+                              <div className="text-[10px] font-mono text-gray-500 truncate">
+                                {comp.sku}
+                              </div>
+                              <div className="text-[10px] text-gray-600 font-medium pt-0.5">
+                                TL: <strong className="text-gray-900 font-mono">{Number(comp.weight || 0).toFixed(4)} Lượng</strong> &bull; Công: <strong className="text-[#00594c]">{roundUp5k(comp.wagePrice).toLocaleString()}đ</strong>
+                              </div>
                             </div>
                           </div>
                         );
@@ -616,57 +708,132 @@ export default function ProductDetailPage({ params }) {
                     </div>
                   </div>
 
-                  {/* Số lượng Bộ & Ghi chú */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Số lượng Bộ
-                      </label>
-                      <div className="flex items-center border border-gray-300 rounded-xl bg-white overflow-hidden shadow-2xs">
-                        <button
-                          type="button"
-                          onClick={() => setSetOrderQty(q => Math.max(1, q - 1))}
-                          className="px-3.5 py-2 text-gray-600 hover:bg-gray-100 font-bold text-sm select-none"
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          min="1"
-                          value={setOrderQty}
-                          onChange={(e) => setSetOrderQty(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="w-full text-center text-xs font-bold text-gray-900 outline-none py-2"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setSetOrderQty(q => q + 1)}
-                          className="px-3.5 py-2 text-gray-600 hover:bg-gray-100 font-bold text-sm select-none"
-                        >
-                          +
-                        </button>
+                  {/* TẦNG 3: PHÂN BỔ THEO KÍCH THƯỚC BỘ */}
+                  <div className="space-y-3 pt-1">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
+                        <Layers className="h-4 w-4 mr-1.5 text-[#00594c]" />
+                        Phân bổ theo kích thước bộ
+                        <span className="ml-2 bg-emerald-100 text-[#00594c] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          {setSizeGroups.length} nhóm kích thước
+                        </span>
                       </div>
+
+                      {/* Nút + Thêm kích thước */}
+                      <button
+                        type="button"
+                        onClick={handleAddSetSizeGroup}
+                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-[#00594c] border border-emerald-300 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-95"
+                      >
+                        <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+                        <span>+ Thêm kích thước</span>
+                      </button>
                     </div>
 
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Ghi chú trên sản phẩm
-                      </label>
-                      <input
-                        type="text"
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                        placeholder="VD: Đóng gói hộp cưới riêng, khắc laser..."
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#00594c]"
-                      />
+                    {/* Danh sách từng nhóm Bộ (Bộ 1, Bộ 2, Bộ 3...) */}
+                    <div className="space-y-3">
+                      {setSizeGroups.map((group, groupIdx) => (
+                        <div
+                          key={group.id}
+                          className="bg-white rounded-2xl border border-gray-200/90 hover:border-emerald-300/80 p-3.5 space-y-3 shadow-2xs transition-all"
+                        >
+                          {/* Header nhóm: Badge Bộ + Nhập SL Bộ + Nút xóa */}
+                          <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                            <div className="flex items-center space-x-3">
+                              <span className="bg-[#00594c] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-2xs">
+                                {group.nameLabel || `Bộ ${groupIdx + 1}`}
+                              </span>
+
+                              <div className="flex items-center space-x-1.5">
+                                <span className="text-[11px] font-semibold text-gray-600">SL:</span>
+                                <div className="flex items-center border border-gray-300 rounded-lg bg-gray-50/50 overflow-hidden shadow-2xs">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateGroupQty(group.id, Math.max(1, (parseInt(group.quantity) || 1) - 1))}
+                                    className="px-2.5 py-1 text-gray-600 hover:bg-gray-200 text-xs font-bold transition-colors"
+                                  >
+                                    -
+                                  </button>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={group.quantity}
+                                    onChange={(e) => handleUpdateGroupQty(group.id, e.target.value)}
+                                    className="w-12 text-center text-xs font-bold text-gray-900 bg-white py-1 outline-none"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateGroupQty(group.id, (parseInt(group.quantity) || 1) + 1)}
+                                    className="px-2.5 py-1 text-gray-600 hover:bg-gray-200 text-xs font-bold transition-colors"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <span className="text-[11px] text-gray-500 font-medium">bộ</span>
+                              </div>
+                            </div>
+
+                            {/* Nút xóa nhóm bộ */}
+                            {setSizeGroups.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSetSizeGroup(group.id)}
+                                className="text-gray-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                title="Xóa nhóm kích thước này"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Grid dropdown kích thước các món trong bộ */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            {selectedComps.filter(c => c.options && c.options.length > 0).map(comp => (
+                              <div key={comp.id} className="bg-gray-50/90 rounded-xl p-2 border border-gray-200/80">
+                                <div className="flex items-center space-x-1 text-[11px] font-semibold text-gray-700 mb-1 truncate">
+                                  <span>{comp.icon}</span>
+                                  <span className="truncate">{comp.name}</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <span className="text-[10px] text-gray-400 font-medium shrink-0">{comp.optionType}:</span>
+                                  <select
+                                    value={group.sizes[comp.id] || comp.defaultOption || comp.options[0]}
+                                    onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
+                                    className="w-full bg-white px-1.5 py-1 border border-gray-300 rounded-lg text-xs font-bold text-[#00594c] focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
+                                  >
+                                    {comp.options.map(opt => (
+                                      <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Summary Bar for Set */}
+                  {/* TẦNG 4: GHI CHÚ TRÊN SẢN PHẨM */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Ghi chú trên sản phẩm
+                    </label>
+                    <input
+                      type="text"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="VD: Đóng gói hộp cưới riêng, khắc laser..."
+                      className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#00594c] shadow-2xs"
+                    />
+                  </div>
+
+                  {/* TẦNG 5: TẠM TÍNH & NÚT THÊM VÀO GIỎ */}
                   <div className="p-4 bg-[#f0f7f4] border border-emerald-200/90 rounded-2xl shadow-xs space-y-3">
                     <div className="flex items-center justify-between text-xs pb-2 border-b border-emerald-200/60">
                       <span className="font-bold text-sm text-gray-900 tracking-tight">Tạm tính:</span>
                       <span className="bg-emerald-100 text-[#00594c] px-2.5 py-0.5 rounded-full font-bold text-xs">
-                        {setOrderQty > 1 ? `${setOrderQty} Bộ (${totalSetItemCount} Món)` : `${selectedComps.length} / ${componentStates.length} Món`}
+                        {totalSetOrderQty} Bộ ({totalSetItemCount} Món)
                       </span>
                     </div>
 
@@ -683,11 +850,11 @@ export default function ProductDetailPage({ params }) {
 
                     <button
                       onClick={handleAddToCart}
-                      disabled={selectedComps.length === 0}
+                      disabled={selectedComps.length === 0 || totalSetOrderQty === 0}
                       className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center space-x-2 shadow-sm ${
                         addedSuccess
                           ? "bg-emerald-600 text-white"
-                          : selectedComps.length === 0
+                          : (selectedComps.length === 0 || totalSetOrderQty === 0)
                           ? "bg-gray-200 cursor-not-allowed text-gray-400"
                           : "bg-[#00594c] hover:bg-[#004737] text-white active:scale-98 shadow-md"
                       }`}
@@ -695,15 +862,13 @@ export default function ProductDetailPage({ params }) {
                       {addedSuccess ? (
                         <>
                           <Check className="h-4 w-4" />
-                          <span>Đã thêm Bộ vào giỏ hàng thành công!</span>
+                          <span>Đã thêm {totalSetOrderQty} Bộ vào giỏ hàng thành công!</span>
                         </>
                       ) : (
                         <>
                           <ShoppingBag className="h-4 w-4" />
                           <span>
-                            {setOrderQty > 1 
-                              ? `Thêm ${setOrderQty} Bộ (${totalSetItemCount} món) vào giỏ hàng` 
-                              : `Thêm ${selectedComps.length} món vào giỏ hàng`}
+                            Thêm {totalSetOrderQty} Bộ ({totalSetItemCount} món) vào giỏ hàng
                           </span>
                         </>
                       )}
