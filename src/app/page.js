@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Filter, Search, Plus, MoreHorizontal, PenLine, Copy } from "lucide-react";
+import { Filter, Search, Plus, MoreHorizontal, PenLine, Copy, Eye } from "lucide-react";
 
 export default function OrderList() {
   const tabs = [
@@ -123,7 +123,16 @@ export default function OrderList() {
               return (
                 <tr key={order.id} className="hover:bg-gray-50 transition">
                   <td className="px-3 py-3.5 whitespace-nowrap text-gray-500 font-medium">{order.id}</td>
-                  <td className="px-3 py-3.5 whitespace-nowrap font-bold text-[#005a46]">{order.code}</td>
+                  <td className="px-3 py-3.5 whitespace-nowrap font-bold">
+                    <Link 
+                      href={`/orders/${order.id}`}
+                      className="text-[#005a46] hover:text-emerald-700 hover:underline inline-flex items-center group"
+                      title="Nhấn để xem chi tiết đơn hàng"
+                    >
+                      <span>{order.code}</span>
+                      <Eye className="h-3.5 w-3.5 ml-1.5 opacity-0 group-hover:opacity-100 text-emerald-600 transition-opacity" />
+                    </Link>
+                  </td>
                   <td className="px-3 py-3.5 whitespace-nowrap text-gray-700 max-w-xs truncate" title={order.customer}>{order.customer}</td>
                   <td className="px-3 py-3.5 whitespace-nowrap text-gray-500">{order.team}</td>
                   <td className="px-3 py-3.5 whitespace-nowrap">
@@ -165,6 +174,13 @@ export default function OrderList() {
                   </td>
                   <td className="px-3 py-3.5 whitespace-nowrap font-medium text-center">
                     <div className="flex items-center justify-center space-x-1.5">
+                      <Link
+                        href={`/orders/${order.id}`}
+                        className="p-1 text-gray-500 hover:text-[#005a46] hover:bg-emerald-50 rounded transition-colors"
+                        title="Xem chi tiết đơn hàng"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Link>
                       <button className="p-1 text-gray-400 hover:text-[#005a46] rounded"><PenLine className="h-4 w-4" /></button>
                       <button className="p-1 text-gray-400 hover:text-gray-600 rounded"><Copy className="h-4 w-4" /></button>
                     </div>

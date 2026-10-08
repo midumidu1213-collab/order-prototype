@@ -1,5 +1,6 @@
 // Danh mục tồn kho Kho Thành Phẩm (Chờ xử lý lại)
 // Bắt buộc khớp 100% các thông số: Mã Item, Tuổi vàng, Ni tay, Màu/Loại đá
+// Chứa đầy đủ các trường: Mã item, Số lượng, Mã đơn hàng cũ, Ngày nhập kho
 
 export const WAREHOUSE_REWORK_ITEMS = [
   {
@@ -14,13 +15,35 @@ export const WAREHOUSE_REWORK_ITEMS = [
     stoneType: "Sapphire Xanh & Kim Cương Tấm",
     stoneQty: "1 viên chủ 4.5mm + 12 viên tấm 1.2mm",
     weight: "3.42g/chiếc",
-    availableQty: 80, // Có sẵn 80 chiếc trong kho (phục vụ ca test: Đặt 100 chiếc -> 80 chiếc kho + 20 chiếc đúc mới)
-    status: "Available", // Available | Allocated
+    availableQty: 80, // Số lượng trong kho
+    oldOrderCode: "SO2607089", // Mã đơn hàng cũ
+    dateInStock: "02/08/2026", // Ngày nhập kho
+    status: "Available",
     location: "Két K1 - Ngăn A03 (Lô L-863)",
-    sourceReason: "Khách cũ hủy đơn đợt 1 (Đã hoàn thiện KCS sẵn)",
+    sourceReason: "Khách hủy do trễ hẹn giao hàng đợt 1",
     oldCustomer: "KH-1000089 - Kim Cương Vàng",
-    dateInStock: "02/08/2026",
-    standardLaborPrice: 480000 // Biểu giá công chuẩn KH mới
+    standardLaborPrice: 480000
+  },
+  {
+    id: "WP-002",
+    bagCode: "BAG-TP-9902",
+    itemCode: "RG202500006",
+    itemName: "Nhẫn Kim Cương Nữ Solitaire 14K",
+    category: "Nhẫn nữ",
+    goldType: "61Y",
+    size: 45,
+    stoneColor: "Xanh",
+    stoneType: "Sapphire Xanh & Kim Cương Tấm",
+    stoneQty: "1 viên chủ 4.5mm + 12 viên tấm 1.2mm",
+    weight: "3.45g/chiếc",
+    availableQty: 20,
+    oldOrderCode: "SO2607045",
+    dateInStock: "25/07/2026",
+    status: "Available",
+    location: "Két K1 - Ngăn A04",
+    sourceReason: "Khách hủy đơn do thay đổi kế hoạch kinh doanh",
+    oldCustomer: "KH-1000045 - Bảo Tín Phát",
+    standardLaborPrice: 480000
   },
   {
     id: "WP-003",
@@ -35,11 +58,12 @@ export const WAREHOUSE_REWORK_ITEMS = [
     stoneQty: "1 viên chủ 4.5mm + 12 viên tấm 1.2mm",
     weight: "3.60g/chiếc",
     availableQty: 15,
+    oldOrderCode: "SO2607055",
+    dateInStock: "28/07/2026",
     status: "Available",
     location: "Két K1 - Ngăn A05",
     sourceReason: "Hàng thành phẩm dư mẫu chào hàng",
-    oldCustomer: "-",
-    dateInStock: "28/07/2026",
+    oldCustomer: "KH-1000018 - DOJI Hà Nội",
     standardLaborPrice: 480000
   },
   {
@@ -48,18 +72,19 @@ export const WAREHOUSE_REWORK_ITEMS = [
     itemCode: "RG202500006",
     itemName: "Nhẫn Kim Cương Nữ Solitaire 18K Trắng",
     category: "Nhẫn nữ",
-    goldType: "75W", // Khác tuổi vàng (75W)
+    goldType: "75W", // 75W
     size: 45,
     stoneColor: "Trắng",
     stoneType: "Kim Cương Tự Nhiên D-Color",
     stoneQty: "1 viên chủ 5.0mm + 16 viên tấm",
     weight: "3.88g/chiếc",
     availableQty: 5,
+    oldOrderCode: "SO2607012",
+    dateInStock: "05/08/2026",
     status: "Available",
     location: "Két VIP - Ngăn V02",
     sourceReason: "Khách hủy do đổi sang vàng hồng",
     oldCustomer: "KH-1000012 - PNJ Chi nhánh 1",
-    dateInStock: "05/08/2026",
     standardLaborPrice: 750000
   },
   {
@@ -75,11 +100,12 @@ export const WAREHOUSE_REWORK_ITEMS = [
     stoneQty: "3 viên chủ Emerald + 48 viên kim cương",
     weight: "28.50g/bộ",
     availableQty: 2,
+    oldOrderCode: "SO2607099",
+    dateInStock: "30/07/2026",
     status: "Available",
     location: "Két K3 - Ngăn C01",
     sourceReason: "Khách sỉ hủy đơn nguyên bộ",
     oldCustomer: "KH-1000099 - Vàng Bạc Ngọc Lan",
-    dateInStock: "30/07/2026",
     standardLaborPrice: 3200000
   },
   {
@@ -95,11 +121,12 @@ export const WAREHOUSE_REWORK_ITEMS = [
     stoneQty: "2 viên mắt Ruby",
     weight: "15.20g/chiếc",
     availableQty: 8,
+    oldOrderCode: "SO2607033",
+    dateInStock: "01/08/2026",
     status: "Available",
     location: "Két K2 - Ngăn B08",
     sourceReason: "Tồn kho chờ xử lý lại",
     oldCustomer: "KH-1000033 - Doji Retail",
-    dateInStock: "01/08/2026",
     standardLaborPrice: 1200000
   }
 ];
