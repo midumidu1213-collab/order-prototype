@@ -24,7 +24,7 @@ export const INITIAL_ORDERS = [
     weight: "408.0000L",
     tempTotal: "130.000.000", // Tổng tiền tạm tính
     discount: "0%",
-    finalPrice: "127,775,000", // Giá sau chiết khấu
+    finalPrice: "130.000.000", // Giá sau chiết khấu (Bằng Tổng tiền tạm tính khi chiết khấu 0%)
     deliveryAddress: "123 Nguyễn Ái Quốc",
     deliveryProgress: "Giao đúng hạn (7h)",
     note: "Đơn thoả thuận 2/10 (item x 100pcs = 500pcs)",
@@ -39,8 +39,8 @@ export const INITIAL_ORDERS = [
       {
         stt: 1,
         image: "earrings",
-        itemCode: "GY0EC00013/A00A00000000000000",
-        drawingCode: "EC00013/A00",
+        itemCode: "GY0EC00013A00A0000000000000000",
+        drawingCode: "EC00013A00",
         platingColor: "Y0",
         stoneColor: "---",
         size: "---",
@@ -57,8 +57,8 @@ export const INITIAL_ORDERS = [
       {
         stt: 2,
         image: "ring",
-        itemCode: "GY0RG00014/A00A00000000000015",
-        drawingCode: "RG00014/A00",
+        itemCode: "GY0RG00144A00A00CZBB1CZWW1013",
+        drawingCode: "RG00014A00",
         platingColor: "Y0",
         stoneColor: "Trắng",
         size: "NNU - 015",
@@ -75,8 +75,8 @@ export const INITIAL_ORDERS = [
       {
         stt: 3,
         image: "ring-diamond",
-        itemCode: "GY0RG00014/A00A00CZ881CZWW1013",
-        drawingCode: "RG00014/A00",
+        itemCode: "GY0RG00014A00A00CZ881CZWW1013",
+        drawingCode: "RG00014A00",
         platingColor: "Y0",
         stoneColor: "---",
         size: "NNU - 013",
@@ -93,7 +93,7 @@ export const INITIAL_ORDERS = [
       {
         stt: 4,
         image: "bracelet",
-        itemCode: "GY0BE00014/A00A00000000CZWW1048",
+        itemCode: "GY0BE00014A00A00000000CZWW1048",
         drawingCode: "BEC00148A00",
         platingColor: "Y0",
         stoneColor: "---",
@@ -111,8 +111,8 @@ export const INITIAL_ORDERS = [
       {
         stt: 5,
         image: "earrings-drop",
-        itemCode: "GY0EC00013/A00A00CZ8810000000",
-        drawingCode: "EC00013/A00",
+        itemCode: "GY0EC00013A00A00CZ8810000000000",
+        drawingCode: "EC00013A00",
         platingColor: "Y0",
         stoneColor: "---",
         size: "---",
@@ -161,7 +161,7 @@ export const INITIAL_ORDERS = [
         stt: 1,
         image: "ring",
         itemCode: "RG202500006",
-        drawingCode: "EC00013/A00",
+        drawingCode: "EC00013A00",
         platingColor: "Y0",
         stoneColor: "Xanh",
         size: "45",
@@ -209,7 +209,7 @@ export const INITIAL_ORDERS = [
         stt: 1,
         image: "ring",
         itemCode: "RG202500006",
-        drawingCode: "RG00014/A00",
+        drawingCode: "RG00014A00",
         platingColor: "Y0",
         stoneColor: "Xanh",
         size: "45",
@@ -257,7 +257,7 @@ export const INITIAL_ORDERS = [
         stt: 1,
         image: "set",
         itemCode: "SET-EMERALD-01",
-        drawingCode: "EC00013/A00",
+        drawingCode: "EC00013A00",
         platingColor: "Y0",
         stoneColor: "Xanh Lục Bảo",
         size: "52",

@@ -337,7 +337,9 @@ export default function OrderDetailPage({ params }) {
             </div>
             <div>
               <span className="text-slate-400 text-[11px] block">Giá sau chiết khấu:</span>
-              <span className="font-mono font-black text-rose-700">{order.finalPrice || "127,775,000"} đ</span>
+              <span className="font-mono font-black text-rose-700">
+                {order.discount === "0%" ? (order.tempTotal || "130.000.000") : (order.finalPrice || order.tempTotal || "130.000.000")} đ
+              </span>
             </div>
           </div>
 
@@ -451,7 +453,9 @@ export default function OrderDetailPage({ params }) {
 
                     {/* Mã Item */}
                     <td className="px-4 py-3.5">
-                      <div className="font-mono font-bold text-slate-900 text-xs">{item.itemCode}</div>
+                      <div className="font-mono font-bold text-slate-900 text-xs">
+                        {item.itemCode?.replace(/\//g, "")}
+                      </div>
                       {isSynced && (
                         <div className="mt-1 flex items-center space-x-1 text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded font-bold">
                           <Warehouse className="h-3 w-3 mr-0.5 text-emerald-700" />
@@ -462,7 +466,7 @@ export default function OrderDetailPage({ params }) {
 
                     {/* Mã Drawing */}
                     <td className="px-3 py-3.5 font-mono text-slate-700 font-semibold">
-                      {item.drawingCode}
+                      {item.drawingCode?.replace(/\//g, "")}
                     </td>
 
                     {/* Màu xi */}

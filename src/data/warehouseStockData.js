@@ -3,11 +3,11 @@
 // Chứa đầy đủ các trường: Mã item, Số lượng, Mã đơn hàng cũ, Ngày nhập kho
 
 export const WAREHOUSE_REWORK_ITEMS = [
-  // Item khớp với đơn SO2608011 (Dòng 2: GY0RG00014/A00A00000000000015)
+  // Item khớp với đơn SO2608011 (Dòng 2: GY0RG00144A00A00CZBB1CZWW1013)
   {
     id: "WP-011",
     bagCode: "BAG-TP-9915",
-    itemCode: "GY0RG00014/A00A00000000000015",
+    itemCode: "GY0RG00144A00A00CZBB1CZWW1013",
     itemCode30: "GY0RG00144A00A00CZBB1CZWW1013",
     itemName: "Nhẫn Nữ",
     category: "Nhẫn nữ",

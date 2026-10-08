@@ -225,7 +225,7 @@ export default function WarehouseSyncPopup({
                       {/* Cột 1: Mã Item (Mã 30 ký tự, tên Nhẫn Nữ, Màu đá Trắng) */}
                       <td className="px-3 py-3.5">
                         <div className="font-mono font-bold text-xs text-slate-900 tracking-tight">
-                          {stock.itemCode30 || stock.itemCode}
+                          {(stock.itemCode30 || stock.itemCode)?.replace(/\//g, "")}
                         </div>
                         <div className="text-[11px] text-slate-700 font-bold mt-0.5">{displayName || "Nhẫn Nữ"}</div>
                         <div className="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-1.5">
