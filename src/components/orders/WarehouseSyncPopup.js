@@ -169,8 +169,7 @@ export default function WarehouseSyncPopup({
               <strong className="font-bold text-amber-950 block text-[13px] mb-0.5">
                 Quy tắc khớp 100% thuộc tính & Bán đúng sản phẩm hiện hữu trong kho
               </strong>
-              Hệ thống chỉ liệt kê các mặt hàng có <strong>Mã Item, Tuổi vàng, Ni tay và Màu đá trùng khớp hoàn toàn</strong> với dòng đặt hàng. 
-              Khi pick chọn item kho, hệ thống sẽ tự động <strong>NHẢ ĐÁ TƯƠNG ỨNG VỀ KHO PHỤ LIỆU</strong> và áp biểu giá tiền công chuẩn của khách hàng hiện tại.
+              Hệ thống chỉ liệt kê các mặt hàng có <strong>Mã item trùng khớp hoàn toàn</strong> với dòng đặt hàng. Khi pick chọn item kho, hệ thống sẽ tự động áp giá tiền công chuẩn của khách hàng hiện tại.
             </div>
           </div>
 
@@ -194,7 +193,7 @@ export default function WarehouseSyncPopup({
                   <th className="px-3 py-3 text-center w-32">Mã Đơn Hàng Cũ</th>
                   <th className="px-3 py-3 text-center w-36">Nguyên Liệu - Tuổi Vàng</th>
                   <th className="px-3 py-3 text-center w-28">Ngày Nhập Kho</th>
-                  <th className="px-3 py-3 text-center w-48">Ô Nhập SL Pick Chọn</th>
+                  <th className="px-3 py-3 text-center w-36">SL PICK CHỌN</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -287,9 +286,9 @@ export default function WarehouseSyncPopup({
                         </span>
                       </td>
 
-                      {/* Cột 7: Ô Nhập Số Lượng Pick Chọn (Đã bỏ dòng 'Nhu cầu đơn: 100 món') */}
+                      {/* Cột 7: SL Pick Chọn */}
                       <td className="px-3 py-3.5 text-center">
-                        <div className="flex items-center justify-center space-x-1.5">
+                        <div className="flex items-center justify-center">
                           <input
                             type="number"
                             min="0"
@@ -299,25 +298,12 @@ export default function WarehouseSyncPopup({
                             onChange={(e) =>
                               handleQtyChange(stock.id, e.target.value, stock.availableQty, requestedQty)
                             }
-                            className={`w-20 text-center font-mono font-black text-sm rounded-lg py-1 px-1 transition-all ${
+                            className={`w-24 text-center font-mono font-black text-sm rounded-lg py-1.5 px-2 transition-all ${
                               isSelected
                                 ? "text-emerald-900 border-2 border-emerald-500 bg-white focus:outline-none focus:ring-2 focus:ring-[#005a46]"
                                 : "text-slate-400 border border-slate-200 bg-slate-50 cursor-not-allowed"
                             }`}
                           />
-                          <button
-                            type="button"
-                            disabled={!isSelected}
-                            onClick={() => handleSelectMax(stock.id, stock.availableQty, requestedQty)}
-                            className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer shrink-0 shadow-2xs ${
-                              isSelected
-                                ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300"
-                                : "bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed"
-                            }`}
-                            title="Chọn tối đa số lượng có thể"
-                          >
-                            Tối đa
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -345,7 +331,7 @@ export default function WarehouseSyncPopup({
             className="px-6 py-2.5 bg-[#005a46] hover:bg-[#004737] text-white text-xs font-bold rounded-xl shadow-sm flex items-center space-x-1.5 transition-colors cursor-pointer"
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-            <span>Xác nhận ({totalPicked} món kho)</span>
+            <span>Xác nhận ({totalPicked} món)</span>
           </button>
         </div>
       </div>
