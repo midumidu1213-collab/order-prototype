@@ -21,7 +21,7 @@ export const INITIAL_ORDERS = [
     type: "Đơn hàng Gia công",
     date: "04/10/2026",
     correspondingCode: "NED", // Mã tương ứng
-    weight: "408.0000g",
+    weight: "408.0000L",
     tempTotal: "130.000.000", // Tổng tiền tạm tính
     discount: "0%",
     finalPrice: "127,775,000", // Giá sau chiết khấu
@@ -46,9 +46,10 @@ export const INITIAL_ORDERS = [
         size: "---",
         qty: 100,
         changeReq: "A00",
-        weight: "0.5000g",
+        weight: "0.5000L",
         unitPrice: 195000,
         note: "---",
+        routingStatus: "Đủ BOM/Routing",
         sourceType: "NEW_PRODUCTION",
         qtyFromStock: 0,
         qtyNewProduction: 100
@@ -63,9 +64,10 @@ export const INITIAL_ORDERS = [
         size: "NNU - 015",
         qty: 100,
         changeReq: "A00",
-        weight: "0.4500g",
+        weight: "0.4500L",
         unitPrice: 150000,
         note: "---",
+        routingStatus: "Chờ Routing mới",
         sourceType: "NEW_PRODUCTION",
         qtyFromStock: 0,
         qtyNewProduction: 100
@@ -80,9 +82,10 @@ export const INITIAL_ORDERS = [
         size: "NNU - 013",
         qty: 100,
         changeReq: "A00",
-        weight: "1.1000g",
+        weight: "1.1000L",
         unitPrice: 455000,
         note: "---",
+        routingStatus: "Đủ BOM/Routing",
         sourceType: "NEW_PRODUCTION",
         qtyFromStock: 0,
         qtyNewProduction: 100
@@ -97,9 +100,10 @@ export const INITIAL_ORDERS = [
         size: "VT - 048",
         qty: 100,
         changeReq: "A00",
-        weight: "0.5000g",
+        weight: "0.5000L",
         unitPrice: 170000,
         note: "---",
+        routingStatus: "Đủ BOM/Routing",
         sourceType: "NEW_PRODUCTION",
         qtyFromStock: 0,
         qtyNewProduction: 100
@@ -114,9 +118,10 @@ export const INITIAL_ORDERS = [
         size: "---",
         qty: 100,
         changeReq: "A00",
-        weight: "1.5000g",
+        weight: "1.5000L",
         unitPrice: 335000,
         note: "---",
+        routingStatus: "Đủ BOM/Routing",
         sourceType: "NEW_PRODUCTION",
         qtyFromStock: 0,
         qtyNewProduction: 100

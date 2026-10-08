@@ -193,57 +193,11 @@ export default function OrderDetailPage({ params }) {
         </div>
       </div>
 
-      {/* THÔNG TIN NGƯỜI TẠO & HÀNG NÚT NGHIỆP VỤ ĐỒNG BỘ KHO */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-3 text-xs">
-        <div className="text-right text-slate-500 text-[11px]">
-          <div>Người tạo: <strong className="text-slate-800">{order.creator || "[04144] - Nguyễn Thị Mỹ Dung"}</strong></div>
-          <div>Ngày tạo: <span className="font-medium text-slate-700">{order.createdAt || "04/10/2026 06:38"}</span></div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          {/* NÚT ĐỒNG BỘ TỒN KHO THÀNH PHẨM (Kèm badge số lượng mặt hàng khớp) */}
-          <div className="relative group">
-            <button
-              type="button"
-              onClick={handleTriggerSync}
-              disabled={!isSyncAllowed}
-              className={`px-4 py-2 rounded-xl text-xs font-bold shadow-xs flex items-center space-x-2 transition-all cursor-pointer ${
-                isSyncAllowed
-                  ? "bg-[#005a46] hover:bg-[#004737] text-white ring-2 ring-emerald-400/40"
-                  : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
-              }`}
-            >
-              <Warehouse className="h-4 w-4" />
-              <span>Đồng bộ tồn kho TP</span>
-              {isSyncAllowed && matchedStockList.length > 0 && (
-                <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full">
-                  {matchedStockList.length}
-                </span>
-              )}
-            </button>
-
-            {/* Tooltip nếu ở trạng thái không cho phép */}
-            {!isSyncAllowed && (
-              <div className="absolute right-0 top-full mt-1.5 hidden group-hover:flex flex-col w-64 p-2 bg-slate-900 text-white text-[11px] rounded-lg shadow-lg z-30">
-                <span className="font-bold text-amber-400 flex items-center mb-0.5">
-                  <ShieldAlert className="h-3 w-3 mr-1" /> Không thể đồng bộ
-                </span>
-                <span>Chỉ áp dụng khi đơn hàng ở trạng thái: <strong>Chờ kỹ thuật, Đủ thông tin kỹ thuật, Chờ duyệt</strong>.</span>
-              </div>
-            )}
-          </div>
-
-          <button className="px-3 py-2 border border-slate-300 rounded-xl text-xs font-medium text-slate-700 bg-white hover:bg-slate-50">
-            <Printer className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
       {/* CARD THÔNG TIN CHUNG: ĐẦY ĐỦ 100% CÁC TRƯỜNG NHƯ ẢNH CHỤP */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-5">
         
-        {/* Header khối thông tin đơn hàng */}
-        <div className="flex items-center justify-between border-b border-slate-200 pb-3.5">
+        {/* Header khối thông tin đơn hàng (Đã bê cụm Người tạo, Ngày tạo, Nút Đồng bộ tồn kho TP xuống đây) */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 pb-3.5">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
               <FileText className="h-5 w-5 text-[#005a46]" />
@@ -255,6 +209,51 @@ export default function OrderDetailPage({ params }) {
               </span>
             </div>
           </div>
+
+          {/* Cụm Người tạo, Ngày tạo, Nút Đồng bộ tồn kho TP và Nút In */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="text-right text-slate-500 text-[11px] leading-tight">
+              <div>Người tạo: <strong className="text-slate-800">{order.creator || "[04144] - Nguyễn Thị Mỹ Dung"}</strong></div>
+              <div>Ngày tạo: <span className="font-medium text-slate-700">{order.createdAt || "04/10/2026 06:38"}</span></div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              {/* Nút Đồng bộ tồn kho TP */}
+              <div className="relative group">
+                <button
+                  type="button"
+                  onClick={handleTriggerSync}
+                  disabled={!isSyncAllowed}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs flex items-center space-x-2 transition-all cursor-pointer ${
+                    isSyncAllowed
+                      ? "bg-[#005a46] hover:bg-[#004737] text-white ring-2 ring-emerald-400/40"
+                      : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                  }`}
+                >
+                  <Warehouse className="h-4 w-4" />
+                  <span>Đồng bộ tồn kho TP</span>
+                  {isSyncAllowed && matchedStockList.length > 0 && (
+                    <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                      {matchedStockList.length}
+                    </span>
+                  )}
+                </button>
+
+                {!isSyncAllowed && (
+                  <div className="absolute right-0 top-full mt-1.5 hidden group-hover:flex flex-col w-64 p-2 bg-slate-900 text-white text-[11px] rounded-lg shadow-lg z-30">
+                    <span className="font-bold text-amber-400 flex items-center mb-0.5">
+                      <ShieldAlert className="h-3 w-3 mr-1" /> Không thể đồng bộ
+                    </span>
+                    <span>Chỉ áp dụng khi đơn hàng ở trạng thái: <strong>Chờ kỹ thuật, Đủ thông tin kỹ thuật, Chờ duyệt</strong>.</span>
+                  </div>
+                )}
+              </div>
+
+              <button className="p-2 border border-slate-300 rounded-xl text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 cursor-pointer" title="In đơn hàng">
+                <Printer className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Tiêu đề THÔNG TIN CHUNG dời xuống theo chỉ đạo của Chị đẹp */}
@@ -264,7 +263,7 @@ export default function OrderDetailPage({ params }) {
           </span>
         </div>
 
-        {/* LƯỚI THÔNG TIN CHI TIẾT (Đã tinh gọn, loại bỏ thông tin thừa và bê Tổng SL, Tổng Giá Trị vào) */}
+        {/* LƯỚI THÔNG TIN CHI TIẾT (Đã tinh gọn, loại bỏ thông tin thừa và chuẩn hóa theo Chị đẹp) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3.5 text-xs">
           
           {/* CỘT 1 */}
@@ -279,7 +278,7 @@ export default function OrderDetailPage({ params }) {
             </div>
             <div>
               <span className="text-slate-400 text-[11px] block">Chất liệu đá:</span>
-              <span className="font-semibold text-slate-800">{order.stoneMaterial || "Không gắn đá"}</span>
+              <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 inline-block font-mono">1</span>
             </div>
             <div>
               <span className="text-slate-400 text-[11px] block flex items-center">
@@ -287,9 +286,8 @@ export default function OrderDetailPage({ params }) {
               </span>
               <span className="font-bold text-slate-900">{order.discount || "0%"}</span>
             </div>
-            {/* Bê Tổng số lượng xuống thành thông tin chung */}
-            <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Tổng số lượng:</span>
+            <div>
+              <span className="text-slate-400 text-[11px] block">Tổng số lượng:</span>
               <span className="font-mono font-black text-slate-900 text-sm">{order.qty} SP</span>
             </div>
           </div>
@@ -314,12 +312,8 @@ export default function OrderDetailPage({ params }) {
             </div>
             <div>
               <span className="text-slate-400 text-[11px] block">Trọng lượng:</span>
-              <span className="font-mono font-bold text-slate-800">{order.weight || "408.0000g"}</span>
-            </div>
-            {/* Bê Tổng giá trị xuống thành thông tin chung */}
-            <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Tổng giá trị:</span>
-              <span className="font-mono font-black text-emerald-900 text-sm">{order.total} đ</span>
+              <span className="font-mono font-bold text-slate-800">{order.weight || "408.0000L"}</span>
+              <span className="text-[10px] text-slate-400 ml-1">(Lượng - L)</span>
             </div>
           </div>
 
@@ -426,9 +420,10 @@ export default function OrderDetailPage({ params }) {
                 <th className="px-3 py-3 text-center">Ni/Size</th>
                 <th className="px-3 py-3 text-center font-bold">Số lượng</th>
                 <th className="px-3 py-3 text-center">Yêu cầu thay đổi</th>
-                <th className="px-3 py-3 text-right">Trọng lượng</th>
+                <th className="px-3 py-3 text-right">Trọng lượng (L)</th>
                 <th className="px-4 py-3 text-right">Đơn giá</th>
                 <th className="px-3 py-3 text-center">Ghi chú</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap min-w-[130px]">Trạng thái BOM/Routing</th>
                 <th className="px-4 py-3 text-center w-36">Tác vụ Kho TP</th>
                 <th className="px-3 py-3 text-center w-14">Thao tác</th>
               </tr>
@@ -495,9 +490,9 @@ export default function OrderDetailPage({ params }) {
                       {item.changeReq || "A00"}
                     </td>
 
-                    {/* Trọng lượng */}
-                    <td className="px-3 py-3.5 text-right font-mono text-slate-700 font-medium">
-                      {item.weight || "0.5000g"}
+                    {/* Trọng lượng (Đơn vị tính là Lượng - L) */}
+                    <td className="px-3 py-3.5 text-right font-mono text-slate-800 font-semibold">
+                      {item.weight || "0.5000L"}
                     </td>
 
                     {/* Đơn giá (Background hồng chữ tím chuẩn như ảnh của Chị đẹp) */}
@@ -510,6 +505,19 @@ export default function OrderDetailPage({ params }) {
                     {/* Ghi chú */}
                     <td className="px-3 py-3.5 text-center text-slate-400">
                       {item.note || "---"}
+                    </td>
+
+                    {/* Trạng thái BOM/Routing (Thêm mới theo chỉ đạo của Chị đẹp) */}
+                    <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                      {item.routingStatus === "Chờ Routing mới" ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 inline-block">
+                          Chờ Routing mới
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 inline-block">
+                          {item.routingStatus || "Đủ BOM/Routing"}
+                        </span>
+                      )}
                     </td>
 
                     {/* Tác vụ Kho TP: Chỉ hiển thị nút đồng bộ kho cho item trùng với item trong kho */}
