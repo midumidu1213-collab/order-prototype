@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   Filter, 
   Search, 
@@ -18,187 +19,300 @@ import {
   ChevronsRight,
   X,
   SlidersHorizontal,
-  Info
+  Info,
+  CheckCircle2,
+  Printer,
+  Trash2,
+  Check,
+  ChevronDown,
+  Warehouse,
+  Ban,
+  PackageCheck
 } from "lucide-react";
 import { ORDER_TABS_CONFIG, MOCK_ORDER_LIST } from "@/data/orderListMockData";
+import ColumnFilterPopover from "@/components/orders/ColumnFilterPopover";
 
 export default function OrderListPage() {
-  // 1. State quản lý Tab đang active (Search theo Tab)
+  const router = useRouter();
+
+  // 1. Dữ liệu danh sách đơn hàng (Quản lý qua state để thao tác action thêm/xóa/đổi trạng thái)
+  const [orders, setOrders] = useState(MOCK_ORDER_LIST);
+
+  // 2. Tab trạng thái đang active
   const [activeTab, setActiveTab] = useState("ALL");
 
-  // 2. State quản lý ô tìm kiếm toàn cục (Global Search)
+  // 3. Ô tìm kiếm toàn cục (Global Search)
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 3. State bật/tắt hiển thị hàng lọc theo từng cột (Column Filter Row)
-  const [showColumnFilters, setShowColumnFilters] = useState(true);
-
-  // 4. State quản lý bộ lọc cho từng cột (Search theo từng cột)
+  // 4. Quản lý bộ lọc trực tiếp trên từng cột (Theo đúng yêu cầu ERP không tách hàng thứ 2)
   const [columnFilters, setColumnFilters] = useState({
-    code: "",
-    customer: "",
-    type: "",
-    gold: "",
-    date: "",
-    offerTime: "",
-    note: "",
-    status: "",
-    programName: ""
+    code: { sort: null, selectedValues: null },
+    customer: { sort: null, selectedValues: null },
+    type: { sort: null, selectedValues: null },
+    gold: { sort: null, selectedValues: null },
+    date: { sort: null, dateCondition: "between", dateFrom: "", dateTo: "" },
+    note: { sort: null, selectedValues: null },
+    status: { sort: null, selectedValues: null },
+    programName: { sort: null, selectedValues: null }
   });
 
-  // 5. State chọn dòng (Checkbox)
-  const [selectedIds, setSelectedIds] = useState(new Set());
+  // Cột nào đang mở Popover lọc
+  const [activeFilterColKey, setActiveFilterColKey] = useState(null);
 
-  // 6. Phân trang
+  // 5. TÙY CHỈNH KÍCH THƯỚC CỘT (RESIZABLE COLUMNS)
+  const [columnWidths, setColumnWidths] = useState({
+    select: 46,
+    stt: 48,
+    code: 140,
+    customer: 260,
+    type: 145,
+    gold: 95,
+    date: 155,
+    offerTime: 135,
+    note: 130,
+    status: 160,
+    qty: 85,
+    total: 135,
+    discount: 95,
+    programName: 200,
+    actions: 120
+  });
+
+  // 6. Quản lý Action Menus mở trên từng dòng
+  const [activeActionOrderId, setActiveActionOrderId] = useState(null);
+  const [activeSettingsOrderId, setActiveSettingsOrderId] = useState(null);
+
+  // Modal đổi trạng thái đơn hàng nhanh
+  const [statusModalOrder, setStatusModalOrder] = useState(null);
+
+  // Toast thông báo tương tác
+  const [toastMessage, setToastMessage] = useState("");
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(""), 4000);
+  };
+
+  // 7. Checkbox chọn dòng & Phân trang
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Danh sách các tùy chọn cho dropdown lọc cột
-  const typeOptions = ["Đơn hàng Gia công", "Đơn hàng Bán"];
-  const goldOptions = ["61Y", "41.7W", "75W"];
-  const statusOptions = [
-    "Đã chuyển KHSX",
-    "Đủ thông tin kỹ thuật",
-    "Chờ kỹ thuật",
-    "Chờ duyệt đơn hàng",
-    "Chờ cập nhật",
-    "Chờ xử lý",
-    "Đã hủy"
-  ];
+  // Đóng action dropdown khi click ra ngoài
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      setActiveActionOrderId(null);
+      setActiveSettingsOrderId(null);
+    };
+    document.addEventListener("click", handleGlobalClick);
+    return () => document.removeEventListener("click", handleGlobalClick);
+  }, []);
 
-  // Đếm số lượng đơn thực tế theo từng Tab trong dữ liệu hiện có
+  // Xử lý kéo thả thay đổi kích thước cột (Column Resizing)
+  const handleResizeMouseDown = (colKey, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startWidth = columnWidths[colKey] || 100;
+
+    const handleMouseMove = (moveEvent) => {
+      const delta = moveEvent.clientX - startX;
+      setColumnWidths((prev) => ({
+        ...prev,
+        [colKey]: Math.max(45, startWidth + delta)
+      }));
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  // TÍNH ĐÚNG SỐ LƯỢNG ĐƠN CHO TỪNG TAB TRẠNG THÁI (ĐỒNG BỘ 100% VỚI DỮ LIỆU)
   const tabCounts = useMemo(() => {
-    const counts = { ALL: MOCK_ORDER_LIST.length };
+    const counts = { ALL: orders.length };
     ORDER_TABS_CONFIG.forEach((tab) => {
       if (tab.id !== "ALL") {
-        const count = MOCK_ORDER_LIST.filter((o) => o.status === tab.status).length;
-        counts[tab.id] = count;
+        counts[tab.id] = orders.filter((o) => o.status === tab.status).length;
       }
     });
     return counts;
-  }, []);
+  }, [orders]);
 
-  // Xử lý thay đổi bộ lọc từng cột
-  const handleColumnFilterChange = (columnKey, value) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [columnKey]: value
-    }));
-    setCurrentPage(1);
+  // Lấy danh sách các giá trị duy nhất của từng cột để đưa vào bộ lọc
+  const uniqueValuesMap = useMemo(() => {
+    return {
+      code: Array.from(new Set(orders.map((o) => o.code).filter(Boolean))),
+      customer: Array.from(new Set(orders.map((o) => o.customer).filter(Boolean))),
+      type: ["Đơn hàng Gia công", "Đơn hàng Bán"],
+      gold: ["61Y", "41.7W", "68Y", "75W"],
+      note: Array.from(new Set(orders.map((o) => o.note).filter(Boolean))),
+      status: [
+        "Chờ cập nhật",
+        "Chờ xử lý",
+        "Chờ kỹ thuật",
+        "Đủ thông tin kỹ thuật",
+        "Chờ duyệt đơn hàng",
+        "Đã chuyển KHSX",
+        "Đang sản xuất",
+        "Đang đóng gói",
+        "Chờ giao hàng",
+        "Hoàn thành",
+        "Đã hủy"
+      ],
+      discount: ["0%", "2%", "3%", "4%", "5%"],
+      programName: Array.from(new Set(orders.map((o) => o.programName).filter(Boolean)))
+    };
+  }, [orders]);
+
+  // Kiểm tra xem một cột có đang áp dụng lọc/sắp xếp không
+  const isColumnFiltered = (colKey) => {
+    const filter = columnFilters[colKey];
+    if (!filter) return false;
+    if (filter.sort) return true;
+    if (filter.selectedValues && filter.selectedValues.size > 0) return true;
+    if (filter.dateFrom || filter.dateTo) return true;
+    return false;
   };
+
+  // Kiểm tra tổng thể có bất kỳ bộ lọc nào đang bật không
+  const isAnyFilterActive = useMemo(() => {
+    if (activeTab !== "ALL") return true;
+    if (searchQuery.trim() !== "") return true;
+    return Object.keys(columnFilters).some((key) => isColumnFiltered(key));
+  }, [activeTab, searchQuery, columnFilters]);
 
   // Xóa toàn bộ bộ lọc
   const handleResetAllFilters = () => {
     setActiveTab("ALL");
     setSearchQuery("");
     setColumnFilters({
-      code: "",
-      customer: "",
-      type: "",
-      gold: "",
-      date: "",
-      offerTime: "",
-      note: "",
-      status: "",
-      programName: ""
+      code: { sort: null, selectedValues: null },
+      customer: { sort: null, selectedValues: null },
+      type: { sort: null, selectedValues: null },
+      gold: { sort: null, selectedValues: null },
+      date: { sort: null, dateCondition: "between", dateFrom: "", dateTo: "" },
+      note: { sort: null, selectedValues: null },
+      status: { sort: null, selectedValues: null },
+      programName: { sort: null, selectedValues: null }
     });
+    setActiveFilterColKey(null);
+    setCurrentPage(1);
+    showToast("Đã đặt lại toàn bộ bộ lọc về mặc định.");
+  };
+
+  // Cập nhật bộ lọc cho một cột
+  const handleApplyColumnFilter = (colKey, newFilterData) => {
+    setColumnFilters((prev) => ({
+      ...prev,
+      [colKey]: newFilterData
+    }));
+    setActiveFilterColKey(null);
     setCurrentPage(1);
   };
 
-  // Kiểm tra xem hiện có bộ lọc nào đang được áp dụng không
-  const isAnyFilterActive = useMemo(() => {
-    return (
-      activeTab !== "ALL" ||
-      searchQuery.trim() !== "" ||
-      Object.values(columnFilters).some((val) => val !== "")
-    );
-  }, [activeTab, searchQuery, columnFilters]);
+  // Xóa bộ lọc của 1 cột
+  const handleClearColumnFilter = (colKey) => {
+    setColumnFilters((prev) => ({
+      ...prev,
+      [colKey]: { sort: null, selectedValues: null, dateFrom: "", dateTo: "" }
+    }));
+    setActiveFilterColKey(null);
+    setCurrentPage(1);
+  };
 
-  // Logic lọc dữ liệu kết hợp: Tab + Search chung + Từng cột
+  // XỬ LÝ LỌC VÀ SẮP XẾP DỮ LIỆU
   const filteredOrders = useMemo(() => {
-    return MOCK_ORDER_LIST.filter((order) => {
-      // 1. Lọc theo Tab trạng thái
-      if (activeTab !== "ALL") {
-        const currentTabConfig = ORDER_TABS_CONFIG.find((t) => t.id === activeTab);
-        if (currentTabConfig?.status && order.status !== currentTabConfig.status) {
-          return false;
-        }
+    let result = [...orders];
+
+    // 1. Lọc theo Tab trạng thái
+    if (activeTab !== "ALL") {
+      const tabConfig = ORDER_TABS_CONFIG.find((t) => t.id === activeTab);
+      if (tabConfig?.status) {
+        result = result.filter((o) => o.status === tabConfig.status);
+      }
+    }
+
+    // 2. Lọc theo ô tìm kiếm toàn cục
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((o) => 
+        o.code?.toLowerCase().includes(q) ||
+        o.customer?.toLowerCase().includes(q) ||
+        o.customerCode?.toLowerCase().includes(q) ||
+        o.team?.toLowerCase().includes(q) ||
+        o.phone?.toLowerCase().includes(q) ||
+        o.type?.toLowerCase().includes(q) ||
+        o.status?.toLowerCase().includes(q)
+      );
+    }
+
+    // 3. Lọc theo từng cột (Checkbox values hoặc Date range)
+    Object.entries(columnFilters).forEach(([colKey, filter]) => {
+      // Lọc danh sách giá trị checkbox
+      if (filter.selectedValues && filter.selectedValues.size > 0) {
+        result = result.filter((o) => {
+          const val = String(o[colKey] || "---");
+          return filter.selectedValues.has(val);
+        });
       }
 
-      // 2. Lọc theo ô tìm kiếm toàn cục (Global Search)
-      if (searchQuery.trim() !== "") {
-        const query = searchQuery.toLowerCase().trim();
-        const matchGlobal = 
-          order.code?.toLowerCase().includes(query) ||
-          order.customer?.toLowerCase().includes(query) ||
-          order.phone?.toLowerCase().includes(query) ||
-          order.team?.toLowerCase().includes(query) ||
-          order.type?.toLowerCase().includes(query) ||
-          order.status?.toLowerCase().includes(query);
-        if (!matchGlobal) return false;
-      }
+      // Lọc theo ngày tháng
+      if (colKey === "date" && (filter.dateFrom || filter.dateTo)) {
+        result = result.filter((o) => {
+          if (!o.date) return false;
+          // Format date của order: "DD/MM/YYYY HH:mm"
+          const parts = o.date.split(" ")[0].split("/");
+          if (parts.length < 3) return true;
+          const orderDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
 
-      // 3. Lọc theo từng cột (Column Filters)
-      // Cột Mã đơn hàng
-      if (columnFilters.code.trim() !== "") {
-        if (!order.code?.toLowerCase().includes(columnFilters.code.toLowerCase().trim())) {
-          return false;
-        }
+          if (filter.dateCondition === "between") {
+            const from = filter.dateFrom ? new Date(filter.dateFrom) : null;
+            const to = filter.dateTo ? new Date(filter.dateTo) : null;
+            if (from && orderDate < from) return false;
+            if (to && orderDate > to) return false;
+            return true;
+          }
+          if (filter.dateCondition === "equals" && filter.dateFrom) {
+            const target = new Date(filter.dateFrom);
+            return orderDate.toDateString() === target.toDateString();
+          }
+          if (filter.dateCondition === "before" && filter.dateFrom) {
+            return orderDate <= new Date(filter.dateFrom);
+          }
+          if (filter.dateCondition === "after" && filter.dateFrom) {
+            return orderDate >= new Date(filter.dateFrom);
+          }
+          return true;
+        });
       }
-
-      // Cột Khách hàng
-      if (columnFilters.customer.trim() !== "") {
-        if (!order.customer?.toLowerCase().includes(columnFilters.customer.toLowerCase().trim())) {
-          return false;
-        }
-      }
-
-      // Cột Loại đơn hàng
-      if (columnFilters.type !== "") {
-        if (order.type !== columnFilters.type) {
-          return false;
-        }
-      }
-
-      // Cột Tuổi vàng
-      if (columnFilters.gold !== "") {
-        if (order.gold !== columnFilters.gold) {
-          return false;
-        }
-      }
-
-      // Cột Ngày đặt hàng
-      if (columnFilters.date.trim() !== "") {
-        if (!order.date?.toLowerCase().includes(columnFilters.date.toLowerCase().trim())) {
-          return false;
-        }
-      }
-
-      // Cột Ghi chú
-      if (columnFilters.note.trim() !== "") {
-        if (!order.note?.toLowerCase().includes(columnFilters.note.toLowerCase().trim())) {
-          return false;
-        }
-      }
-
-      // Cột Trạng thái
-      if (columnFilters.status !== "") {
-        if (order.status !== columnFilters.status) {
-          return false;
-        }
-      }
-
-      // Cột Tên & loại chương trình
-      if (columnFilters.programName.trim() !== "") {
-        if (!order.programName?.toLowerCase().includes(columnFilters.programName.toLowerCase().trim())) {
-          return false;
-        }
-      }
-
-      return true;
     });
-  }, [activeTab, searchQuery, columnFilters]);
 
-  // Phân trang dữ liệu
+    // 4. Sắp xếp (Sort) theo cột đang được chọn
+    const activeSortCol = Object.entries(columnFilters).find(([_, f]) => f.sort);
+    if (activeSortCol) {
+      const [colKey, f] = activeSortCol;
+      const isAsc = f.sort === "asc";
+      result.sort((a, b) => {
+        let valA = a[colKey];
+        let valB = b[colKey];
+        if (typeof valA === "number" && typeof valB === "number") {
+          return isAsc ? valA - valB : valB - valA;
+        }
+        valA = String(valA || "");
+        valB = String(valB || "");
+        return isAsc ? valA.localeCompare(valB, "vi") : valB.localeCompare(valA, "vi");
+      });
+    }
+
+    return result;
+  }, [orders, activeTab, searchQuery, columnFilters]);
+
+  // Phân trang
   const paginatedOrders = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredOrders.slice(startIndex, startIndex + itemsPerPage);
@@ -224,7 +338,41 @@ export default function OrderListPage() {
     });
   };
 
-  // Helper render badge trạng thái chuẩn màu theo ảnh thực tế của Chị đẹp
+  // CÁC THAO TÁC ACTION (ACTIONS TRÊN TỪNG DÒNG ĐƠN HÀNG)
+  // 1. Sao chép mã SO
+  const handleCopyOrderCode = (code, e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(code);
+    setActiveActionOrderId(null);
+    showToast(`Đã sao chép mã đơn hàng ${code} vào bộ nhớ tạm!`);
+  };
+
+  // 2. In đơn hàng
+  const handlePrintOrder = (order, e) => {
+    e.stopPropagation();
+    setActiveActionOrderId(null);
+    showToast(`Đang mở giao diện in cho đơn hàng ${order.code}...`);
+    setTimeout(() => window.print(), 300);
+  };
+
+  // 3. Xóa đơn hàng
+  const handleDeleteOrder = (orderId, orderCode, e) => {
+    e.stopPropagation();
+    setActiveSettingsOrderId(null);
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    showToast(`Đã xóa đơn hàng ${orderCode} khỏi danh sách thành công.`);
+  };
+
+  // 4. Đổi trạng thái đơn hàng nhanh
+  const handleUpdateOrderStatus = (orderId, newStatus) => {
+    setOrders((prev) => 
+      prev.map((o) => o.id === orderId ? { ...o, status: newStatus } : o)
+    );
+    setStatusModalOrder(null);
+    showToast(`Đã chuyển trạng thái đơn hàng sang "${newStatus}"!`);
+  };
+
+  // Badge trạng thái chuẩn màu
   const renderStatusBadge = (status) => {
     switch (status) {
       case "Đã chuyển KHSX":
@@ -251,21 +399,40 @@ export default function OrderListPage() {
             {status}
           </span>
         );
+      case "Chờ cập nhật":
       case "Chờ xử lý":
         return (
           <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
             {status}
           </span>
         );
-      case "Chờ cập nhật":
+      case "Đang sản xuất":
         return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-300">
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-cyan-50 text-cyan-700 border border-cyan-200">
+            {status}
+          </span>
+        );
+      case "Đang đóng gói":
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+            {status}
+          </span>
+        );
+      case "Chờ giao hàng":
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-teal-50 text-teal-800 border border-teal-200">
+            {status}
+          </span>
+        );
+      case "Hoàn thành":
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-100 text-emerald-900 border border-emerald-300">
             {status}
           </span>
         );
       case "Đã hủy":
         return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-rose-50 text-rose-700 border border-rose-200">
             {status}
           </span>
         );
@@ -279,25 +446,38 @@ export default function OrderListPage() {
   };
 
   return (
-    <div className="space-y-3 pb-16 max-w-[1680px] mx-auto text-slate-800">
+    <div className="space-y-4 pb-20 max-w-[1700px] mx-auto px-4 sm:px-6 text-slate-800">
       
-      {/* 1. Breadcrumbs */}
-      <div className="text-xs text-slate-500 flex items-center space-x-1.5 pt-1">
-        <span>Quản lý đơn hàng</span>
+      {/* TOAST THÔNG BÁO TÁC VỤ */}
+      {toastMessage && (
+        <div className="fixed top-5 right-5 z-50 bg-[#005a46] text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center space-x-2 text-xs font-bold animate-in fade-in slide-in-from-top-3">
+          <CheckCircle2 className="h-4 w-4 text-emerald-300 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* 1. BREADCRUMB */}
+      <div className="flex items-center space-x-2 text-xs text-slate-500 pt-2">
+        <Link href="/" className="hover:text-slate-800 transition-colors">
+          Quản lý đơn hàng
+        </Link>
         <span>&gt;</span>
-        <span className="font-semibold text-slate-900">Danh sách đơn hàng</span>
+        <span className="text-[#005a46] font-semibold">Danh sách đơn hàng</span>
       </div>
 
-      {/* 2. Tiêu đề trang */}
+      {/* 2. TIÊU ĐỀ TRANG */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-900">Danh sách đơn hàng</h1>
+        <h1 className="text-xl font-black text-slate-900 tracking-tight">
+          Danh sách đơn hàng
+        </h1>
       </div>
 
-      {/* 3. HÀNG TABS: TÌM KIẾM / LỌC THEO TAB (CHUẨN 100% THEO ẢNH CHỤP CỦA CHỊ ĐẸP) */}
-      <div className="border-b border-slate-200 overflow-x-auto">
-        <nav className="-mb-px flex space-x-6 min-w-max">
+      {/* 3. TABS TRẠNG THÁI (HIỂN THỊ ĐÚNG SỐ LƯỢNG ĐƠN CHO TỪNG TAB TRẠNG THÁI) */}
+      <div className="border-b border-slate-200 overflow-x-auto scrollbar-none">
+        <nav className="flex space-x-5 min-w-max pb-px" aria-label="Tabs">
           {ORDER_TABS_CONFIG.map((tab) => {
             const isActive = activeTab === tab.id;
+            const count = tabCounts[tab.id] || 0;
 
             return (
               <button
@@ -314,23 +494,16 @@ export default function OrderListPage() {
               >
                 <span>{tab.name}</span>
                 <span className={`text-[11px] ${isActive ? "text-[#005a46] font-bold" : "text-slate-500"}`}>
-                  ({tab.count})
+                  ({count})
                 </span>
-                {tabCounts[tab.id] > 0 && tab.id !== "ALL" && (
-                  <span className="ml-1 px-1.5 py-0.2 bg-emerald-100 text-[#005a46] text-[10px] rounded-full font-bold">
-                    {tabCounts[tab.id]} đơn
-                  </span>
-                )}
               </button>
             );
           })}
         </nav>
       </div>
 
-      {/* 4. THANH TÌM KIẾM TOÀN CỤC & THANH CÔNG CỤ (TOOLBAR) */}
+      {/* 4. THANH TÌM KIẾM TOÀN CỤC & CÔNG CỤ */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-        
-        {/* Khối Tìm kiếm chung & Bật/Tắt Bộ lọc cột */}
         <div className="flex items-center space-x-2 flex-1 max-w-lg">
           <div className="relative flex-1">
             <input
@@ -354,27 +527,12 @@ export default function OrderListPage() {
             )}
           </div>
 
-          {/* Nút Bật / Tắt hàng lọc từng cột */}
-          <button
-            type="button"
-            onClick={() => setShowColumnFilters(!showColumnFilters)}
-            className={`flex items-center px-3 py-2 border rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-              showColumnFilters
-                ? "bg-emerald-50 border-emerald-400 text-[#005a46]"
-                : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
-            }`}
-            title="Bật/tắt thanh tìm kiếm theo từng cột"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
-            <span>Bộ lọc cột</span>
-          </button>
-
           {/* Nút Xóa toàn bộ bộ lọc nếu đang có filter */}
           {isAnyFilterActive && (
             <button
               type="button"
               onClick={handleResetAllFilters}
-              className="flex items-center px-2.5 py-2 border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center px-3 py-2 border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
               title="Đặt lại toàn bộ bộ lọc"
             >
               <RotateCcw className="h-3.5 w-3.5 mr-1" />
@@ -383,12 +541,12 @@ export default function OrderListPage() {
           )}
         </div>
 
-        {/* Khối Nút Thêm Mới & Reload */}
+        {/* Khối Thêm Mới & Reload */}
         <div className="flex items-center space-x-2 justify-end">
           <button
             type="button"
             onClick={handleResetAllFilters}
-            className="p-2 border border-slate-300 rounded-lg bg-white text-slate-600 hover:bg-slate-50 cursor-pointer"
+            className="p-2 border border-slate-300 rounded-lg bg-white text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"
             title="Tải lại danh sách"
           >
             <RotateCcw className="h-4 w-4" />
@@ -406,398 +564,444 @@ export default function OrderListPage() {
 
       {/* Thông báo kết quả lọc */}
       {isAnyFilterActive && (
-        <div className="text-xs text-slate-600 flex flex-wrap items-center gap-1.5 py-1">
-          <span>Đang hiển thị kết quả lọc: <strong>{filteredOrders.length}</strong> / {MOCK_ORDER_LIST.length} đơn hàng.</span>
+        <div className="text-xs text-slate-600 flex flex-wrap items-center gap-1.5 py-0.5">
+          <span>Đang hiển thị kết quả lọc: <strong>{filteredOrders.length}</strong> / {orders.length} đơn hàng.</span>
           {activeTab !== "ALL" && (
             <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200">
-              Tab: {ORDER_TABS_CONFIG.find((t) => t.id === activeTab)?.name}
-            </span>
-          )}
-          {columnFilters.code && (
-            <span className="bg-emerald-50 text-[#005a46] px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
-              Mã: {columnFilters.code}
-            </span>
-          )}
-          {columnFilters.customer && (
-            <span className="bg-emerald-50 text-[#005a46] px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
-              KH: {columnFilters.customer}
-            </span>
-          )}
-          {columnFilters.type && (
-            <span className="bg-emerald-50 text-[#005a46] px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
-              Loại: {columnFilters.type}
-            </span>
-          )}
-          {columnFilters.gold && (
-            <span className="bg-emerald-50 text-[#005a46] px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
-              Vàng: {columnFilters.gold}
-            </span>
-          )}
-          {columnFilters.date && (
-            <span className="bg-emerald-50 text-[#005a46] px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
-              Ngày: {columnFilters.date}
-            </span>
-          )}
-          {columnFilters.status && (
-            <span className="bg-emerald-50 text-[#005a46] px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
-              Trạng thái: {columnFilters.status}
+              Trạng thái: {ORDER_TABS_CONFIG.find((t) => t.id === activeTab)?.name}
             </span>
           )}
         </div>
       )}
 
-      {/* 5. BẢNG DỮ LIỆU ĐƠN HÀNG: ĐẦY ĐỦ 15 CỘT CHUẨN 100% THEO ẢNH CHỤP CỦA CHỊ ĐẸP */}
+      {/* 5. BẢNG DỮ LIỆU ĐƠN HÀNG (LỌC TRỰC TIẾP TRÊN CỘT, RESIZABLE COLUMNS, ACTIONS HOẠT ĐỘNG 100%) */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-        <div className="overflow-x-auto">
-          <table className="w-full divide-y divide-slate-200 text-left text-xs">
+        <div className="overflow-x-auto min-h-[460px]">
+          <table className="w-full divide-y divide-slate-200 text-left text-xs table-fixed">
             
-            {/* HÀNG TIÊU ĐỀ CHÍNH (THEAD - 15 CỘT) */}
-            <thead className="bg-slate-50 font-bold text-slate-700 text-[11px] whitespace-nowrap select-none">
+            {/* THEAD DUY NHẤT: LỌC TRỰC TIẾP TRÊN CỘT QUA POPOVER (KHÔNG TÁCH HÀNG THỨ 2) */}
+            <thead className="bg-slate-50 font-bold text-slate-700 text-[11px] select-none">
               <tr>
                 {/* 1. Checkbox chọn tất cả */}
-                <th className="px-2.5 py-3 text-center w-8">
+                <th
+                  style={{ width: `${columnWidths.select}px`, minWidth: `${columnWidths.select}px` }}
+                  className="relative px-2.5 py-3 text-center"
+                >
                   <input
                     type="checkbox"
                     checked={selectedIds.size === paginatedOrders.length && paginatedOrders.length > 0}
                     onChange={handleToggleSelectAll}
                     className="w-4 h-4 rounded text-[#005a46] focus:ring-[#005a46] border-slate-300 cursor-pointer"
                   />
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("select", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
                 {/* 2. STT */}
-                <th className="px-2 py-3 text-center w-10 font-bold text-slate-800">STT</th>
+                <th
+                  style={{ width: `${columnWidths.stt}px`, minWidth: `${columnWidths.stt}px` }}
+                  className="relative px-2 py-3 text-center font-bold text-slate-800"
+                >
+                  STT
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("stt", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
+                </th>
 
                 {/* 3. Mã đơn hàng */}
-                <th className="px-2.5 py-3">
-                  <div className="flex items-center space-x-1 cursor-pointer">
-                    <span className="font-bold text-slate-800">Mã đơn hàng</span>
+                <th
+                  style={{ width: `${columnWidths.code}px`, minWidth: `${columnWidths.code}px` }}
+                  className="relative px-2.5 py-3"
+                >
+                  <div className="flex items-center justify-between space-x-1">
+                    <span className="font-bold text-slate-800 truncate">Mã đơn hàng</span>
                     <button
                       type="button"
-                      onClick={() => setShowColumnFilters(true)}
-                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
-                        columnFilters.code ? "text-[#005a46] font-bold" : "text-slate-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "code" ? null : "code");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("code")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                       }`}
-                      title="Lọc theo Mã đơn hàng"
+                      title="Lọc & sắp xếp cột Mã đơn hàng"
                     >
-                      <Filter className="h-3 w-3" />
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("code") ? "fill-[#005a46]" : ""}`} />
                     </button>
                   </div>
+                  {activeFilterColKey === "code" && (
+                    <ColumnFilterPopover
+                      columnKey="code"
+                      columnTitle="Mã đơn hàng"
+                      columnType="select"
+                      uniqueValues={uniqueValuesMap.code}
+                      filterState={columnFilters.code}
+                      onApply={(data) => handleApplyColumnFilter("code", data)}
+                      onClear={() => handleClearColumnFilter("code")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("code", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
                 {/* 4. Khách hàng */}
-                <th className="px-2.5 py-3">
-                  <div className="flex items-center space-x-1 cursor-pointer">
-                    <span className="font-bold text-slate-800">Khách hàng</span>
+                <th
+                  style={{ width: `${columnWidths.customer}px`, minWidth: `${columnWidths.customer}px` }}
+                  className="relative px-2.5 py-3"
+                >
+                  <div className="flex items-center justify-between space-x-1">
+                    <span className="font-bold text-slate-800 truncate">Khách hàng</span>
                     <button
                       type="button"
-                      onClick={() => setShowColumnFilters(true)}
-                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
-                        columnFilters.customer ? "text-[#005a46] font-bold" : "text-slate-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "customer" ? null : "customer");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("customer")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                       }`}
-                      title="Lọc theo Khách hàng"
+                      title="Lọc & sắp xếp cột Khách hàng"
                     >
-                      <Filter className="h-3 w-3" />
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("customer") ? "fill-[#005a46]" : ""}`} />
                     </button>
                   </div>
+                  {activeFilterColKey === "customer" && (
+                    <ColumnFilterPopover
+                      columnKey="customer"
+                      columnTitle="Khách hàng"
+                      columnType="select"
+                      uniqueValues={uniqueValuesMap.customer}
+                      filterState={columnFilters.customer}
+                      onApply={(data) => handleApplyColumnFilter("customer", data)}
+                      onClear={() => handleClearColumnFilter("customer")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("customer", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
                 {/* 5. Loại đơn hàng */}
-                <th className="px-2.5 py-3 text-center">
-                  <div className="flex items-center justify-center space-x-1 cursor-pointer">
-                    <span className="font-bold text-slate-800">Loại đơn hàng</span>
+                <th
+                  style={{ width: `${columnWidths.type}px`, minWidth: `${columnWidths.type}px` }}
+                  className="relative px-2.5 py-3 text-center"
+                >
+                  <div className="flex items-center justify-center space-x-1">
+                    <span className="font-bold text-slate-800 truncate">Loại đơn hàng</span>
                     <button
                       type="button"
-                      onClick={() => setShowColumnFilters(true)}
-                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
-                        columnFilters.type ? "text-[#005a46] font-bold" : "text-slate-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "type" ? null : "type");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("type")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                       }`}
-                      title="Lọc theo Loại đơn hàng"
+                      title="Lọc Loại đơn hàng"
                     >
-                      <Filter className="h-3 w-3" />
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("type") ? "fill-[#005a46]" : ""}`} />
                     </button>
                   </div>
+                  {activeFilterColKey === "type" && (
+                    <ColumnFilterPopover
+                      columnKey="type"
+                      columnTitle="Loại đơn hàng"
+                      columnType="select"
+                      uniqueValues={uniqueValuesMap.type}
+                      filterState={columnFilters.type}
+                      onApply={(data) => handleApplyColumnFilter("type", data)}
+                      onClear={() => handleClearColumnFilter("type")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("type", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
                 {/* 6. Tuổi vàng */}
-                <th className="px-2 py-3 text-center">
-                  <div className="flex items-center justify-center space-x-1 cursor-pointer">
-                    <span className="font-bold text-slate-800">Tuổi vàng</span>
+                <th
+                  style={{ width: `${columnWidths.gold}px`, minWidth: `${columnWidths.gold}px` }}
+                  className="relative px-2 py-3 text-center"
+                >
+                  <div className="flex items-center justify-center space-x-1">
+                    <span className="font-bold text-slate-800 truncate">Tuổi vàng</span>
                     <button
                       type="button"
-                      onClick={() => setShowColumnFilters(true)}
-                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
-                        columnFilters.gold ? "text-[#005a46] font-bold" : "text-slate-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "gold" ? null : "gold");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("gold")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                       }`}
-                      title="Lọc theo Tuổi vàng"
+                      title="Lọc Tuổi vàng"
                     >
-                      <Filter className="h-3 w-3" />
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("gold") ? "fill-[#005a46]" : ""}`} />
                     </button>
                   </div>
+                  {activeFilterColKey === "gold" && (
+                    <ColumnFilterPopover
+                      columnKey="gold"
+                      columnTitle="Tuổi vàng"
+                      columnType="select"
+                      uniqueValues={uniqueValuesMap.gold}
+                      filterState={columnFilters.gold}
+                      onApply={(data) => handleApplyColumnFilter("gold", data)}
+                      onClear={() => handleClearColumnFilter("gold")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("gold", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
                 {/* 7. Ngày đặt hàng */}
-                <th className="px-2.5 py-3 text-center">
-                  <div className="flex items-center justify-center space-x-1 cursor-pointer">
-                    <span className="font-bold text-slate-800">Ngày đặt hàng</span>
+                <th
+                  style={{ width: `${columnWidths.date}px`, minWidth: `${columnWidths.date}px` }}
+                  className="relative px-2.5 py-3 text-center"
+                >
+                  <div className="flex items-center justify-center space-x-1">
+                    <span className="font-bold text-slate-800 truncate">Ngày đặt hàng</span>
                     <button
                       type="button"
-                      onClick={() => setShowColumnFilters(true)}
-                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
-                        columnFilters.date ? "text-[#005a46] font-bold" : "text-slate-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "date" ? null : "date");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("date")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                       }`}
-                      title="Lọc theo Ngày đặt hàng"
+                      title="Lọc & sắp xếp Ngày đặt hàng"
                     >
-                      <Filter className="h-3 w-3" />
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("date") ? "fill-[#005a46]" : ""}`} />
                     </button>
                   </div>
+                  {activeFilterColKey === "date" && (
+                    <ColumnFilterPopover
+                      columnKey="date"
+                      columnTitle="Ngày đặt hàng"
+                      columnType="date"
+                      uniqueValues={[]}
+                      filterState={columnFilters.date}
+                      onApply={(data) => handleApplyColumnFilter("date", data)}
+                      onClear={() => handleClearColumnFilter("date")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("date", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
                 {/* 8. Thời gian chào hàng */}
-                <th className="px-2 py-3 text-center text-slate-800">
-                  Thời gian chào hàng
+                <th
+                  style={{ width: `${columnWidths.offerTime}px`, minWidth: `${columnWidths.offerTime}px` }}
+                  className="relative px-2 py-3 text-center text-slate-800"
+                >
+                  <span className="truncate">Thời gian chào hàng</span>
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("offerTime", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
                 {/* 9. Ghi chú */}
-                <th className="px-2.5 py-3 text-center text-slate-800">
-                  <div className="flex items-center justify-center space-x-1 cursor-pointer">
-                    <span>Ghi chú</span>
+                <th
+                  style={{ width: `${columnWidths.note}px`, minWidth: `${columnWidths.note}px` }}
+                  className="relative px-2.5 py-3 text-center text-slate-800"
+                >
+                  <div className="flex items-center justify-center space-x-1">
+                    <span className="truncate">Ghi chú</span>
                     <button
                       type="button"
-                      onClick={() => setShowColumnFilters(true)}
-                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
-                        columnFilters.note ? "text-[#005a46] font-bold" : "text-slate-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "note" ? null : "note");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("note")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                       }`}
-                      title="Lọc theo Ghi chú"
+                      title="Lọc Ghi chú"
                     >
-                      <Filter className="h-3 w-3" />
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("note") ? "fill-[#005a46]" : ""}`} />
                     </button>
                   </div>
+                  {activeFilterColKey === "note" && (
+                    <ColumnFilterPopover
+                      columnKey="note"
+                      columnTitle="Ghi chú"
+                      columnType="select"
+                      uniqueValues={uniqueValuesMap.note}
+                      filterState={columnFilters.note}
+                      onApply={(data) => handleApplyColumnFilter("note", data)}
+                      onClear={() => handleClearColumnFilter("note")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("note", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
-                {/* 10. Trạng thái (Bổ sung mới chuẩn ảnh) */}
-                <th className="px-2.5 py-3 text-center text-slate-800">
-                  <div className="flex items-center justify-center space-x-1 cursor-pointer">
-                    <span className="font-bold">Trạng thái</span>
+                {/* 10. Trạng thái */}
+                <th
+                  style={{ width: `${columnWidths.status}px`, minWidth: `${columnWidths.status}px` }}
+                  className="relative px-2.5 py-3 text-center text-slate-800"
+                >
+                  <div className="flex items-center justify-center space-x-1">
+                    <span className="font-bold truncate">Trạng thái</span>
                     <button
                       type="button"
-                      onClick={() => setShowColumnFilters(true)}
-                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
-                        columnFilters.status ? "text-[#005a46] font-bold" : "text-slate-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "status" ? null : "status");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("status")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                       }`}
-                      title="Lọc theo Trạng thái"
+                      title="Lọc Trạng thái"
                     >
-                      <Filter className="h-3 w-3" />
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("status") ? "fill-[#005a46]" : ""}`} />
                     </button>
                   </div>
+                  {activeFilterColKey === "status" && (
+                    <ColumnFilterPopover
+                      columnKey="status"
+                      columnTitle="Trạng thái"
+                      columnType="select"
+                      uniqueValues={uniqueValuesMap.status}
+                      filterState={columnFilters.status}
+                      onApply={(data) => handleApplyColumnFilter("status", data)}
+                      onClear={() => handleClearColumnFilter("status")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("status", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
-                {/* 11. Số lượng (Bổ sung mới chuẩn ảnh) */}
-                <th className="px-2.5 py-3 text-right font-bold text-slate-800">
-                  Số lượng
+                {/* 11. Số lượng */}
+                <th
+                  style={{ width: `${columnWidths.qty}px`, minWidth: `${columnWidths.qty}px` }}
+                  className="relative px-2.5 py-3 text-right font-bold text-slate-800"
+                >
+                  <span className="truncate">Số lượng</span>
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("qty", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
-                {/* 12. Tổng tiền (Bổ sung mới chuẩn ảnh) */}
-                <th className="px-3 py-3 text-right font-bold text-slate-800">
-                  Tổng tiền
+                {/* 12. Tổng tiền */}
+                <th
+                  style={{ width: `${columnWidths.total}px`, minWidth: `${columnWidths.total}px` }}
+                  className="relative px-3 py-3 text-right font-bold text-slate-800"
+                >
+                  <span className="truncate">Tổng tiền</span>
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("total", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
-                {/* 13. Chiết khấu (Bổ sung mới chuẩn ảnh) */}
-                <th className="px-2 py-3 text-center text-slate-800">
-                  Chiết khấu
+                {/* 13. Chiết khấu */}
+                <th
+                  style={{ width: `${columnWidths.discount}px`, minWidth: `${columnWidths.discount}px` }}
+                  className="relative px-2 py-3 text-center text-slate-800"
+                >
+                  <span className="truncate">Chiết khấu</span>
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("discount", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
-                {/* 14. Tên & loại chương trình (Bổ sung mới chuẩn ảnh) */}
-                <th className="px-3 py-3 text-left text-slate-800">
-                  <div className="flex items-center space-x-1 cursor-pointer">
-                    <span>Tên & loại chương trình</span>
+                {/* 14. Tên & loại chương trình */}
+                <th
+                  style={{ width: `${columnWidths.programName}px`, minWidth: `${columnWidths.programName}px` }}
+                  className="relative px-3 py-3 text-left text-slate-800"
+                >
+                  <div className="flex items-center justify-between space-x-1">
+                    <span className="truncate">Tên & loại chương trình</span>
                     <button
                       type="button"
-                      onClick={() => setShowColumnFilters(true)}
-                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
-                        columnFilters.programName ? "text-[#005a46] font-bold" : "text-slate-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "programName" ? null : "programName");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("programName")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                       }`}
-                      title="Lọc theo Tên chương trình"
+                      title="Lọc Tên chương trình"
                     >
-                      <Filter className="h-3 w-3" />
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("programName") ? "fill-[#005a46]" : ""}`} />
                     </button>
                   </div>
+                  {activeFilterColKey === "programName" && (
+                    <ColumnFilterPopover
+                      columnKey="programName"
+                      columnTitle="Tên & loại chương trình"
+                      columnType="select"
+                      uniqueValues={uniqueValuesMap.programName}
+                      filterState={columnFilters.programName}
+                      onApply={(data) => handleApplyColumnFilter("programName", data)}
+                      onClear={() => handleClearColumnFilter("programName")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("programName", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
 
                 {/* 15. Actions */}
-                <th className="px-2.5 py-3 text-center w-24 text-slate-800">
+                <th
+                  style={{ width: `${columnWidths.actions}px`, minWidth: `${columnWidths.actions}px` }}
+                  className="relative px-2.5 py-3 text-center text-slate-800"
+                >
                   Actions
+                  <div
+                    onMouseDown={(e) => handleResizeMouseDown("actions", e)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
+                  />
                 </th>
               </tr>
-
-              {/* HÀNG FILTER ROW TỪNG CỘT (HIỂN THỊ KHI BẬT BỘ LỌC) */}
-              {showColumnFilters && (
-                <tr className="bg-emerald-50/40 border-t border-b border-emerald-100">
-                  {/* Ô trống tương ứng checkbox */}
-                  <th className="px-1 py-1.5 text-center"></th>
-
-                  {/* Ô trống tương ứng STT */}
-                  <th className="px-1 py-1.5 text-center"></th>
-
-                  {/* 3. Lọc Mã đơn hàng */}
-                  <th className="px-1.5 py-1.5">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={columnFilters.code}
-                        onChange={(e) => handleColumnFilterChange("code", e.target.value)}
-                        placeholder="Lọc mã SO..."
-                        className="w-full px-2 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
-                      />
-                      {columnFilters.code && (
-                        <button
-                          type="button"
-                          onClick={() => handleColumnFilterChange("code", "")}
-                          className="absolute right-1 top-1 text-slate-400 hover:text-slate-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                  </th>
-
-                  {/* 4. Lọc Khách hàng */}
-                  <th className="px-1.5 py-1.5">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={columnFilters.customer}
-                        onChange={(e) => handleColumnFilterChange("customer", e.target.value)}
-                        placeholder="Lọc tên/mã KH..."
-                        className="w-full px-2 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
-                      />
-                      {columnFilters.customer && (
-                        <button
-                          type="button"
-                          onClick={() => handleColumnFilterChange("customer", "")}
-                          className="absolute right-1 top-1 text-slate-400 hover:text-slate-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                  </th>
-
-                  {/* 5. Lọc Loại đơn hàng */}
-                  <th className="px-1.5 py-1.5">
-                    <select
-                      value={columnFilters.type}
-                      onChange={(e) => handleColumnFilterChange("type", e.target.value)}
-                      className="w-full px-1 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
-                    >
-                      <option value="">Tất cả</option>
-                      {typeOptions.map((tp) => (
-                        <option key={tp} value={tp}>{tp}</option>
-                      ))}
-                    </select>
-                  </th>
-
-                  {/* 6. Lọc Tuổi vàng */}
-                  <th className="px-1 py-1.5">
-                    <select
-                      value={columnFilters.gold}
-                      onChange={(e) => handleColumnFilterChange("gold", e.target.value)}
-                      className="w-full px-1 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
-                    >
-                      <option value="">Tất cả</option>
-                      {goldOptions.map((g) => (
-                        <option key={g} value={g}>{g}</option>
-                      ))}
-                    </select>
-                  </th>
-
-                  {/* 7. Lọc Ngày đặt hàng */}
-                  <th className="px-1.5 py-1.5">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={columnFilters.date}
-                        onChange={(e) => handleColumnFilterChange("date", e.target.value)}
-                        placeholder="Lọc ngày..."
-                        className="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
-                      />
-                      {columnFilters.date && (
-                        <button
-                          type="button"
-                          onClick={() => handleColumnFilterChange("date", "")}
-                          className="absolute right-1 top-1 text-slate-400 hover:text-slate-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                  </th>
-
-                  {/* 8. Thời gian chào hàng */}
-                  <th className="px-1 py-1.5 text-center"></th>
-
-                  {/* 9. Ghi chú */}
-                  <th className="px-1.5 py-1.5">
-                    <input
-                      type="text"
-                      value={columnFilters.note}
-                      onChange={(e) => handleColumnFilterChange("note", e.target.value)}
-                      placeholder="Lọc ghi chú..."
-                      className="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
-                    />
-                  </th>
-
-                  {/* 10. Trạng thái */}
-                  <th className="px-1.5 py-1.5">
-                    <select
-                      value={columnFilters.status}
-                      onChange={(e) => handleColumnFilterChange("status", e.target.value)}
-                      className="w-full px-1 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
-                    >
-                      <option value="">Tất cả</option>
-                      {statusOptions.map((st) => (
-                        <option key={st} value={st}>{st}</option>
-                      ))}
-                    </select>
-                  </th>
-
-                  {/* 11. Số lượng */}
-                  <th className="px-1 py-1.5 text-center"></th>
-
-                  {/* 12. Tổng tiền */}
-                  <th className="px-1 py-1.5 text-center"></th>
-
-                  {/* 13. Chiết khấu */}
-                  <th className="px-1 py-1.5 text-center"></th>
-
-                  {/* 14. Tên & loại chương trình */}
-                  <th className="px-1.5 py-1.5">
-                    <input
-                      type="text"
-                      value={columnFilters.programName}
-                      onChange={(e) => handleColumnFilterChange("programName", e.target.value)}
-                      placeholder="Lọc chương trình..."
-                      className="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
-                    />
-                  </th>
-
-                  {/* 15. Nút Reset bộ lọc cột */}
-                  <th className="px-1 py-1.5 text-center">
-                    {isAnyFilterActive && (
-                      <button
-                        type="button"
-                        onClick={handleResetAllFilters}
-                        className="text-[10px] text-rose-600 hover:text-rose-800 font-bold underline cursor-pointer"
-                        title="Xóa điều kiện lọc cột"
-                      >
-                        Reset
-                      </button>
-                    )}
-                  </th>
-                </tr>
-              )}
             </thead>
 
-            {/* THÂN BẢNG DỮ LIỆU (TBODY - 15 CỘT CHUẨN XÁC) */}
+            {/* TBODY: DỮ LIỆU ĐƠN HÀNG VÀ TÁC VỤ ACTIONS HOẠT ĐỘNG HOÀN TOÀN */}
             <tbody className="divide-y divide-slate-100 bg-white">
               {paginatedOrders.length > 0 ? (
                 paginatedOrders.map((order, idx) => {
@@ -813,7 +1017,7 @@ export default function OrderListPage() {
                       }`}
                     >
                       {/* 1. Checkbox chọn dòng */}
-                      <td className="px-2.5 py-3 text-center">
+                      <td style={{ width: `${columnWidths.select}px` }} className="px-2.5 py-3 text-center">
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -823,12 +1027,12 @@ export default function OrderListPage() {
                       </td>
 
                       {/* 2. STT */}
-                      <td className="px-2 py-3 text-center font-mono font-medium text-slate-500">
+                      <td style={{ width: `${columnWidths.stt}px` }} className="px-2 py-3 text-center font-mono font-medium text-slate-500">
                         {displayIndex}
                       </td>
 
                       {/* 3. Mã đơn hàng (Link click xem chi tiết) */}
-                      <td className="px-2.5 py-3 whitespace-nowrap">
+                      <td style={{ width: `${columnWidths.code}px` }} className="px-2.5 py-3 whitespace-nowrap">
                         <Link
                           href={`/orders/${order.id === 11 ? "11" : order.id}`}
                           className="font-mono font-bold text-[#007a5e] hover:text-[#004737] hover:underline"
@@ -839,14 +1043,14 @@ export default function OrderListPage() {
                       </td>
 
                       {/* 4. Khách hàng */}
-                      <td className="px-2.5 py-3 text-slate-800 max-w-[200px] truncate" title={order.customer}>
+                      <td style={{ width: `${columnWidths.customer}px` }} className="px-2.5 py-3 text-slate-800 truncate" title={order.customer}>
                         <span className="font-mono font-bold text-slate-700">{order.customerCode}</span>
                         <span className="text-slate-400 mx-1">-</span>
                         <span className="font-medium text-slate-900">{order.customerName || order.customer}</span>
                       </td>
 
-                      {/* 5. Loại đơn hàng (Badge màu vàng cam cho Gia công, xanh lá cho Bán chuẩn ảnh) */}
-                      <td className="px-2.5 py-3 text-center whitespace-nowrap">
+                      {/* 5. Loại đơn hàng */}
+                      <td style={{ width: `${columnWidths.type}px` }} className="px-2.5 py-3 text-center whitespace-nowrap">
                         {isProcessing ? (
                           <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
                             Đơn hàng Gia công
@@ -859,54 +1063,55 @@ export default function OrderListPage() {
                       </td>
 
                       {/* 6. Tuổi vàng */}
-                      <td className="px-2 py-3 text-center font-mono font-bold text-slate-700">
+                      <td style={{ width: `${columnWidths.gold}px` }} className="px-2 py-3 text-center font-mono font-bold text-slate-700">
                         {order.gold}
                       </td>
 
                       {/* 7. Ngày đặt hàng */}
-                      <td className="px-2.5 py-3 text-center font-mono text-slate-600 whitespace-nowrap">
+                      <td style={{ width: `${columnWidths.date}px` }} className="px-2.5 py-3 text-center font-mono text-slate-600 whitespace-nowrap">
                         {order.date}
                       </td>
 
                       {/* 8. Thời gian chào hàng */}
-                      <td className="px-2 py-3 text-center text-slate-400 font-mono">
+                      <td style={{ width: `${columnWidths.offerTime}px` }} className="px-2 py-3 text-center text-slate-400 font-mono">
                         {order.offerTime || "---"}
                       </td>
 
-                      {/* 9. Ghi chú (Bổ sung mới) */}
-                      <td className="px-2.5 py-3 text-center text-slate-400 max-w-[100px] truncate font-mono" title={order.note}>
+                      {/* 9. Ghi chú */}
+                      <td style={{ width: `${columnWidths.note}px` }} className="px-2.5 py-3 text-center text-slate-400 truncate font-mono" title={order.note}>
                         {order.note || "---"}
                       </td>
 
-                      {/* 10. Trạng thái (Bổ sung mới chuẩn badge) */}
-                      <td className="px-2.5 py-3 text-center whitespace-nowrap">
+                      {/* 10. Trạng thái */}
+                      <td style={{ width: `${columnWidths.status}px` }} className="px-2.5 py-3 text-center whitespace-nowrap">
                         {renderStatusBadge(order.status)}
                       </td>
 
-                      {/* 11. Số lượng (Bổ sung mới) */}
-                      <td className="px-2.5 py-3 text-right font-mono font-bold text-slate-900">
+                      {/* 11. Số lượng */}
+                      <td style={{ width: `${columnWidths.qty}px` }} className="px-2.5 py-3 text-right font-mono font-bold text-slate-900">
                         {order.qty}
                       </td>
 
-                      {/* 12. Tổng tiền (Bổ sung mới chuẩn format dấu phẩy) */}
-                      <td className="px-3 py-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                      {/* 12. Tổng tiền */}
+                      <td style={{ width: `${columnWidths.total}px` }} className="px-3 py-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
                         {typeof order.total === "number" ? order.total.toLocaleString("en-US") : order.total}
                       </td>
 
-                      {/* 13. Chiết khấu (Bổ sung mới) */}
-                      <td className="px-2 py-3 text-center font-mono text-slate-700 font-semibold">
+                      {/* 13. Chiết khấu */}
+                      <td style={{ width: `${columnWidths.discount}px` }} className="px-2 py-3 text-center font-mono text-slate-700 font-semibold">
                         {order.discount || "---"}
                       </td>
 
-                      {/* 14. Tên & loại chương trình (Bổ sung mới) */}
-                      <td className="px-3 py-3 text-left text-slate-600 max-w-[180px] truncate text-[11px]" title={order.programName}>
+                      {/* 14. Tên & loại chương trình */}
+                      <td style={{ width: `${columnWidths.programName}px` }} className="px-3 py-3 text-left text-slate-600 truncate text-[11px]" title={order.programName}>
                         {order.programName || "---"}
                       </td>
 
-                      {/* 15. Actions (3 icons: Sổ/Xem đỏ cam, Lưới, Cài đặt chuẩn ảnh) */}
-                      <td className="px-2.5 py-3 text-center whitespace-nowrap">
+                      {/* 15. Actions: HOẠT ĐỘNG HOÀN TOÀN CẢ 3 NÚT (FileText, LayoutGrid, Settings) */}
+                      <td style={{ width: `${columnWidths.actions}px` }} className="px-2.5 py-3 text-center whitespace-nowrap relative">
                         <div className="flex items-center justify-center space-x-1.5 text-slate-400">
-                          {/* Nút xem chi tiết màu đỏ cam / sổ */}
+                          
+                          {/* Nút 1: Xem chi tiết đơn hàng (Icon sổ đỏ/cam) */}
                           <Link
                             href={`/orders/${order.id === 11 ? "11" : order.id}`}
                             className="p-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded transition-colors"
@@ -915,23 +1120,153 @@ export default function OrderListPage() {
                             <FileText className="h-3.5 w-3.5" />
                           </Link>
 
-                          {/* Nút lưới / tác vụ */}
-                          <button
-                            type="button"
-                            className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors cursor-pointer"
-                            title="Tác vụ"
-                          >
-                            <LayoutGrid className="h-3.5 w-3.5" />
-                          </button>
+                          {/* Nút 2: Tác vụ nhanh (Menu lưới LayoutGrid) */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveActionOrderId(activeActionOrderId === order.id ? null : order.id);
+                                setActiveSettingsOrderId(null);
+                              }}
+                              className={`p-1 rounded transition-colors cursor-pointer ${
+                                activeActionOrderId === order.id
+                                  ? "bg-[#005a46] text-white"
+                                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                              }`}
+                              title="Tác vụ đơn hàng"
+                            >
+                              <LayoutGrid className="h-3.5 w-3.5" />
+                            </button>
 
-                          {/* Nút cài đặt */}
-                          <button
-                            type="button"
-                            className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors cursor-pointer"
-                            title="Cấu hình"
-                          >
-                            <Settings className="h-3.5 w-3.5" />
-                          </button>
+                            {/* Dropdown Menu Tác Vụ */}
+                            {activeActionOrderId === order.id && (
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="absolute right-0 top-full mt-1.5 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 text-slate-700 py-1.5 w-56 text-left text-xs animate-in fade-in zoom-in-95 duration-100"
+                              >
+                                <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                                  Tác vụ đơn: {order.code}
+                                </div>
+
+                                <Link
+                                  href={`/orders/${order.id === 11 ? "11" : order.id}`}
+                                  className="flex items-center px-3 py-2 hover:bg-slate-50 text-slate-700 hover:text-[#005a46] transition-colors"
+                                >
+                                  <Eye className="h-3.5 w-3.5 mr-2 text-slate-400" />
+                                  <span>Xem chi tiết đơn hàng</span>
+                                </Link>
+
+                                <Link
+                                  href={`/orders/${order.id === 11 ? "11" : order.id}`}
+                                  className="flex items-center px-3 py-2 hover:bg-emerald-50 text-emerald-800 font-semibold transition-colors"
+                                >
+                                  <Warehouse className="h-3.5 w-3.5 mr-2 text-emerald-600" />
+                                  <span>Chọn Item Kho TP / Đồng bộ</span>
+                                </Link>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleCopyOrderCode(order.code, e)}
+                                  className="w-full flex items-center px-3 py-2 hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer"
+                                >
+                                  <Copy className="h-3.5 w-3.5 mr-2 text-slate-400" />
+                                  <span>Sao chép mã đơn hàng</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => handlePrintOrder(order, e)}
+                                  className="w-full flex items-center px-3 py-2 hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer"
+                                >
+                                  <Printer className="h-3.5 w-3.5 mr-2 text-slate-400" />
+                                  <span>In phiếu đơn hàng</span>
+                                </button>
+
+                                <div className="border-t border-slate-100 my-1" />
+
+                                <Link
+                                  href={`/delivery-orders/create`}
+                                  className="flex items-center px-3 py-2 hover:bg-slate-50 text-slate-700 transition-colors"
+                                >
+                                  <PackageCheck className="h-3.5 w-3.5 mr-2 text-blue-500" />
+                                  <span>Tạo phiếu giao hàng (DO)</span>
+                                </Link>
+
+                                <Link
+                                  href={`/cancel-requests/create`}
+                                  className="flex items-center px-3 py-2 hover:bg-rose-50 text-rose-600 transition-colors"
+                                >
+                                  <Ban className="h-3.5 w-3.5 mr-2 text-rose-500" />
+                                  <span>Yêu cầu hủy SO</span>
+                                </Link>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Nút 3: Cấu hình & Quản lý đơn (Icon bánh răng Settings) */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveSettingsOrderId(activeSettingsOrderId === order.id ? null : order.id);
+                                setActiveActionOrderId(null);
+                              }}
+                              className={`p-1 rounded transition-colors cursor-pointer ${
+                                activeSettingsOrderId === order.id
+                                  ? "bg-slate-800 text-white"
+                                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                              }`}
+                              title="Cấu hình & quản lý"
+                            >
+                              <Settings className="h-3.5 w-3.5" />
+                            </button>
+
+                            {/* Dropdown Menu Cấu hình / Settings */}
+                            {activeSettingsOrderId === order.id && (
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="absolute right-0 top-full mt-1.5 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 text-slate-700 py-1.5 w-52 text-left text-xs animate-in fade-in zoom-in-95 duration-100"
+                              >
+                                <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                                  Quản lý: {order.code}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveSettingsOrderId(null);
+                                    setStatusModalOrder(order);
+                                  }}
+                                  className="w-full flex items-center px-3 py-2 hover:bg-emerald-50 text-[#005a46] font-semibold transition-colors cursor-pointer"
+                                >
+                                  <RotateCcw className="h-3.5 w-3.5 mr-2 text-[#005a46]" />
+                                  <span>Đổi nhanh trạng thái</span>
+                                </button>
+
+                                <Link
+                                  href={`/orders/${order.id === 11 ? "11" : order.id}`}
+                                  className="flex items-center px-3 py-2 hover:bg-slate-50 text-slate-700 transition-colors"
+                                >
+                                  <SlidersHorizontal className="h-3.5 w-3.5 mr-2 text-slate-400" />
+                                  <span>Chỉnh sửa thông tin đơn</span>
+                                </Link>
+
+                                <div className="border-t border-slate-100 my-1" />
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDeleteOrder(order.id, order.code, e)}
+                                  className="w-full flex items-center px-3 py-2 hover:bg-rose-50 text-rose-600 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-500" />
+                                  <span>Xóa đơn hàng</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
                         </div>
                       </td>
                     </tr>
@@ -946,13 +1281,10 @@ export default function OrderListPage() {
                       <p className="text-sm font-semibold text-slate-600">
                         Không tìm thấy đơn hàng nào phù hợp với bộ lọc hiện tại.
                       </p>
-                      <p className="text-xs text-slate-400">
-                        Thử thay đổi từ khóa tìm kiếm hoặc bấm nút "Xóa tất cả bộ lọc".
-                      </p>
                       <button
                         type="button"
                         onClick={handleResetAllFilters}
-                        className="mt-2 px-3 py-1.5 bg-[#005a46] text-white text-xs font-bold rounded-lg hover:bg-[#004737] cursor-pointer"
+                        className="px-3 py-1.5 bg-emerald-50 text-[#005a46] border border-emerald-300 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer"
                       >
                         Xóa tất cả bộ lọc
                       </button>
@@ -964,111 +1296,143 @@ export default function OrderListPage() {
           </table>
         </div>
 
-        {/* 6. PHÂN TRANG (PAGINATION CHUẨN ERP) */}
-        <div className="bg-slate-50/70 px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 select-none">
-          <div className="flex items-center space-x-1.5">
-            <span>Hiển thị</span>
-            <strong className="text-slate-900">{filteredOrders.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</strong>
-            <span>-</span>
-            <strong className="text-slate-900">{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</strong>
-            <span>trong tổng số</span>
-            <strong className="text-slate-900">{filteredOrders.length}</strong>
-            <span>đơn hàng</span>
+        {/* 6. PHÂN TRANG (PAGINATION) CHUẨN ERP */}
+        <div className="px-4 py-3 border-t border-slate-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+          <div>
+            Hiển thị <strong>{filteredOrders.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</strong> - <strong>{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</strong> trong tổng số <strong>{filteredOrders.length}</strong> đơn hàng
           </div>
 
           <div className="flex items-center space-x-1.5">
-            {/* Về trang đầu */}
             <button
               type="button"
-              disabled={currentPage === 1}
               onClick={() => setCurrentPage(1)}
-              className="p-1 rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              disabled={currentPage === 1}
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
               title="Trang đầu"
             >
-              <ChevronsLeft className="h-4 w-4" />
+              <ChevronsLeft className="h-3.5 w-3.5" />
             </button>
-
-            {/* Trang trước */}
             <button
               type="button"
-              disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="p-1 rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              disabled={currentPage === 1}
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
               title="Trang trước"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3.5 w-3.5" />
             </button>
 
-            {/* Các số trang */}
-            <button
-              type="button"
-              className="px-2.5 py-1 rounded border border-[#005a46] bg-[#005a46] text-white font-bold"
-            >
-              1
-            </button>
-            <button
-              type="button"
-              className="px-2.5 py-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer"
-            >
-              2
-            </button>
-            <button
-              type="button"
-              className="px-2.5 py-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer"
-            >
-              3
-            </button>
-            <button
-              type="button"
-              className="px-2.5 py-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer"
-            >
-              4
-            </button>
-            <button
-              type="button"
-              className="px-2.5 py-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer"
-            >
-              5
-            </button>
-            <span className="px-1 text-slate-400">...</span>
-            <button
-              type="button"
-              className="px-2 py-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer"
-            >
-              30
-            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => {
+              if (pg === 1 || pg === totalPages || (pg >= currentPage - 1 && pg <= currentPage + 1)) {
+                return (
+                  <button
+                    key={pg}
+                    type="button"
+                    onClick={() => setCurrentPage(pg)}
+                    className={`min-w-7 h-7 px-2 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                      currentPage === pg
+                        ? "bg-[#005a46] text-white"
+                        : "border border-slate-200 hover:bg-slate-50 text-slate-700"
+                    }`}
+                  >
+                    {pg}
+                  </button>
+                );
+              }
+              if (pg === currentPage - 2 || pg === currentPage + 2) {
+                return <span key={pg} className="px-1 text-slate-400">...</span>;
+              }
+              return null;
+            })}
 
-            {/* Trang sau */}
             <button
               type="button"
-              disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="p-1 rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              disabled={currentPage === totalPages}
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
               title="Trang sau"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </button>
-
-            {/* Về trang cuối */}
             <button
               type="button"
-              disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(totalPages)}
-              className="p-1 rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              disabled={currentPage === totalPages}
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
               title="Trang cuối"
             >
-              <ChevronsRight className="h-4 w-4" />
+              <ChevronsRight className="h-3.5 w-3.5" />
             </button>
 
-            <select className="border border-slate-300 rounded px-2 py-1 bg-white text-xs text-slate-700 ml-2 focus:outline-none">
-              <option>20 / trang</option>
-              <option>50 / trang</option>
-              <option>100 / trang</option>
-            </select>
+            <span className="text-slate-400 mx-1">|</span>
+            <span className="text-slate-500 font-medium">20 / trang</span>
           </div>
         </div>
-
       </div>
+
+      {/* 7. MODAL ĐỔI NHANH TRẠNG THÁI ĐƠN HÀNG (HỖ TRỢ ACTION SETTINGS) */}
+      {statusModalOrder && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-5 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-900">
+                Đổi trạng thái đơn hàng: <span className="text-[#005a46] font-mono">{statusModalOrder.code}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setStatusModalOrder(null)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Chọn trạng thái mới để cập nhật cho đơn hàng. Số lượng trên các tab trạng thái sẽ tự động cập nhật ngay lập tức:
+            </p>
+
+            <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+              {[
+                "Chờ cập nhật",
+                "Chờ xử lý",
+                "Chờ kỹ thuật",
+                "Đủ thông tin kỹ thuật",
+                "Chờ duyệt đơn hàng",
+                "Đã chuyển KHSX",
+                "Đang sản xuất",
+                "Đang đóng gói",
+                "Chờ giao hàng",
+                "Hoàn thành",
+                "Đã hủy"
+              ].map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => handleUpdateOrderStatus(statusModalOrder.id, st)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                    statusModalOrder.status === st
+                      ? "bg-emerald-50 text-[#005a46] border border-emerald-300"
+                      : "bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200"
+                  }`}
+                >
+                  <span>{st}</span>
+                  {statusModalOrder.status === st && <Check className="h-4 w-4 text-[#005a46]" />}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setStatusModalOrder(null)}
+                className="px-4 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
