@@ -3,6 +3,28 @@
 // Chứa đầy đủ các trường: Mã item, Số lượng, Mã đơn hàng cũ, Ngày nhập kho
 
 export const WAREHOUSE_REWORK_ITEMS = [
+  // Item khớp với đơn SO2608011 (Dòng 2: GY0RG00014/A00A00000000000015)
+  {
+    id: "WP-011",
+    bagCode: "BAG-TP-9915",
+    itemCode: "GY0RG00014/A00A00000000000015",
+    itemName: "Nhẫn Nữ Vàng 14K Trơn NNU-015",
+    category: "Nhẫn nữ",
+    goldType: "61Y",
+    size: "NNU - 015", // Khớp Ni NNU - 015
+    stoneColor: "---",
+    stoneType: "Không gắn đá",
+    stoneQty: "0",
+    weight: "0.4500g/chiếc",
+    availableQty: 15, // Đúng 15 sản phẩm như trong ảnh chụp của Chị đẹp!
+    oldOrderCode: "SO2607089", // Mã đơn hàng cũ
+    dateInStock: "02/08/2026", // Ngày nhập kho
+    status: "Available",
+    location: "Két K1 - Ngăn A03 (Lô L-863)",
+    sourceReason: "Khách hủy do trễ hẹn giao hàng đợt 1",
+    oldCustomer: "KH-1000089 - Kim Cương Vàng",
+    standardLaborPrice: 150000
+  },
   {
     id: "WP-001",
     bagCode: "BAG-TP-9901",
@@ -10,14 +32,14 @@ export const WAREHOUSE_REWORK_ITEMS = [
     itemName: "Nhẫn Kim Cương Nữ Solitaire 14K",
     category: "Nhẫn nữ",
     goldType: "61Y",
-    size: 45, // Ni 45
+    size: "45",
     stoneColor: "Xanh",
     stoneType: "Sapphire Xanh & Kim Cương Tấm",
     stoneQty: "1 viên chủ 4.5mm + 12 viên tấm 1.2mm",
     weight: "3.42g/chiếc",
-    availableQty: 80, // Số lượng trong kho
-    oldOrderCode: "SO2607089", // Mã đơn hàng cũ
-    dateInStock: "02/08/2026", // Ngày nhập kho
+    availableQty: 80,
+    oldOrderCode: "SO2607089",
+    dateInStock: "02/08/2026",
     status: "Available",
     location: "Két K1 - Ngăn A03 (Lô L-863)",
     sourceReason: "Khách hủy do trễ hẹn giao hàng đợt 1",
@@ -31,7 +53,7 @@ export const WAREHOUSE_REWORK_ITEMS = [
     itemName: "Nhẫn Kim Cương Nữ Solitaire 14K",
     category: "Nhẫn nữ",
     goldType: "61Y",
-    size: 45,
+    size: "45",
     stoneColor: "Xanh",
     stoneType: "Sapphire Xanh & Kim Cương Tấm",
     stoneQty: "1 viên chủ 4.5mm + 12 viên tấm 1.2mm",
@@ -52,7 +74,7 @@ export const WAREHOUSE_REWORK_ITEMS = [
     itemName: "Nhẫn Kim Cương Nữ Solitaire 14K",
     category: "Nhẫn nữ",
     goldType: "61Y",
-    size: 48, // Ni 48
+    size: "48",
     stoneColor: "Xanh",
     stoneType: "Sapphire Xanh & Kim Cương Tấm",
     stoneQty: "1 viên chủ 4.5mm + 12 viên tấm 1.2mm",
@@ -72,8 +94,8 @@ export const WAREHOUSE_REWORK_ITEMS = [
     itemCode: "RG202500006",
     itemName: "Nhẫn Kim Cương Nữ Solitaire 18K Trắng",
     category: "Nhẫn nữ",
-    goldType: "75W", // 75W
-    size: 45,
+    goldType: "75W",
+    size: "45",
     stoneColor: "Trắng",
     stoneType: "Kim Cương Tự Nhiên D-Color",
     stoneQty: "1 viên chủ 5.0mm + 16 viên tấm",
@@ -94,7 +116,7 @@ export const WAREHOUSE_REWORK_ITEMS = [
     itemName: "Bộ Hoàng Gia Emerald Quý Tộc (Dây + Lắc + Nhẫn)",
     category: "Bộ",
     goldType: "75Y",
-    size: 52,
+    size: "52",
     stoneColor: "Xanh Lục Bảo",
     stoneType: "Ngọc Lục Bảo Colombia & Kim Cương",
     stoneQty: "3 viên chủ Emerald + 48 viên kim cương",
@@ -115,7 +137,7 @@ export const WAREHOUSE_REWORK_ITEMS = [
     itemName: "Vòng Tay Rắn Vàng Ý Khắc Kim",
     category: "Vòng tay",
     goldType: "41.6Y",
-    size: 54,
+    size: "54",
     stoneColor: "Đỏ Ruby",
     stoneType: "Ruby Mắt Rắn",
     stoneQty: "2 viên mắt Ruby",
@@ -133,13 +155,24 @@ export const WAREHOUSE_REWORK_ITEMS = [
 
 // Hàm tìm kiếm Item trong kho thành phẩm khớp 100%
 export function findMatchingWarehouseItems({ itemCode, goldType, size, stoneColor }) {
-  if (!itemCode || !goldType || !size || !stoneColor) return [];
+  if (!itemCode) return [];
 
   return WAREHOUSE_REWORK_ITEMS.filter((stock) => {
     const matchItem = stock.itemCode?.toLowerCase() === itemCode?.toLowerCase();
-    const matchGold = stock.goldType?.toLowerCase() === goldType?.toLowerCase();
-    const matchSize = Number(stock.size) === Number(size);
-    const matchColor = stock.stoneColor?.toLowerCase() === stoneColor?.toLowerCase();
+    
+    // Nếu có tuổi vàng thì so khớp, không thì bỏ qua
+    const matchGold = goldType ? stock.goldType?.toLowerCase() === goldType?.toLowerCase() : true;
+    
+    // So khớp size/ni
+    const matchSize = size && size !== "---" 
+      ? String(stock.size).toLowerCase() === String(size).toLowerCase() 
+      : true;
+
+    // So khớp màu đá
+    const matchColor = stoneColor && stoneColor !== "---"
+      ? stock.stoneColor?.toLowerCase() === stoneColor?.toLowerCase()
+      : true;
+
     const isAvailable = stock.status === "Available" && stock.availableQty > 0;
 
     return matchItem && matchGold && matchSize && matchColor && isAvailable;
