@@ -13,9 +13,9 @@ export const WAREHOUSE_REWORK_ITEMS = [
     category: "Nhẫn nữ",
     goldType: "61Y",
     size: "NNU - 015", // Khớp Ni NNU - 015
-    stoneColor: "---",
-    stoneType: "Không gắn đá",
-    stoneQty: "0",
+    stoneColor: "Trắng",
+    stoneType: "CZ Trắng",
+    stoneQty: "1 viên",
     weight: "0.4500g/chiếc",
     availableQty: 15, // Đúng 15 sản phẩm như trong ảnh chụp của Chị đẹp!
     oldOrderCode: "SO2607089", // Mã đơn hàng cũ

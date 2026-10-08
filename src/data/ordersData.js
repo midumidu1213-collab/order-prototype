@@ -60,7 +60,7 @@ export const INITIAL_ORDERS = [
         itemCode: "GY0RG00014/A00A00000000000015",
         drawingCode: "RG00014/A00",
         platingColor: "Y0",
-        stoneColor: "---",
+        stoneColor: "Trắng",
         size: "NNU - 015",
         qty: 100,
         changeReq: "A00",

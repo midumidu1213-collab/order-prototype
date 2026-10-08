@@ -19,31 +19,94 @@ export default function WarehouseSyncPopup({
 }) {
   // State lưu số lượng pick cho từng dòng stock item
   const [pickQuantities, setPickQuantities] = useState({});
+  // State lưu danh sách ID stock item được tick chọn qua Checkbox
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   useEffect(() => {
     if (matchedStockList.length > 0 && order) {
-      const initial = {};
+      const initialQty = {};
+      const initialSelected = new Set();
       matchedStockList.forEach((stock) => {
         const orderItem = order.items?.find(
           (i) => i.itemCode?.toLowerCase() === stock.itemCode?.toLowerCase()
         );
         const requestedQty = orderItem ? orderItem.qty : stock.availableQty;
-        initial[stock.id] = Math.min(requestedQty, stock.availableQty);
+        // Mặc định SL pick chọn là SL trong kho
+        const defaultQty = Math.min(requestedQty, stock.availableQty);
+        initialQty[stock.id] = defaultQty;
+        initialSelected.add(stock.id);
       });
-      setPickQuantities(initial);
+      setPickQuantities(initialQty);
+      setSelectedIds(initialSelected);
     }
   }, [matchedStockList, order]);
 
   if (!isOpen || !order) return null;
 
-  // Tính tổng số lượng pick
-  const totalPicked = Object.values(pickQuantities).reduce((acc, v) => acc + (Number(v) || 0), 0);
+  // Toggle chọn / bỏ chọn từng dòng item
+  const handleToggleItem = (stockId, stockAvailable, requestedQty) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(stockId)) {
+        next.delete(stockId);
+        // Khi bỏ chọn thì reset số lượng pick về 0
+        setPickQuantities((q) => ({ ...q, [stockId]: 0 }));
+      } else {
+        next.add(stockId);
+        // Khi tick chọn thì mặc định SL pick chọn là SL trong kho
+        const defaultQty = Math.min(stockAvailable, requestedQty);
+        setPickQuantities((q) => ({ ...q, [stockId]: defaultQty }));
+      }
+      return next;
+    });
+  };
+
+  // Toggle Chọn tất cả / Bỏ chọn tất cả
+  const handleToggleSelectAll = () => {
+    if (selectedIds.size === matchedStockList.length) {
+      setSelectedIds(new Set());
+      const cleared = {};
+      matchedStockList.forEach((s) => (cleared[s.id] = 0));
+      setPickQuantities(cleared);
+    } else {
+      const all = new Set();
+      const filled = {};
+      matchedStockList.forEach((stock) => {
+        all.add(stock.id);
+        const orderItem = order.items?.find(
+          (i) => i.itemCode?.toLowerCase() === stock.itemCode?.toLowerCase()
+        );
+        const requestedQty = orderItem ? orderItem.qty : stock.availableQty;
+        filled[stock.id] = Math.min(requestedQty, stock.availableQty);
+      });
+      setSelectedIds(all);
+      setPickQuantities(filled);
+    }
+  };
+
+  // Tính tổng số lượng pick cho các item được tick chọn
+  const totalPicked = Array.from(selectedIds).reduce(
+    (acc, id) => acc + (Number(pickQuantities[id]) || 0),
+    0
+  );
 
   const handleQtyChange = (stockId, value, maxAvailable, requestedQty) => {
     let num = Number(value);
     if (isNaN(num) || num < 0) num = 0;
     const maxAllowed = Math.min(maxAvailable, requestedQty);
     if (num > maxAllowed) num = maxAllowed;
+    
+    // Nếu nhập số lượng > 0 thì tự động tick chọn
+    if (num > 0) {
+      setSelectedIds((prev) => new Set([...prev, stockId]));
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(stockId);
+        return next;
+      });
+    }
+
     setPickQuantities((prev) => ({
       ...prev,
       [stockId]: num
@@ -52,6 +115,7 @@ export default function WarehouseSyncPopup({
 
   const handleSelectMax = (stockId, maxAvailable, requestedQty) => {
     const maxAllowed = Math.min(maxAvailable, requestedQty);
+    setSelectedIds((prev) => new Set([...prev, stockId]));
     setPickQuantities((prev) => ({
       ...prev,
       [stockId]: maxAllowed
@@ -59,14 +123,21 @@ export default function WarehouseSyncPopup({
   };
 
   const handleSubmit = () => {
-    onConfirmPick(pickQuantities);
+    // Chỉ gửi các item được tick chọn và có SL > 0
+    const finalPicks = {};
+    selectedIds.forEach((id) => {
+      finalPicks[id] = pickQuantities[id] || 0;
+    });
+    onConfirmPick(finalPicks);
   };
+
+  const isAllSelected = matchedStockList.length > 0 && selectedIds.size === matchedStockList.length;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-6xl w-full border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         
-        {/* Header (Đã bỏ badge KHỚP 100% theo yêu cầu của Chị đẹp) */}
+        {/* Header */}
         <div className="bg-gradient-to-r from-[#005a46] via-[#004737] to-[#013328] text-white px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-emerald-500/20 rounded-lg border border-emerald-400/30">
@@ -103,22 +174,32 @@ export default function WarehouseSyncPopup({
             </div>
           </div>
 
-          {/* BẢNG CHI TIẾT CÁC MẶT HÀNG TRONG KHO (CHUẨN CÁC CỘT THEO GÓP Ý CỦA CHỊ ĐẸP) */}
-          <div className="border border-slate-200 rounded-xl overflow-x-auto shadow-2xs">
+          {/* BẢNG CHI TIẾT (Đã bổ sung Checkbox, bỏ toàn bộ text phụ dưới các ô, bỏ thanh cuộn ngang) */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
             <table className="w-full divide-y divide-slate-200 text-left text-xs">
               <thead className="bg-slate-50 font-bold text-slate-700 uppercase tracking-wider text-[11px] whitespace-nowrap">
                 <tr>
-                  <th className="px-4 py-3 min-w-[220px]">Mã Item</th>
-                  <th className="px-3 py-3 text-center text-emerald-900 bg-emerald-50/50 whitespace-nowrap min-w-[75px]">SL Đặt</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[110px]">Số Lượng Tồn Kho</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[125px]">Mã Đơn Hàng Cũ</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[135px]">Nguyên Liệu - Tuổi Vàng</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[105px]">Ngày Nhập Kho</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[185px]">Ô Nhập SL Pick Chọn</th>
+                  <th className="px-3 py-3 text-center w-10">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={handleToggleSelectAll}
+                      className="w-4 h-4 rounded text-[#005a46] focus:ring-[#005a46] border-slate-300 cursor-pointer"
+                      title="Chọn tất cả"
+                    />
+                  </th>
+                  <th className="px-3 py-3">Mã Item</th>
+                  <th className="px-3 py-3 text-center text-emerald-900 bg-emerald-50/50 w-20">SL Đặt</th>
+                  <th className="px-3 py-3 text-center w-28">Số Lượng Tồn Kho</th>
+                  <th className="px-3 py-3 text-center w-32">Mã Đơn Hàng Cũ</th>
+                  <th className="px-3 py-3 text-center w-36">Nguyên Liệu - Tuổi Vàng</th>
+                  <th className="px-3 py-3 text-center w-28">Ngày Nhập Kho</th>
+                  <th className="px-3 py-3 text-center w-48">Ô Nhập SL Pick Chọn</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {matchedStockList.map((stock) => {
+                  const isSelected = selectedIds.has(stock.id);
                   const currentPick = pickQuantities[stock.id] || 0;
                   const orderItem = order.items?.find(
                     (i) => i.itemCode?.toLowerCase() === stock.itemCode?.toLowerCase()
@@ -127,47 +208,53 @@ export default function WarehouseSyncPopup({
                   const displayName = stock.itemName ? stock.itemName.replace(/Vàng.*/i, "").trim() : "Nhẫn Nữ";
 
                   return (
-                    <tr key={stock.id} className="hover:bg-slate-50 transition-colors">
-                      {/* Cột 1: Mã Item (Mã 30 ký tự chuẩn ERP, tên Nhẫn Nữ gọn gàng) */}
-                      <td className="px-4 py-3.5">
+                    <tr 
+                      key={stock.id} 
+                      className={`transition-colors ${isSelected ? "bg-emerald-50/20" : "hover:bg-slate-50 opacity-75"}`}
+                    >
+                      {/* Cột 0: Checkbox chọn item */}
+                      <td className="px-3 py-3.5 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleItem(stock.id, stock.availableQty, requestedQty)}
+                          className="w-4 h-4 rounded text-[#005a46] focus:ring-[#005a46] border-slate-300 cursor-pointer"
+                        />
+                      </td>
+
+                      {/* Cột 1: Mã Item (Mã 30 ký tự, tên Nhẫn Nữ, Màu đá Trắng) */}
+                      <td className="px-3 py-3.5">
                         <div className="font-mono font-bold text-xs text-slate-900 tracking-tight">
                           {stock.itemCode30 || stock.itemCode}
                         </div>
                         <div className="text-[11px] text-slate-700 font-bold mt-0.5">{displayName || "Nhẫn Nữ"}</div>
                         <div className="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-1.5">
                           <span>Ni {stock.size}</span>
-                          {stock.stoneColor && stock.stoneColor !== "--" ? (
-                            <span>• {stock.stoneColor} ({stock.stoneType})</span>
-                          ) : (
-                            <span className="text-slate-400">• Không gắn đá</span>
-                          )}
+                          <span>• Đá {stock.stoneColor || "Trắng"}</span>
                         </div>
                       </td>
 
-                      {/* Cột 2: SL Đặt */}
-                      <td className="px-3 py-3.5 text-center bg-emerald-50/30 whitespace-nowrap">
-                        <span className="font-mono font-black text-sm text-emerald-950 block">
+                      {/* Cột 2: SL Đặt (Đã bỏ chữ 'món đặt') */}
+                      <td className="px-3 py-3.5 text-center bg-emerald-50/30">
+                        <span className="font-mono font-black text-sm text-emerald-950">
                           {requestedQty}
                         </span>
-                        <span className="text-[10px] text-emerald-700">món đặt</span>
                       </td>
 
-                      {/* Cột 3: Số Lượng Tồn Kho */}
-                      <td className="px-3 py-3.5 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                      {/* Cột 3: Số Lượng Tồn Kho (Đã bỏ chữ 'Khả dụng') */}
+                      <td className="px-3 py-3.5 text-center">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
                           {stock.availableQty} món
                         </span>
-                        <div className="text-[10px] text-slate-400 mt-1">Khả dụng</div>
                       </td>
 
-                      {/* Cột 4: Mã Đơn Hàng Cũ (Rê chuột vào xem được lý do hủy) */}
-                      <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                      {/* Cột 4: Mã Đơn Hàng Cũ (Đã bỏ chữ 'Đã hủy đợt trước') */}
+                      <td className="px-3 py-3.5 text-center">
                         <div className="relative inline-block group">
-                          <span className="font-mono font-bold text-xs text-amber-900 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 hover:bg-amber-100 hover:border-amber-300 cursor-help transition-colors inline-flex items-center space-x-1">
+                          <span className="font-mono font-bold text-xs text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200 hover:bg-amber-100 hover:border-amber-300 cursor-help transition-colors inline-flex items-center space-x-1">
                             <span>{stock.oldOrderCode || "-"}</span>
                             <Info className="h-3 w-3 text-amber-600" />
                           </span>
-                          <div className="text-[10px] text-slate-400 mt-1">Đã hủy đợt trước</div>
 
                           {/* Tooltip hiển thị lý do hủy khi rê chuột */}
                           <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:flex flex-col w-56 p-2 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl z-30 pointer-events-none text-left whitespace-normal">
@@ -185,48 +272,52 @@ export default function WarehouseSyncPopup({
                         </div>
                       </td>
 
-                      {/* Cột 5: Nguyên Liệu - Tuổi Vàng */}
-                      <td className="px-3 py-3.5 text-center whitespace-nowrap">
-                        <span className="font-bold text-xs text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 inline-block font-mono">
+                      {/* Cột 5: Nguyên Liệu - Tuổi Vàng (Đã bỏ chữ 'Chuẩn tuổi') */}
+                      <td className="px-3 py-3.5 text-center">
+                        <span className="font-bold text-xs text-slate-800 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200 inline-block font-mono">
                           {order.material || "Vàng"} - {stock.goldType}
                         </span>
-                        <div className="text-[10px] text-slate-400 mt-1">Chuẩn tuổi</div>
                       </td>
 
-                      {/* Cột 6: Ngày Nhập Kho */}
-                      <td className="px-3 py-3.5 text-center whitespace-nowrap">
-                        <span className="font-mono text-xs font-semibold text-slate-700">
+                      {/* Cột 6: Ngày Nhập Kho (Đã bỏ chữ 'Lưu kho') */}
+                      <td className="px-3 py-3.5 text-center">
+                        <span className="font-mono text-xs font-semibold text-slate-700 inline-flex items-center">
+                          <Calendar className="h-3 w-3 mr-1 text-slate-400" />
                           {stock.dateInStock || "-"}
                         </span>
-                        <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-center">
-                          <Calendar className="h-3 w-3 mr-0.5 text-slate-400" /> Lưu kho
-                        </div>
                       </td>
 
-                      {/* Cột 7: Ô Nhập Số Lượng Pick Chọn (Hiển thị đầy đủ, rộng rãi không bị che khuất) */}
-                      <td className="px-4 py-3.5 text-center whitespace-nowrap min-w-[195px]">
+                      {/* Cột 7: Ô Nhập Số Lượng Pick Chọn (Đã bỏ dòng 'Nhu cầu đơn: 100 món') */}
+                      <td className="px-3 py-3.5 text-center">
                         <div className="flex items-center justify-center space-x-1.5">
                           <input
                             type="number"
                             min="0"
                             max={Math.min(stock.availableQty, requestedQty)}
+                            disabled={!isSelected}
                             value={currentPick}
                             onChange={(e) =>
                               handleQtyChange(stock.id, e.target.value, stock.availableQty, requestedQty)
                             }
-                            className="w-20 text-center font-mono font-black text-sm text-emerald-900 border-2 border-emerald-500 rounded-lg py-1 px-1 bg-white focus:outline-none focus:ring-2 focus:ring-[#005a46]"
+                            className={`w-20 text-center font-mono font-black text-sm rounded-lg py-1 px-1 transition-all ${
+                              isSelected
+                                ? "text-emerald-900 border-2 border-emerald-500 bg-white focus:outline-none focus:ring-2 focus:ring-[#005a46]"
+                                : "text-slate-400 border border-slate-200 bg-slate-50 cursor-not-allowed"
+                            }`}
                           />
                           <button
                             type="button"
+                            disabled={!isSelected}
                             onClick={() => handleSelectMax(stock.id, stock.availableQty, requestedQty)}
-                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 rounded-lg border border-slate-300 transition-colors cursor-pointer shrink-0 shadow-2xs"
+                            className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer shrink-0 shadow-2xs ${
+                              isSelected
+                                ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300"
+                                : "bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed"
+                            }`}
                             title="Chọn tối đa số lượng có thể"
                           >
                             Tối đa
                           </button>
-                        </div>
-                        <div className="text-[11px] text-slate-500 mt-1 font-medium whitespace-nowrap">
-                          Nhu cầu đơn: <strong className="text-slate-800">{requestedQty} món</strong>
                         </div>
                       </td>
                     </tr>
@@ -238,8 +329,8 @@ export default function WarehouseSyncPopup({
 
         </div>
 
-        {/* Footer (Bỏ toàn bộ khối tổng hợp phân bổ, chỉ giữ nút Đóng và nút Xác nhận) */}
-        <div className="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex justify-between items-center">
+        {/* Footer (Nút Đóng bê qua nằm bên trái nút Xác nhận, nút Xác nhận rút gọn) */}
+        <div className="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex justify-end items-center space-x-3">
           <button
             type="button"
             onClick={onClose}
@@ -254,7 +345,7 @@ export default function WarehouseSyncPopup({
             className="px-6 py-2.5 bg-[#005a46] hover:bg-[#004737] text-white text-xs font-bold rounded-xl shadow-sm flex items-center space-x-1.5 transition-colors cursor-pointer"
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-            <span>Xác nhận Pick chọn vào Đơn hàng ({totalPicked} món kho)</span>
+            <span>Xác nhận ({totalPicked} món kho)</span>
           </button>
         </div>
       </div>
