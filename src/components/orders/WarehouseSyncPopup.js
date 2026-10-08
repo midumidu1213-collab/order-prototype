@@ -5,13 +5,9 @@ import {
   X, 
   Warehouse, 
   Sparkles, 
-  CheckCircle2, 
   AlertTriangle, 
   Calendar, 
-  FileText, 
-  Check, 
-  Layers,
-  ArrowRight
+  Info
 } from "lucide-react";
 
 export default function WarehouseSyncPopup({
@@ -22,20 +18,16 @@ export default function WarehouseSyncPopup({
   onConfirmPick
 }) {
   // State lưu số lượng pick cho từng dòng stock item
-  // key là stock.id, value là số lượng pick
   const [pickQuantities, setPickQuantities] = useState({});
 
   useEffect(() => {
-    // Khởi tạo mặc định: pick tối đa số lượng có thể (bằng min giữa nhu cầu đặt và tồn kho)
     if (matchedStockList.length > 0 && order) {
       const initial = {};
       matchedStockList.forEach((stock) => {
-        // Tìm dòng hàng tương ứng trong đơn hàng
         const orderItem = order.items?.find(
           (i) => i.itemCode?.toLowerCase() === stock.itemCode?.toLowerCase()
         );
         const requestedQty = orderItem ? orderItem.qty : stock.availableQty;
-        // Mặc định lấy tối đa số tồn nhưng không vượt quá nhu cầu đặt
         initial[stock.id] = Math.min(requestedQty, stock.availableQty);
       });
       setPickQuantities(initial);
@@ -46,8 +38,6 @@ export default function WarehouseSyncPopup({
 
   // Tính tổng số lượng pick
   const totalPicked = Object.values(pickQuantities).reduce((acc, v) => acc + (Number(v) || 0), 0);
-  const totalOrderQty = order.items?.reduce((acc, i) => acc + i.qty, 0) || order.qty;
-  const remainingForNewProduction = Math.max(0, totalOrderQty - totalPicked);
 
   const handleQtyChange = (stockId, value, maxAvailable, requestedQty) => {
     let num = Number(value);
@@ -74,7 +64,7 @@ export default function WarehouseSyncPopup({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         
         {/* Header */}
         <div className="bg-gradient-to-r from-[#005a46] via-[#004737] to-[#013328] text-white px-6 py-4 flex items-center justify-between">
@@ -102,7 +92,7 @@ export default function WarehouseSyncPopup({
           </button>
         </div>
 
-        <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+        <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
           
           {/* Cảnh báo quy tắc nghiệp vụ */}
           <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex items-start space-x-3 text-xs text-amber-900 leading-relaxed">
@@ -116,16 +106,18 @@ export default function WarehouseSyncPopup({
             </div>
           </div>
 
-          {/* BẢNG CHI TIẾT CÁC MẶT HÀNG TRONG KHO */}
+          {/* BẢNG CHI TIẾT CÁC MẶT HÀNG TRONG KHO (CHUẨN CÁC CỘT THEO GÓP Ý CỦA CHỊ ĐẸP) */}
           <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
             <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
-              <thead className="bg-slate-50 font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+              <thead className="bg-slate-50 font-bold text-slate-700 uppercase tracking-wider text-[11px] whitespace-nowrap">
                 <tr>
                   <th className="px-4 py-3">Mã Item</th>
-                  <th className="px-4 py-3 text-center">Số Lượng Tồn Kho</th>
+                  <th className="px-3 py-3 text-center text-emerald-900 bg-emerald-50/50">SL Đặt</th>
+                  <th className="px-3 py-3 text-center">Số Lượng Tồn Kho</th>
                   <th className="px-4 py-3 text-center">Mã Đơn Hàng Cũ</th>
-                  <th className="px-4 py-3 text-center">Ngày Nhập Kho</th>
-                  <th className="px-4 py-3 text-center w-48">Ô Nhập SL Pick Chọn</th>
+                  <th className="px-3 py-3 text-center">Nguyên Liệu - Tuổi Vàng</th>
+                  <th className="px-3 py-3 text-center">Ngày Nhập Kho</th>
+                  <th className="px-4 py-3 text-center w-44">Ô Nhập SL Pick Chọn</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -140,7 +132,7 @@ export default function WarehouseSyncPopup({
                     <tr key={stock.id} className="hover:bg-slate-50 transition-colors">
                       {/* Cột 1: Mã Item */}
                       <td className="px-4 py-3.5">
-                        <div className="font-mono font-bold text-sm text-slate-900">{stock.itemCode}</div>
+                        <div className="font-mono font-bold text-xs text-slate-900">{stock.itemCode}</div>
                         <div className="text-[11px] text-slate-600 font-medium">{stock.itemName}</div>
                         <div className="text-[10px] text-slate-400 mt-0.5 flex items-center space-x-2">
                           <span className="font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">{stock.goldType}</span>
@@ -152,33 +144,66 @@ export default function WarehouseSyncPopup({
                         </div>
                       </td>
 
-                      {/* Cột 2: Số Lượng Tồn Kho */}
-                      <td className="px-4 py-3.5 text-center">
+                      {/* Cột 2: SL Đặt (Thêm mới theo chỉ đạo của Chị đẹp) */}
+                      <td className="px-3 py-3.5 text-center bg-emerald-50/30">
+                        <span className="font-mono font-black text-sm text-emerald-950 block">
+                          {requestedQty}
+                        </span>
+                        <span className="text-[10px] text-emerald-700">món đặt</span>
+                      </td>
+
+                      {/* Cột 3: Số Lượng Tồn Kho */}
+                      <td className="px-3 py-3.5 text-center">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
                           {stock.availableQty} món
                         </span>
                         <div className="text-[10px] text-slate-400 mt-1">Khả dụng</div>
                       </td>
 
-                      {/* Cột 3: Mã Đơn Hàng Cũ */}
+                      {/* Cột 4: Mã Đơn Hàng Cũ (Rê chuột vào xem được lý do hủy) */}
                       <td className="px-4 py-3.5 text-center">
-                        <span className="font-mono font-bold text-xs text-amber-900 bg-amber-50 px-2 py-1 rounded border border-amber-200">
-                          {stock.oldOrderCode || "-"}
-                        </span>
-                        <div className="text-[10px] text-slate-400 mt-1">Đã hủy đợt trước</div>
+                        <div className="relative inline-block group">
+                          <span className="font-mono font-bold text-xs text-amber-900 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 hover:bg-amber-100 hover:border-amber-300 cursor-help transition-colors flex items-center space-x-1">
+                            <span>{stock.oldOrderCode || "-"}</span>
+                            <Info className="h-3 w-3 text-amber-600" />
+                          </span>
+                          <div className="text-[10px] text-slate-400 mt-1">Đã hủy đợt trước</div>
+
+                          {/* Tooltip hiển thị lý do hủy khi rê chuột */}
+                          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:flex flex-col w-56 p-2 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl z-30 pointer-events-none">
+                            <span className="font-bold text-amber-400 flex items-center mb-0.5">
+                              📌 Lý do hủy đơn cũ:
+                            </span>
+                            <span className="leading-tight text-slate-200">
+                              {stock.sourceReason || "Khách hủy do trễ hẹn giao hàng đợt 1"}
+                            </span>
+                            <div className="text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-700">
+                              Khách cũ: {stock.oldCustomer || "Khách hàng cũ"}
+                            </div>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900" />
+                          </div>
+                        </div>
                       </td>
 
-                      {/* Cột 4: Ngày Nhập Kho */}
-                      <td className="px-4 py-3.5 text-center">
+                      {/* Cột 5: Nguyên Liệu - Tuổi Vàng (Thêm mới theo chỉ đạo của Chị đẹp) */}
+                      <td className="px-3 py-3.5 text-center">
+                        <span className="font-bold text-xs text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 inline-block font-mono">
+                          {order.material || "Vàng"} - {stock.goldType}
+                        </span>
+                        <div className="text-[10px] text-slate-400 mt-1">Chuẩn tuổi</div>
+                      </td>
+
+                      {/* Cột 6: Ngày Nhập Kho */}
+                      <td className="px-3 py-3.5 text-center">
                         <span className="font-mono text-xs font-semibold text-slate-700">
                           {stock.dateInStock || "-"}
                         </span>
                         <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-center">
-                          <Calendar className="h-3 w-3 mr-0.5" /> Lưu kho
+                          <Calendar className="h-3 w-3 mr-0.5 text-slate-400" /> Lưu kho
                         </div>
                       </td>
 
-                      {/* Cột 5: Ô Nhập Số Lượng Pick Chọn */}
+                      {/* Cột 7: Ô Nhập Số Lượng Pick Chọn */}
                       <td className="px-4 py-3.5 text-center">
                         <div className="flex items-center justify-center space-x-1.5">
                           <input
@@ -194,7 +219,7 @@ export default function WarehouseSyncPopup({
                           <button
                             type="button"
                             onClick={() => handleSelectMax(stock.id, stock.availableQty, requestedQty)}
-                            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700 rounded border border-slate-300 transition-colors"
+                            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700 rounded border border-slate-300 transition-colors cursor-pointer"
                             title="Chọn tối đa số lượng có thể"
                           >
                             Tối đa
@@ -211,54 +236,14 @@ export default function WarehouseSyncPopup({
             </table>
           </div>
 
-          {/* BOX TÓM TẮT KẾT QUẢ PHÂN BỔ & NHẢ ĐÁ */}
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-3">
-            <div className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
-              <span className="flex items-center">
-                <Layers className="h-4 w-4 mr-1.5 text-emerald-700" />
-                Tổng hợp phân bổ đơn hàng sau khi pick chọn
-              </span>
-              <span className="text-slate-500 font-semibold text-xs">
-                Tổng nhu cầu đơn hàng: <strong className="text-slate-900">{totalOrderQty} món</strong>
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-emerald-950">1. Lấy từ Kho Thành Phẩm:</span>
-                  <span className="font-mono font-black text-emerald-800 text-sm">{totalPicked} món</span>
-                </div>
-                <div className="text-[11px] text-emerald-800 flex items-center">
-                  <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-600 shrink-0" />
-                  <span>Tự động <strong>NHẢ {totalPicked} phần đá</strong> đã tạm hold về kho phụ liệu.</span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-blue-950">2. Bắt buộc Sản Xuất Mới:</span>
-                  <span className="font-mono font-black text-blue-800 text-sm">{remainingForNewProduction} món</span>
-                </div>
-                <div className="text-[11px] text-blue-800">
-                  • Tiếp tục duy trì giữ chỗ đá cho {remainingForNewProduction} món theo BOM đúc mới.
-                </div>
-              </div>
-            </div>
-
-            <div className="text-[11px] text-slate-500 bg-white p-2.5 rounded-lg border border-slate-200">
-              📌 <strong>Vòng đời tiếp theo:</strong> Sau khi xác nhận, thông tin được gửi sang QLSP để cập nhật Routing làm mới. Khi QLSP duyệt xong, đơn hàng sẽ chuyển sang trạng thái <strong>&apos;Đủ thông tin kỹ thuật&apos;</strong> để QLĐH bấm chuyển KHSX.
-            </div>
-          </div>
-
         </div>
 
-        {/* Footer */}
-        <div className="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-between items-center">
+        {/* Footer (Bỏ toàn bộ khối tổng hợp phân bổ, chỉ giữ nút Đóng và nút Xác nhận) */}
+        <div className="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex justify-between items-center">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+            className="px-5 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             Đóng
           </button>
