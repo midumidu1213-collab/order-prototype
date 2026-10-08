@@ -8,7 +8,8 @@ export const WAREHOUSE_REWORK_ITEMS = [
     id: "WP-011",
     bagCode: "BAG-TP-9915",
     itemCode: "GY0RG00014/A00A00000000000015",
-    itemName: "Nhẫn Nữ Vàng 14K Trơn NNU-015",
+    itemCode30: "GY0RG00144A00A00CZBB1CZWW1013",
+    itemName: "Nhẫn Nữ",
     category: "Nhẫn nữ",
     goldType: "61Y",
     size: "NNU - 015", // Khớp Ni NNU - 015

@@ -18,7 +18,8 @@ import {
   BadgePercent,
   Download,
   ShieldAlert,
-  ImageIcon
+  ImageIcon,
+  Trash2
 } from "lucide-react";
 import { getOrderById, ALLOWED_SYNC_STATUSES, INITIAL_ORDERS } from "@/data/ordersData";
 import { findMatchingWarehouseItems } from "@/data/warehouseStockData";
@@ -136,6 +137,16 @@ export default function OrderDetailPage({ params }) {
     }));
   };
 
+  // Xóa dòng sản phẩm khỏi đơn hàng (Hỗ trợ nút action Xóa của Chị đẹp)
+  const handleDeleteItem = (stt) => {
+    setOrder((prev) => ({
+      ...prev,
+      items: prev.items.filter((it) => it.stt !== stt)
+    }));
+    setSyncToastMessage(`Đã xóa dòng sản phẩm STT ${stt} khỏi đơn hàng.`);
+    setTimeout(() => setSyncToastMessage(""), 3000);
+  };
+
   const totalStockAvailable = matchedStockList.reduce((acc, s) => acc + s.availableQty, 0);
 
   return (
@@ -231,39 +242,29 @@ export default function OrderDetailPage({ params }) {
       {/* CARD THÔNG TIN CHUNG: ĐẦY ĐỦ 100% CÁC TRƯỜNG NHƯ ẢNH CHỤP */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-5">
         
-        {/* Header khối thông tin chung */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        {/* Header khối thông tin đơn hàng */}
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3.5">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
               <FileText className="h-5 w-5 text-[#005a46]" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2.5">
-                <h2 className="text-xl font-black text-slate-900 font-mono tracking-tight">{order.code}</h2>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold border border-yellow-300 text-yellow-800 bg-yellow-50">
-                  {order.status}
-                </span>
-              </div>
-              <span className="text-[11px] font-bold text-[#005a46] uppercase tracking-wider block mt-0.5">
-                Thông tin chung
+            <div className="flex items-center space-x-2.5">
+              <h2 className="text-xl font-black text-slate-900 font-mono tracking-tight">{order.code}</h2>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold border border-yellow-300 text-yellow-800 bg-yellow-50">
+                {order.status}
               </span>
-            </div>
-          </div>
-
-          {/* 2 Hộp Thống Kê Số Lượng & Giá Trị Lớn Bên Phải */}
-          <div className="flex items-center space-x-3 shrink-0">
-            <div className="bg-slate-50 px-5 py-3 rounded-xl border border-slate-200 min-w-[140px] text-left">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tổng số lượng</span>
-              <span className="text-base font-black text-slate-900 font-mono">{order.qty} SP</span>
-            </div>
-            <div className="bg-slate-50 px-5 py-3 rounded-xl border border-slate-200 min-w-[160px] text-left">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tổng giá trị</span>
-              <span className="text-base font-black text-emerald-900 font-mono">{order.total} đ</span>
             </div>
           </div>
         </div>
 
-        {/* LƯỚI TOÀN BỘ 18 TRƯỜNG THÔNG TIN CHI TIẾT */}
+        {/* Tiêu đề THÔNG TIN CHUNG dời xuống theo chỉ đạo của Chị đẹp */}
+        <div>
+          <span className="text-xs font-bold text-[#005a46] uppercase tracking-wider block">
+            Thông tin chung
+          </span>
+        </div>
+
+        {/* LƯỚI THÔNG TIN CHI TIẾT (Đã tinh gọn, loại bỏ thông tin thừa và bê Tổng SL, Tổng Giá Trị vào) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3.5 text-xs">
           
           {/* CỘT 1 */}
@@ -277,12 +278,8 @@ export default function OrderDetailPage({ params }) {
               <span className="font-semibold text-slate-800">{order.team || "TEAM 3_B2B2C_HCM & Miền Đông"}</span>
             </div>
             <div>
-              <span className="text-slate-400 text-[11px] block">Chất liệu xi:</span>
-              <span className="font-semibold text-slate-800">{order.platingMaterial || "1"}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 text-[11px] block">Mã tương ứng:</span>
-              <span className="font-mono font-bold text-slate-800">{order.correspondingCode || "NED"}</span>
+              <span className="text-slate-400 text-[11px] block">Chất liệu đá:</span>
+              <span className="font-semibold text-slate-800">{order.stoneMaterial || "Không gắn đá"}</span>
             </div>
             <div>
               <span className="text-slate-400 text-[11px] block flex items-center">
@@ -290,11 +287,10 @@ export default function OrderDetailPage({ params }) {
               </span>
               <span className="font-bold text-slate-900">{order.discount || "0%"}</span>
             </div>
-            <div>
-              <span className="text-slate-400 text-[11px] block">Tiến độ giao hàng:</span>
-              <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block mt-0.5">
-                {order.deliveryProgress || "Giao đúng hạn (7h)"}
-              </span>
+            {/* Bê Tổng số lượng xuống thành thông tin chung */}
+            <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Tổng số lượng:</span>
+              <span className="font-mono font-black text-slate-900 text-sm">{order.qty} SP</span>
             </div>
           </div>
 
@@ -320,13 +316,10 @@ export default function OrderDetailPage({ params }) {
               <span className="text-slate-400 text-[11px] block">Trọng lượng:</span>
               <span className="font-mono font-bold text-slate-800">{order.weight || "408.0000g"}</span>
             </div>
-            <div>
-              <span className="text-slate-400 text-[11px] block">Giá sau chiết khấu:</span>
-              <span className="font-mono font-black text-rose-700">{order.finalPrice || "127,775,000"} đ</span>
-            </div>
-            <div>
-              <span className="text-slate-400 text-[11px] block">Ghi chú đơn hàng:</span>
-              <span className="text-slate-700 italic block">{order.note || "Đơn thoả thuận 2/10 (item x 100pcs = 500pcs)"}</span>
+            {/* Bê Tổng giá trị xuống thành thông tin chung */}
+            <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Tổng giá trị:</span>
+              <span className="font-mono font-black text-emerald-900 text-sm">{order.total} đ</span>
             </div>
           </div>
 
@@ -349,15 +342,8 @@ export default function OrderDetailPage({ params }) {
               <span className="font-mono font-bold text-slate-900">{order.tempTotal || "130.000.000"} đ</span>
             </div>
             <div>
-              <span className="text-slate-400 text-[11px] block">Địa chỉ giao hàng:</span>
-              <span className="font-medium text-slate-800">{order.deliveryAddress || "123 Nguyễn Ái Quốc"}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 text-[11px] block">Ghi chú tiến độ SX / MO:</span>
-              <span className="font-mono font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200 inline-flex items-center">
-                {order.productionProgressNote || "GDR-20100220"}
-                <Copy className="h-3 w-3 ml-1 text-indigo-400 cursor-pointer" />
-              </span>
+              <span className="text-slate-400 text-[11px] block">Giá sau chiết khấu:</span>
+              <span className="font-mono font-black text-rose-700">{order.finalPrice || "127,775,000"} đ</span>
             </div>
           </div>
 
@@ -368,6 +354,14 @@ export default function OrderDetailPage({ params }) {
               <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block">
                 {order.stoneHoldStatus || "Đã hold đá (100%)"}
               </span>
+            </div>
+            <div>
+              <span className="text-slate-400 text-[11px] block">Địa chỉ giao hàng:</span>
+              <span className="font-medium text-slate-800">{order.deliveryAddress || "123 Nguyễn Ái Quốc"}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 text-[11px] block">Ghi chú đơn hàng:</span>
+              <span className="text-slate-700 italic block">{order.note || "Đơn thoả thuận 2/10 (item x 100pcs = 500pcs)"}</span>
             </div>
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Phân hệ xử lý</span>
@@ -435,12 +429,17 @@ export default function OrderDetailPage({ params }) {
                 <th className="px-3 py-3 text-right">Trọng lượng</th>
                 <th className="px-4 py-3 text-right">Đơn giá</th>
                 <th className="px-3 py-3 text-center">Ghi chú</th>
-                <th className="px-4 py-3 text-center w-40">Tác vụ Kho TP</th>
+                <th className="px-4 py-3 text-center w-36">Tác vụ Kho TP</th>
+                <th className="px-3 py-3 text-center w-14">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {order.items?.map((item) => {
                 const isSynced = item.sourceType === "WAREHOUSE_REWORK" || item.sourceType === "SPLIT_ALLOCATION";
+                // Chỉ hiển thị nút đồng bộ kho cho item trùng với item trong kho theo yêu cầu của Chị đẹp
+                const isItemInStock = matchedStockList.some(
+                  (s) => s.itemCode?.toLowerCase() === item.itemCode?.toLowerCase()
+                );
 
                 return (
                   <tr key={item.stt} className={`hover:bg-slate-50 transition-colors ${isSynced ? "bg-emerald-50/25" : ""}`}>
@@ -513,23 +512,23 @@ export default function OrderDetailPage({ params }) {
                       {item.note || "---"}
                     </td>
 
-                    {/* Tác vụ Kho TP */}
+                    {/* Tác vụ Kho TP: Chỉ hiển thị nút đồng bộ kho cho item trùng với item trong kho */}
                     <td className="px-4 py-3.5 text-center">
                       {isSynced ? (
                         <button
                           type="button"
                           onClick={() => handleRevertItem(item.stt)}
-                          className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors"
+                          className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors cursor-pointer"
                         >
                           <RotateCcw className="h-3 w-3 inline mr-1" />
                           Hủy chọn kho
                         </button>
-                      ) : (
+                      ) : isItemInStock ? (
                         <button
                           type="button"
                           onClick={handleTriggerSync}
                           disabled={!isSyncAllowed}
-                          className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
+                          className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all cursor-pointer ${
                             isSyncAllowed
                               ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300 shadow-2xs"
                               : "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
@@ -537,7 +536,21 @@ export default function OrderDetailPage({ params }) {
                         >
                           Đồng bộ kho
                         </button>
+                      ) : (
+                        <span className="text-slate-300 font-mono text-xs">---</span>
                       )}
+                    </td>
+
+                    {/* Thao tác: Nút Xóa dòng sản phẩm theo yêu cầu của Chị đẹp */}
+                    <td className="px-3 py-3.5 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteItem(item.stt)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Xóa dòng sản phẩm khỏi đơn hàng"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 );

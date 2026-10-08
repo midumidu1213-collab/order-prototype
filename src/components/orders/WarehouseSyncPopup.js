@@ -105,16 +105,16 @@ export default function WarehouseSyncPopup({
 
           {/* BẢNG CHI TIẾT CÁC MẶT HÀNG TRONG KHO (CHUẨN CÁC CỘT THEO GÓP Ý CỦA CHỊ ĐẸP) */}
           <div className="border border-slate-200 rounded-xl overflow-x-auto shadow-2xs">
-            <table className="w-full divide-y divide-slate-200 text-left text-xs min-w-[980px]">
+            <table className="w-full divide-y divide-slate-200 text-left text-xs">
               <thead className="bg-slate-50 font-bold text-slate-700 uppercase tracking-wider text-[11px] whitespace-nowrap">
                 <tr>
-                  <th className="px-4 py-3 min-w-[240px]">Mã Item</th>
-                  <th className="px-3 py-3 text-center text-emerald-900 bg-emerald-50/50 whitespace-nowrap min-w-[85px]">SL Đặt</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[125px]">Số Lượng Tồn Kho</th>
-                  <th className="px-4 py-3 text-center whitespace-nowrap min-w-[135px]">Mã Đơn Hàng Cũ</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[145px]">Nguyên Liệu - Tuổi Vàng</th>
-                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[115px]">Ngày Nhập Kho</th>
-                  <th className="px-4 py-3 text-center whitespace-nowrap min-w-[195px]">Ô Nhập SL Pick Chọn</th>
+                  <th className="px-4 py-3 min-w-[220px]">Mã Item</th>
+                  <th className="px-3 py-3 text-center text-emerald-900 bg-emerald-50/50 whitespace-nowrap min-w-[75px]">SL Đặt</th>
+                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[110px]">Số Lượng Tồn Kho</th>
+                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[125px]">Mã Đơn Hàng Cũ</th>
+                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[135px]">Nguyên Liệu - Tuổi Vàng</th>
+                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[105px]">Ngày Nhập Kho</th>
+                  <th className="px-3 py-3 text-center whitespace-nowrap min-w-[185px]">Ô Nhập SL Pick Chọn</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -124,13 +124,16 @@ export default function WarehouseSyncPopup({
                     (i) => i.itemCode?.toLowerCase() === stock.itemCode?.toLowerCase()
                   );
                   const requestedQty = orderItem ? orderItem.qty : stock.availableQty;
+                  const displayName = stock.itemName ? stock.itemName.replace(/Vàng.*/i, "").trim() : "Nhẫn Nữ";
 
                   return (
                     <tr key={stock.id} className="hover:bg-slate-50 transition-colors">
-                      {/* Cột 1: Mã Item (Đã bỏ badge 61Y và bỏ vị trí két/ngăn theo yêu cầu của Chị đẹp) */}
+                      {/* Cột 1: Mã Item (Mã 30 ký tự chuẩn ERP, tên Nhẫn Nữ gọn gàng) */}
                       <td className="px-4 py-3.5">
-                        <div className="font-mono font-bold text-xs text-slate-900">{stock.itemCode}</div>
-                        <div className="text-[11px] text-slate-600 font-medium">{stock.itemName}</div>
+                        <div className="font-mono font-bold text-xs text-slate-900 tracking-tight">
+                          {stock.itemCode30 || stock.itemCode}
+                        </div>
+                        <div className="text-[11px] text-slate-700 font-bold mt-0.5">{displayName || "Nhẫn Nữ"}</div>
                         <div className="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-1.5">
                           <span>Ni {stock.size}</span>
                           {stock.stoneColor && stock.stoneColor !== "--" ? (
