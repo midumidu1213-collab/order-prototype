@@ -6,14 +6,15 @@ import {
   ChevronLeft, 
   Plus, 
   Upload, 
-  ImageIcon, 
   Warehouse, 
   CheckCircle2, 
   RotateCcw, 
   ShieldCheck, 
   Sparkles,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Split,
+  Lightbulb
 } from "lucide-react";
 import WarehouseStockModal from "@/components/orders/WarehouseStockModal";
 import { findMatchingWarehouseItems } from "@/data/warehouseStockData";
@@ -26,7 +27,7 @@ export default function CreateOrder() {
     goldType: "61Y"
   });
 
-  // State các dòng sản phẩm trong đơn hàng
+  // Dòng sản phẩm mẫu (với Dòng 1 đặt 100 món để minh họa đúng tình huống: Đặt 100, Kho có 80)
   const [orderItems, setOrderItems] = useState([
     {
       stt: 1,
@@ -38,15 +39,17 @@ export default function CreateOrder() {
       stoneColor: "Xanh",
       stoneType: "Sapphire Xanh & CZ",
       size: 45,
-      qty: 1,
+      qty: 100, // Khách đặt 100 chiếc!
       customerReq: "Làm kỹ",
       note: "Yêu cầu hoàn thiện cao cấp",
       weight: "3.42g",
       unitPrice: 480000, // Tiền công KH mới
-      // Trạng thái nguồn gốc sản phẩm
-      sourceType: "NEW_PRODUCTION", // "NEW_PRODUCTION" | "WAREHOUSE_REWORK"
-      assignedStock: null, // Chi tiết item kho nếu chọn
-      stoneHoldStatus: "HELD_FOR_PRODUCTION" // "HELD_FOR_PRODUCTION" | "RELEASED_TO_STOCK"
+      // Phân bổ số lượng
+      sourceType: "NEW_PRODUCTION", // "NEW_PRODUCTION" | "SPLIT_ALLOCATION" | "WAREHOUSE_REWORK"
+      qtyFromStock: 0,
+      qtyNewProduction: 100,
+      assignedStock: null,
+      stoneHoldStatus: "HELD_FOR_PRODUCTION" // "HELD_FOR_PRODUCTION" | "PARTIALLY_RELEASED"
     },
     {
       stt: 2,
@@ -57,13 +60,15 @@ export default function CreateOrder() {
       platingColor: "X",
       stoneColor: "Xanh",
       stoneType: "Sapphire Xanh & CZ",
-      size: 48, // Ni 48 (Trong kho có mẫu Ni 48 WP-003)
-      qty: 1,
+      size: 48, // Ni 48 (Kho có sẵn 15 chiếc)
+      qty: 10,
       customerReq: "Tiêu chuẩn",
       note: "-",
       weight: "3.60g",
       unitPrice: 480000,
       sourceType: "NEW_PRODUCTION",
+      qtyFromStock: 0,
+      qtyNewProduction: 10,
       assignedStock: null,
       stoneHoldStatus: "HELD_FOR_PRODUCTION"
     },
@@ -77,12 +82,14 @@ export default function CreateOrder() {
       stoneColor: "Xanh Lục Bảo",
       stoneType: "Emerald Colombia",
       size: 52,
-      qty: 1,
+      qty: 5, // Kho có sẵn 2 bộ
       customerReq: "Đồng bộ",
       note: "Bộ 3 món (Dây + Lắc + Nhẫn)",
       weight: "28.50g",
       unitPrice: 3200000,
       sourceType: "NEW_PRODUCTION",
+      qtyFromStock: 0,
+      qtyNewProduction: 5,
       assignedStock: null,
       stoneHoldStatus: "HELD_FOR_PRODUCTION"
     }
@@ -92,28 +99,30 @@ export default function CreateOrder() {
   const [selectedItemForModal, setSelectedItemForModal] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Mở modal tra cứu cho dòng được chọn
+  // Mở modal review kho cho dòng được chọn
   const handleOpenStockModal = (item) => {
     setSelectedItemForModal(item);
     setIsModalOpen(true);
   };
 
-  // Chọn Item từ kho thành phẩm
-  const handleSelectStockItem = (stockItem) => {
+  // Xác nhận đồng bộ & phân bổ từ modal
+  const handleConfirmSync = ({ stockItem, qtyFromStock, qtyNewProduction }) => {
     if (!selectedItemForModal) return;
 
     setOrderItems((prevItems) =>
       prevItems.map((item) => {
         if (item.stt === selectedItemForModal.stt) {
+          const isFullWarehouse = qtyNewProduction === 0;
           return {
             ...item,
-            sourceType: "WAREHOUSE_REWORK",
+            sourceType: isFullWarehouse ? "WAREHOUSE_REWORK" : "SPLIT_ALLOCATION",
             assignedStock: stockItem,
-            // Cơ chế cốt lõi: Tự động Nhả 100% đá tạm hold về tồn khả dụng vì phôi kho đã ngậm đủ đá
-            stoneHoldStatus: "RELEASED_TO_STOCK",
-            // Tiền công tính độc lập theo khách hàng mới
+            qtyFromStock,
+            qtyNewProduction,
+            // Cơ chế cốt lõi: Nhả đúng số phần đá tương ứng với số món lấy từ kho
+            stoneHoldStatus: "PARTIALLY_RELEASED",
             unitPrice: stockItem.standardLaborPrice || item.unitPrice,
-            note: `Lấy từ kho TP (${stockItem.bagCode} - ${stockItem.location})`
+            note: `Đồng bộ kho: ${qtyFromStock} món (${stockItem.bagCode}) + ${qtyNewProduction} món SX mới`
           };
         }
         return item;
@@ -124,7 +133,7 @@ export default function CreateOrder() {
     setSelectedItemForModal(null);
   };
 
-  // Hủy chọn từ kho, quay lại sản xuất mới
+  // Hủy đồng bộ kho, quay lại sản xuất mới hoàn toàn
   const handleRevertToNewProduction = (stt) => {
     setOrderItems((prevItems) =>
       prevItems.map((item) => {
@@ -133,7 +142,8 @@ export default function CreateOrder() {
             ...item,
             sourceType: "NEW_PRODUCTION",
             assignedStock: null,
-            // Kích hoạt lại việc giữ chỗ đá sản xuất mới
+            qtyFromStock: 0,
+            qtyNewProduction: item.qty,
             stoneHoldStatus: "HELD_FOR_PRODUCTION",
             note: "-"
           };
@@ -143,9 +153,10 @@ export default function CreateOrder() {
     );
   };
 
-  // Thống kê nhanh
-  const totalReworkItems = orderItems.filter((i) => i.sourceType === "WAREHOUSE_REWORK").length;
-  const totalNewItems = orderItems.filter((i) => i.sourceType === "NEW_PRODUCTION").length;
+  // Thống kê nhanh toàn đơn
+  const totalQty = orderItems.reduce((acc, i) => acc + i.qty, 0);
+  const totalStockAllocated = orderItems.reduce((acc, i) => acc + i.qtyFromStock, 0);
+  const totalNewProduction = orderItems.reduce((acc, i) => acc + i.qtyNewProduction, 0);
 
   return (
     <div className="space-y-6 pb-28">
@@ -160,7 +171,7 @@ export default function CreateOrder() {
           <h2 className="text-lg font-bold text-gray-900 flex items-center">
             Thêm mới đơn hàng bán (Sales Order)
             <span className="ml-3 text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-semibold">
-              Hỗ trợ Kho Chờ Xử Lý (Phase 1)
+              Nhận diện Tồn kho & Phân bổ (Phase 1)
             </span>
           </h2>
         </div>
@@ -248,7 +259,7 @@ export default function CreateOrder() {
               <span className="ml-2 text-xs font-bold text-slate-500 lowercase">({orderItems.length} dòng hàng)</span>
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Hệ thống tự động quét Kho Thành Phẩm Chờ Xử Lý Lại và gợi ý các Item khớp 100% thuộc tính
+              Hệ thống tự động nhận diện mã item khớp với Kho Chờ Xử Lý và gợi ý nút <strong>Đồng bộ thông tin</strong> để review
             </p>
           </div>
           <div className="flex items-center space-x-2">
@@ -272,28 +283,30 @@ export default function CreateOrder() {
                 <th className="px-3 py-3">Tuổi vàng</th>
                 <th className="px-3 py-3">Ni / Size</th>
                 <th className="px-3 py-3">Đá / Màu</th>
-                <th className="px-3 py-3 text-center">SL</th>
+                <th className="px-3 py-3 text-center">SL Đặt</th>
                 <th className="px-3 py-3">Tiền công (KH Mới)</th>
-                <th className="px-3 py-3">Nguồn hàng & Trạng thái Đá</th>
-                <th className="px-3 py-3 text-center w-40">Tác vụ Kho TP</th>
+                <th className="px-3 py-3">Kế hoạch Phân bổ & Điều tiết Đá</th>
+                <th className="px-3 py-3 text-center w-48">Tác vụ Đồng bộ Kho</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200 text-xs">
               {orderItems.map((item) => {
-                // Kiểm tra xem trong kho có bao nhiêu item khớp 100%
+                // Tự động quét kiểm tra tồn kho khớp 100%
                 const stockMatches = findMatchingWarehouseItems({
                   itemCode: item.itemCode,
                   goldType: item.goldType,
                   size: item.size,
                   stoneColor: item.stoneColor
                 });
-                const isRework = item.sourceType === "WAREHOUSE_REWORK";
+                const totalStockAvailable = stockMatches.reduce((acc, s) => acc + s.availableQty, 0);
+
+                const isSynced = item.sourceType === "WAREHOUSE_REWORK" || item.sourceType === "SPLIT_ALLOCATION";
 
                 return (
                   <tr 
                     key={item.stt} 
                     className={`hover:bg-slate-50/80 transition-colors ${
-                      isRework ? "bg-emerald-50/30" : ""
+                      isSynced ? "bg-emerald-50/25" : ""
                     }`}
                   >
                     <td className="px-3 py-3 text-center font-bold text-slate-500">
@@ -304,6 +317,14 @@ export default function CreateOrder() {
                     <td className="px-3 py-3">
                       <div className="font-mono font-bold text-slate-900">{item.itemCode}</div>
                       <div className="text-[11px] text-slate-500 line-clamp-1">{item.itemName}</div>
+                      
+                      {/* GỢI Ý NHẬN DIỆN TỰ ĐỘNG (Smart Suggestion) nếu chưa đồng bộ */}
+                      {!isSynced && totalStockAvailable > 0 && (
+                        <div className="mt-1 flex items-center space-x-1 text-[11px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/80">
+                          <Lightbulb className="h-3 w-3 text-amber-600 shrink-0" />
+                          <span>Kho có sẵn <strong>{totalStockAvailable} món</strong> khớp 100%</span>
+                        </div>
+                      )}
                     </td>
 
                     {/* Tuổi vàng */}
@@ -324,8 +345,8 @@ export default function CreateOrder() {
                       <div className="text-[10px] text-slate-400">{item.stoneType}</div>
                     </td>
 
-                    {/* Số lượng */}
-                    <td className="px-3 py-3 text-center font-bold text-slate-900">
+                    {/* Số lượng đặt */}
+                    <td className="px-3 py-3 text-center font-mono font-black text-sm text-slate-900">
                       {item.qty}
                     </td>
 
@@ -334,67 +355,87 @@ export default function CreateOrder() {
                       {item.unitPrice.toLocaleString("vi-VN")} đ
                     </td>
 
-                    {/* Nguồn hàng & Trạng thái Đá */}
+                    {/* Kế hoạch Phân bổ & Điều tiết Đá */}
                     <td className="px-3 py-3">
-                      {isRework ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-1.5">
-                            <span className="inline-flex items-center font-bold text-[11px] text-emerald-900 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md">
+                      {isSynced ? (
+                        <div className="space-y-1.5">
+                          {/* Chi tiết phân bổ */}
+                          <div className="flex items-center space-x-2">
+                            <span className="inline-flex items-center font-bold text-[11px] text-emerald-900 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded">
                               <Warehouse className="h-3 w-3 mr-1 text-emerald-700" />
-                              Kho TP: {item.assignedStock?.bagCode}
+                              Kho TP: {item.qtyFromStock} món
                             </span>
-                            <span className="text-[10px] text-emerald-700 font-medium">
-                              ({item.assignedStock?.location})
-                            </span>
+                            {item.qtyNewProduction > 0 && (
+                              <span className="inline-flex items-center font-bold text-[11px] text-blue-900 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded">
+                                <Layers className="h-3 w-3 mr-1 text-blue-700" />
+                                Đúc mới: {item.qtyNewProduction} món
+                              </span>
+                            )}
                           </div>
 
-                          {/* Trạng thái Nhả Đá */}
-                          <div className="flex items-center text-[10px] text-emerald-700 font-bold bg-white px-2 py-0.5 rounded border border-emerald-200">
-                            <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-600 shrink-0" />
-                            Đã NHẢ 100% đá giữ chỗ về kho (Đá có sẵn trên phôi)
+                          {/* Trạng thái Điều tiết Đá */}
+                          <div className="text-[10px] text-emerald-800 font-semibold bg-white p-1.5 rounded border border-emerald-200 space-y-0.5">
+                            <div className="flex items-center text-emerald-700 font-bold">
+                              <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-600 shrink-0" />
+                              Đã NHẢ {item.qtyFromStock} phần đá giữ chỗ về kho phụ liệu
+                            </div>
+                            {item.qtyNewProduction > 0 && (
+                              <div className="text-blue-700 pl-4">
+                                • Giữ chỗ {item.qtyNewProduction} phần đá cho đợt đúc mới
+                              </div>
+                            )}
                           </div>
 
                           <div className="text-[10px] text-slate-500 italic">
-                            Routing QLSP: Tẩy xi → Khắc logo mới → Xi mạ → KCS
+                            Chờ QLSP cập nhật Routing → Chuyển &apos;Đủ thông tin KT&apos;
                           </div>
                         </div>
                       ) : (
                         <div className="space-y-1">
                           <span className="inline-flex items-center font-semibold text-[11px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                            Sản xuất mới hoàn toàn
+                            Sản xuất mới 100% ({item.qty} món)
                           </span>
                           <div className="text-[10px] text-amber-700 font-medium">
-                            • Tạm giữ chỗ Lần 1: 1 viên chủ + đá tấm
+                            • Tạm giữ chỗ Lần 1: {item.qty} phần đá (BOM chuẩn)
                           </div>
                         </div>
                       )}
                     </td>
 
-                    {/* Tác vụ Kho TP */}
+                    {/* Tác vụ Đồng bộ Kho */}
                     <td className="px-3 py-3 text-center">
-                      {isRework ? (
-                        <button
-                          type="button"
-                          onClick={() => handleRevertToNewProduction(item.stt)}
-                          className="inline-flex items-center px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors"
-                          title="Hủy gán item kho và quay lại sản xuất mới"
-                        >
-                          <RotateCcw className="h-3 w-3 mr-1" />
-                          Hủy chọn kho
-                        </button>
+                      {isSynced ? (
+                        <div className="flex items-center justify-center space-x-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenStockModal(item)}
+                            className="px-2 py-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200 transition-colors"
+                          >
+                            Review lại
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRevertToNewProduction(item.stt)}
+                            className="px-2 py-1 text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded border border-rose-200 transition-colors"
+                            title="Hủy phân bổ kho và quay lại sản xuất mới hoàn toàn"
+                          >
+                            <RotateCcw className="h-3 w-3 inline mr-0.5" />
+                            Hủy
+                          </button>
+                        </div>
                       ) : (
                         <button
                           type="button"
                           onClick={() => handleOpenStockModal(item)}
                           className={`inline-flex items-center px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${
-                            stockMatches.length > 0
-                              ? "bg-emerald-600 hover:bg-emerald-700 text-white border-transparent shadow-xs animate-pulse"
+                            totalStockAvailable > 0
+                              ? "bg-emerald-600 hover:bg-emerald-700 text-white border-transparent shadow-xs"
                               : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300"
                           }`}
                         >
-                          <Warehouse className="h-3 w-3 mr-1" />
-                          {stockMatches.length > 0 ? (
-                            <span>Có {stockMatches.length} SP khớp kho</span>
+                          <Sparkles className="h-3.5 w-3.5 mr-1 text-amber-300" />
+                          {totalStockAvailable > 0 ? (
+                            <span>Đồng bộ kho ({totalStockAvailable})</span>
                           ) : (
                             <span>Tra cứu kho</span>
                           )}
@@ -414,41 +455,40 @@ export default function CreateOrder() {
         <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 space-y-2">
           <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center">
             <Warehouse className="h-4 w-4 mr-1.5 text-emerald-700" />
-            Thành phẩm lấy từ Kho Chờ Xử Lý
+            1. Sản phẩm lấy từ Kho Chờ Xử Lý
           </div>
           <div className="text-2xl font-black text-emerald-950 font-mono">
-            {totalReworkItems} <span className="text-xs font-bold text-emerald-700">sản phẩm</span>
+            {totalStockAllocated} <span className="text-xs font-bold text-emerald-700">món</span>
           </div>
           <p className="text-xs text-emerald-800 leading-relaxed">
-            • <strong>Nhả đá hoàn toàn:</strong> Đã gửi lệnh hoàn nhập 100% đá tạm hold về kho phụ liệu khả dụng.<br/>
-            • <strong>Rút ngắn tiến độ:</strong> Chỉ cần 2-3 ngày xử lý bề mặt, khắc logo và xi mạ lại.
+            • <strong>Đã nhả đá giữ chỗ:</strong> Hoàn trả 100% đá tương ứng ({totalStockAllocated} phần) về kho phụ liệu khả dụng.<br/>
+            • <strong>Rút ngắn tiến độ:</strong> Chỉ cần 2-3 ngày qua xưởng xi mạ & khắc laser.
           </p>
         </div>
 
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-          <div className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center">
-            <Layers className="h-4 w-4 mr-1.5 text-slate-500" />
-            Sản xuất đúc mới hoàn toàn
+        <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4 space-y-2">
+          <div className="text-xs font-bold text-blue-800 uppercase tracking-wider flex items-center">
+            <Layers className="h-4 w-4 mr-1.5 text-blue-700" />
+            2. Bắt buộc Sản xuất Đúc Mới
           </div>
-          <div className="text-2xl font-black text-slate-900 font-mono">
-            {totalNewItems} <span className="text-xs font-bold text-slate-500">sản phẩm</span>
+          <div className="text-2xl font-black text-blue-950 font-mono">
+            {totalNewProduction} <span className="text-xs font-bold text-blue-700">món</span>
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            • <strong>Đang giữ chỗ đá:</strong> Đã hold đá Lần 1 theo định mức BOM tiêu chuẩn.<br/>
-            • <strong>Tiến độ thông thường:</strong> 10-15 ngày (Đúc phôi → Nguội → Gắn đá → Xi mạ → KCS).
+          <p className="text-xs text-blue-800 leading-relaxed">
+            • <strong>Đang giữ chỗ đá:</strong> Duy trì giữ chỗ đá ({totalNewProduction} phần) theo BOM đúc mới.<br/>
+            • <strong>Tiến độ:</strong> 10-15 ngày (Đúc phôi → Nguội → Gắn đá → Xi mạ → KCS).
           </p>
         </div>
 
         <div className="bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 space-y-2">
           <div className="text-xs font-bold text-indigo-900 uppercase tracking-wider flex items-center">
             <ShieldCheck className="h-4 w-4 mr-1.5 text-indigo-700" />
-            Quy trình phối hợp 4 Phân hệ
+            3. Vòng đời & Ranh giới chuyển KHSX
           </div>
           <p className="text-xs text-indigo-950 leading-relaxed">
-            <strong>1. QLĐH:</strong> Chốt SO với item kho khớp 100% và nhả đá.<br/>
-            <strong>2. QLSP:</strong> Cập nhật Routing làm mới cho item kho.<br/>
-            <strong>3. KHSX:</strong> Tách 2 Planned Order (Nhóm kho vs Nhóm đúc mới).<br/>
-            <strong>4. Kho TP:</strong> Xuất phôi theo mã Bag gán giữ chỗ.
+            • <strong>QLSP duyệt Routing:</strong> Cập nhật quy trình làm mới.<br/>
+            • <strong>Chuyển &apos;Đủ thông tin KT&apos;:</strong> Hệ thống cập nhật trạng thái SO.<br/>
+            • <strong>QLĐH bấm Chuyển KHSX:</strong> Bán hàng chủ động chốt gửi lệnh sang KHSX để tách Planned Orders.
           </p>
         </div>
       </div>
@@ -456,27 +496,29 @@ export default function CreateOrder() {
       {/* Sticky Bottom Actions */}
       <div className="fixed bottom-0 right-0 left-64 bg-white border-t border-gray-200 p-4 flex items-center justify-between shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40">
         <div className="text-xs text-gray-500 flex items-center space-x-2">
-          <span className="font-semibold text-gray-700">Đơn hàng đang tạo:</span>
-          <span>{orderItems.length} sản phẩm ({totalReworkItems} lấy từ Kho TP, {totalNewItems} đúc mới)</span>
+          <span className="font-semibold text-gray-700">Tổng đặt hàng:</span>
+          <span>
+            {totalQty} sản phẩm (<strong>{totalStockAllocated}</strong> lấy từ Kho TP, <strong>{totalNewProduction}</strong> đúc mới)
+          </span>
         </div>
         <div className="flex space-x-3">
           <button className="px-5 py-2 border border-gray-300 rounded-xl bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50">
-            Lưu nháp
+            Lưu nháp đơn hàng
           </button>
           <button className="px-6 py-2 border border-transparent rounded-xl text-xs font-bold text-white bg-[#005a46] hover:bg-[#004737] shadow-sm flex items-center space-x-1.5">
-            <span>Xác nhận & Gửi duyệt kỹ thuật</span>
+            <span>Xác nhận & Gửi duyệt kỹ thuật (QLSP)</span>
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      {/* Modal Tra cứu Kho Thành Phẩm */}
+      {/* Modal Review & Đồng bộ Kho Thành Phẩm */}
       <WarehouseStockModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         targetItem={selectedItemForModal}
         customerName={customerInfo.name}
-        onSelectStock={handleSelectStockItem}
+        onConfirmSync={handleConfirmSync}
       />
     </div>
   );

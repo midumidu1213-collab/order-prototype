@@ -9,36 +9,18 @@ export const WAREHOUSE_REWORK_ITEMS = [
     itemName: "Nhẫn Kim Cương Nữ Solitaire 14K",
     category: "Nhẫn nữ",
     goldType: "61Y",
-    size: 45, // Ni 45 (hoặc Ni 12 theo chuẩn)
+    size: 45, // Ni 45
     stoneColor: "Xanh",
     stoneType: "Sapphire Xanh & Kim Cương Tấm",
     stoneQty: "1 viên chủ 4.5mm + 12 viên tấm 1.2mm",
-    weight: "3.42g",
+    weight: "3.42g/chiếc",
+    availableQty: 80, // Có sẵn 80 chiếc trong kho (phục vụ ca test: Đặt 100 chiếc -> 80 chiếc kho + 20 chiếc đúc mới)
     status: "Available", // Available | Allocated
-    location: "Két K1 - Ngăn A03",
-    sourceReason: "Khách cũ hủy đơn đợt 1 (Đã hoàn thiện KCS)",
+    location: "Két K1 - Ngăn A03 (Lô L-863)",
+    sourceReason: "Khách cũ hủy đơn đợt 1 (Đã hoàn thiện KCS sẵn)",
     oldCustomer: "KH-1000089 - Kim Cương Vàng",
     dateInStock: "02/08/2026",
-    standardLaborPrice: 480000 // Biểu giá công chuẩn
-  },
-  {
-    id: "WP-002",
-    bagCode: "BAG-TP-9902",
-    itemCode: "RG202500006",
-    itemName: "Nhẫn Kim Cương Nữ Solitaire 14K",
-    category: "Nhẫn nữ",
-    goldType: "61Y",
-    size: 45,
-    stoneColor: "Xanh",
-    stoneType: "Sapphire Xanh & Kim Cương Tấm",
-    stoneQty: "1 viên chủ 4.5mm + 12 viên tấm 1.2mm",
-    weight: "3.45g",
-    status: "Available",
-    location: "Két K1 - Ngăn A04",
-    sourceReason: "Khách cũ hủy đơn do trễ hẹn giao",
-    oldCustomer: "KH-1000045 - Bảo Tín Phát",
-    dateInStock: "03/08/2026",
-    standardLaborPrice: 480000
+    standardLaborPrice: 480000 // Biểu giá công chuẩn KH mới
   },
   {
     id: "WP-003",
@@ -47,11 +29,12 @@ export const WAREHOUSE_REWORK_ITEMS = [
     itemName: "Nhẫn Kim Cương Nữ Solitaire 14K",
     category: "Nhẫn nữ",
     goldType: "61Y",
-    size: 48, // Khác Ni (Ni 48) -> Không cho khớp với đơn Ni 45
+    size: 48, // Ni 48
     stoneColor: "Xanh",
     stoneType: "Sapphire Xanh & Kim Cương Tấm",
     stoneQty: "1 viên chủ 4.5mm + 12 viên tấm 1.2mm",
-    weight: "3.60g",
+    weight: "3.60g/chiếc",
+    availableQty: 15,
     status: "Available",
     location: "Két K1 - Ngăn A05",
     sourceReason: "Hàng thành phẩm dư mẫu chào hàng",
@@ -70,7 +53,8 @@ export const WAREHOUSE_REWORK_ITEMS = [
     stoneColor: "Trắng",
     stoneType: "Kim Cương Tự Nhiên D-Color",
     stoneQty: "1 viên chủ 5.0mm + 16 viên tấm",
-    weight: "3.88g",
+    weight: "3.88g/chiếc",
+    availableQty: 5,
     status: "Available",
     location: "Két VIP - Ngăn V02",
     sourceReason: "Khách hủy do đổi sang vàng hồng",
@@ -89,7 +73,8 @@ export const WAREHOUSE_REWORK_ITEMS = [
     stoneColor: "Xanh Lục Bảo",
     stoneType: "Ngọc Lục Bảo Colombia & Kim Cương",
     stoneQty: "3 viên chủ Emerald + 48 viên kim cương",
-    weight: "28.50g",
+    weight: "28.50g/bộ",
+    availableQty: 2,
     status: "Available",
     location: "Két K3 - Ngăn C01",
     sourceReason: "Khách sỉ hủy đơn nguyên bộ",
@@ -108,7 +93,8 @@ export const WAREHOUSE_REWORK_ITEMS = [
     stoneColor: "Đỏ Ruby",
     stoneType: "Ruby Mắt Rắn",
     stoneQty: "2 viên mắt Ruby",
-    weight: "15.20g",
+    weight: "15.20g/chiếc",
+    availableQty: 8,
     status: "Available",
     location: "Két K2 - Ngăn B08",
     sourceReason: "Tồn kho chờ xử lý lại",
@@ -123,11 +109,11 @@ export function findMatchingWarehouseItems({ itemCode, goldType, size, stoneColo
   if (!itemCode || !goldType || !size || !stoneColor) return [];
 
   return WAREHOUSE_REWORK_ITEMS.filter((stock) => {
-    const matchItem = stock.itemCode.toLowerCase() === itemCode.toLowerCase();
-    const matchGold = stock.goldType.toLowerCase() === goldType.toLowerCase();
+    const matchItem = stock.itemCode?.toLowerCase() === itemCode?.toLowerCase();
+    const matchGold = stock.goldType?.toLowerCase() === goldType?.toLowerCase();
     const matchSize = Number(stock.size) === Number(size);
-    const matchColor = stock.stoneColor.toLowerCase() === stoneColor.toLowerCase();
-    const isAvailable = stock.status === "Available";
+    const matchColor = stock.stoneColor?.toLowerCase() === stoneColor?.toLowerCase();
+    const isAvailable = stock.status === "Available" && stock.availableQty > 0;
 
     return matchItem && matchGold && matchSize && matchColor && isAvailable;
   });
