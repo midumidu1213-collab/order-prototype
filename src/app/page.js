@@ -8,6 +8,7 @@ import {
   Plus, 
   RotateCcw, 
   Eye, 
+  FileText,
   Copy, 
   Settings, 
   LayoutGrid,
@@ -17,7 +18,7 @@ import {
   ChevronsRight,
   X,
   SlidersHorizontal,
-  ArrowUpDown
+  Info
 } from "lucide-react";
 import { ORDER_TABS_CONFIG, MOCK_ORDER_LIST } from "@/data/orderListMockData";
 
@@ -35,30 +36,34 @@ export default function OrderListPage() {
   const [columnFilters, setColumnFilters] = useState({
     code: "",
     customer: "",
-    team: "",
     type: "",
     gold: "",
-    date: ""
+    date: "",
+    offerTime: "",
+    note: "",
+    status: "",
+    programName: ""
   });
 
-  // 5. State quản lý popover lọc nổi theo từng cột khi bấm vào icon filter ở header
-  const [activePopoverColumn, setActivePopoverColumn] = useState(null);
-
-  // 6. State chọn dòng (Checkbox)
+  // 5. State chọn dòng (Checkbox)
   const [selectedIds, setSelectedIds] = useState(new Set());
 
-  // 7. Phân trang
+  // 6. Phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
   // Danh sách các tùy chọn cho dropdown lọc cột
-  const teamOptions = useMemo(() => {
-    const teams = Array.from(new Set(MOCK_ORDER_LIST.map((o) => o.team).filter(Boolean)));
-    return teams.sort();
-  }, []);
-
   const typeOptions = ["Đơn hàng Gia công", "Đơn hàng Bán"];
-  const goldOptions = ["61Y", "41.7W", "75W", "75Y"];
+  const goldOptions = ["61Y", "41.7W", "75W"];
+  const statusOptions = [
+    "Đã chuyển KHSX",
+    "Đủ thông tin kỹ thuật",
+    "Chờ kỹ thuật",
+    "Chờ duyệt đơn hàng",
+    "Chờ cập nhật",
+    "Chờ xử lý",
+    "Đã hủy"
+  ];
 
   // Đếm số lượng đơn thực tế theo từng Tab trong dữ liệu hiện có
   const tabCounts = useMemo(() => {
@@ -88,12 +93,14 @@ export default function OrderListPage() {
     setColumnFilters({
       code: "",
       customer: "",
-      team: "",
       type: "",
       gold: "",
-      date: ""
+      date: "",
+      offerTime: "",
+      note: "",
+      status: "",
+      programName: ""
     });
-    setActivePopoverColumn(null);
     setCurrentPage(1);
   };
 
@@ -125,7 +132,8 @@ export default function OrderListPage() {
           order.customer?.toLowerCase().includes(query) ||
           order.phone?.toLowerCase().includes(query) ||
           order.team?.toLowerCase().includes(query) ||
-          order.type?.toLowerCase().includes(query);
+          order.type?.toLowerCase().includes(query) ||
+          order.status?.toLowerCase().includes(query);
         if (!matchGlobal) return false;
       }
 
@@ -140,13 +148,6 @@ export default function OrderListPage() {
       // Cột Khách hàng
       if (columnFilters.customer.trim() !== "") {
         if (!order.customer?.toLowerCase().includes(columnFilters.customer.toLowerCase().trim())) {
-          return false;
-        }
-      }
-
-      // Cột Đội nhóm phụ trách
-      if (columnFilters.team !== "") {
-        if (order.team !== columnFilters.team) {
           return false;
         }
       }
@@ -168,6 +169,27 @@ export default function OrderListPage() {
       // Cột Ngày đặt hàng
       if (columnFilters.date.trim() !== "") {
         if (!order.date?.toLowerCase().includes(columnFilters.date.toLowerCase().trim())) {
+          return false;
+        }
+      }
+
+      // Cột Ghi chú
+      if (columnFilters.note.trim() !== "") {
+        if (!order.note?.toLowerCase().includes(columnFilters.note.toLowerCase().trim())) {
+          return false;
+        }
+      }
+
+      // Cột Trạng thái
+      if (columnFilters.status !== "") {
+        if (order.status !== columnFilters.status) {
+          return false;
+        }
+      }
+
+      // Cột Tên & loại chương trình
+      if (columnFilters.programName.trim() !== "") {
+        if (!order.programName?.toLowerCase().includes(columnFilters.programName.toLowerCase().trim())) {
           return false;
         }
       }
@@ -202,8 +224,62 @@ export default function OrderListPage() {
     });
   };
 
+  // Helper render badge trạng thái chuẩn màu theo ảnh thực tế của Chị đẹp
+  const renderStatusBadge = (status) => {
+    switch (status) {
+      case "Đã chuyển KHSX":
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+            {status}
+          </span>
+        );
+      case "Đủ thông tin kỹ thuật":
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+            {status}
+          </span>
+        );
+      case "Chờ kỹ thuật":
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+            {status}
+          </span>
+        );
+      case "Chờ duyệt đơn hàng":
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-orange-50 text-orange-800 border border-orange-200">
+            {status}
+          </span>
+        );
+      case "Chờ xử lý":
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">
+            {status}
+          </span>
+        );
+      case "Chờ cập nhật":
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-300">
+            {status}
+          </span>
+        );
+      case "Đã hủy":
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+            {status}
+          </span>
+        );
+      default:
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+            {status}
+          </span>
+        );
+    }
+  };
+
   return (
-    <div className="space-y-3 pb-16 max-w-[1600px] mx-auto text-slate-800">
+    <div className="space-y-3 pb-16 max-w-[1680px] mx-auto text-slate-800">
       
       {/* 1. Breadcrumbs */}
       <div className="text-xs text-slate-500 flex items-center space-x-1.5 pt-1">
@@ -217,15 +293,11 @@ export default function OrderListPage() {
         <h1 className="text-xl font-bold text-slate-900">Danh sách đơn hàng</h1>
       </div>
 
-      {/* 3. HÀNG TABS: TÌM KIẾM / LỌC THEO TAB (CHUẨN FORM TRONG ẢNH CHỤP) */}
+      {/* 3. HÀNG TABS: TÌM KIẾM / LỌC THEO TAB (CHUẨN 100% THEO ẢNH CHỤP CỦA CHỊ ĐẸP) */}
       <div className="border-b border-slate-200 overflow-x-auto">
         <nav className="-mb-px flex space-x-6 min-w-max">
           {ORDER_TABS_CONFIG.map((tab) => {
             const isActive = activeTab === tab.id;
-            // Hiển thị số lượng: ưu tiên lấy count từ cấu hình hoặc count thực tế nếu có
-            const displayCount = tab.id === "ALL" 
-              ? tab.count 
-              : tabCounts[tab.id] !== undefined ? `${tab.count} (${tabCounts[tab.id]})` : tab.count;
 
             return (
               <button
@@ -242,11 +314,11 @@ export default function OrderListPage() {
               >
                 <span>{tab.name}</span>
                 <span className={`text-[11px] ${isActive ? "text-[#005a46] font-bold" : "text-slate-500"}`}>
-                  ({tab.id === "ALL" ? tab.count : tab.count})
+                  ({tab.count})
                 </span>
                 {tabCounts[tab.id] > 0 && tab.id !== "ALL" && (
                   <span className="ml-1 px-1.5 py-0.2 bg-emerald-100 text-[#005a46] text-[10px] rounded-full font-bold">
-                    {tabCounts[tab.id]} có sẵn
+                    {tabCounts[tab.id]} đơn
                   </span>
                 )}
               </button>
@@ -334,7 +406,7 @@ export default function OrderListPage() {
 
       {/* Thông báo kết quả lọc */}
       {isAnyFilterActive && (
-        <div className="text-xs text-slate-600 flex items-center space-x-2 py-1">
+        <div className="text-xs text-slate-600 flex flex-wrap items-center gap-1.5 py-1">
           <span>Đang hiển thị kết quả lọc: <strong>{filteredOrders.length}</strong> / {MOCK_ORDER_LIST.length} đơn hàng.</span>
           {activeTab !== "ALL" && (
             <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200">
@@ -349,11 +421,6 @@ export default function OrderListPage() {
           {columnFilters.customer && (
             <span className="bg-emerald-50 text-[#005a46] px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
               KH: {columnFilters.customer}
-            </span>
-          )}
-          {columnFilters.team && (
-            <span className="bg-emerald-50 text-[#005a46] px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
-              Nhóm: {columnFilters.team}
             </span>
           )}
           {columnFilters.type && (
@@ -371,19 +438,24 @@ export default function OrderListPage() {
               Ngày: {columnFilters.date}
             </span>
           )}
+          {columnFilters.status && (
+            <span className="bg-emerald-50 text-[#005a46] px-2 py-0.5 rounded text-[11px] font-medium border border-emerald-200">
+              Trạng thái: {columnFilters.status}
+            </span>
+          )}
         </div>
       )}
 
-      {/* 5. BẢNG DỮ LIỆU ĐƠN HÀNG (THEO ĐÚNG CÁC CỘT TRONG ẢNH CHỤP CỦA CHỊ ĐẸP) */}
+      {/* 5. BẢNG DỮ LIỆU ĐƠN HÀNG: ĐẦY ĐỦ 15 CỘT CHUẨN 100% THEO ẢNH CHỤP CỦA CHỊ ĐẸP */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
           <table className="w-full divide-y divide-slate-200 text-left text-xs">
             
-            {/* HÀNG TIÊU ĐỀ CHÍNH (THEAD) */}
+            {/* HÀNG TIÊU ĐỀ CHÍNH (THEAD - 15 CỘT) */}
             <thead className="bg-slate-50 font-bold text-slate-700 text-[11px] whitespace-nowrap select-none">
               <tr>
-                {/* Cột 1: Checkbox chọn tất cả */}
-                <th className="px-3 py-3 text-center w-10">
+                {/* 1. Checkbox chọn tất cả */}
+                <th className="px-2.5 py-3 text-center w-8">
                   <input
                     type="checkbox"
                     checked={selectedIds.size === paginatedOrders.length && paginatedOrders.length > 0}
@@ -392,17 +464,17 @@ export default function OrderListPage() {
                   />
                 </th>
 
-                {/* Cột 2: STT */}
-                <th className="px-3 py-3 text-center w-12 font-bold text-slate-800">STT</th>
+                {/* 2. STT */}
+                <th className="px-2 py-3 text-center w-10 font-bold text-slate-800">STT</th>
 
-                {/* Cột 3: Mã đơn hàng (Kèm icon Filter) */}
-                <th className="px-3 py-3">
-                  <div className="flex items-center space-x-1.5 cursor-pointer">
+                {/* 3. Mã đơn hàng */}
+                <th className="px-2.5 py-3">
+                  <div className="flex items-center space-x-1 cursor-pointer">
                     <span className="font-bold text-slate-800">Mã đơn hàng</span>
                     <button
                       type="button"
                       onClick={() => setShowColumnFilters(true)}
-                      className={`p-1 rounded hover:bg-slate-200 transition-colors ${
+                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
                         columnFilters.code ? "text-[#005a46] font-bold" : "text-slate-400"
                       }`}
                       title="Lọc theo Mã đơn hàng"
@@ -412,14 +484,14 @@ export default function OrderListPage() {
                   </div>
                 </th>
 
-                {/* Cột 4: Khách hàng (Kèm icon Filter) */}
-                <th className="px-3 py-3">
-                  <div className="flex items-center space-x-1.5 cursor-pointer">
+                {/* 4. Khách hàng */}
+                <th className="px-2.5 py-3">
+                  <div className="flex items-center space-x-1 cursor-pointer">
                     <span className="font-bold text-slate-800">Khách hàng</span>
                     <button
                       type="button"
                       onClick={() => setShowColumnFilters(true)}
-                      className={`p-1 rounded hover:bg-slate-200 transition-colors ${
+                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
                         columnFilters.customer ? "text-[#005a46] font-bold" : "text-slate-400"
                       }`}
                       title="Lọc theo Khách hàng"
@@ -429,31 +501,14 @@ export default function OrderListPage() {
                   </div>
                 </th>
 
-                {/* Cột 5: Đội nhóm phụ trách (Kèm icon Filter) */}
-                <th className="px-3 py-3">
-                  <div className="flex items-center space-x-1.5 cursor-pointer">
-                    <span className="font-bold text-slate-800">Đội nhóm phụ trách</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowColumnFilters(true)}
-                      className={`p-1 rounded hover:bg-slate-200 transition-colors ${
-                        columnFilters.team ? "text-[#005a46] font-bold" : "text-slate-400"
-                      }`}
-                      title="Lọc theo Đội nhóm phụ trách"
-                    >
-                      <Filter className="h-3 w-3" />
-                    </button>
-                  </div>
-                </th>
-
-                {/* Cột 6: Loại đơn hàng (Kèm icon Filter) */}
-                <th className="px-3 py-3 text-center">
-                  <div className="flex items-center justify-center space-x-1.5 cursor-pointer">
+                {/* 5. Loại đơn hàng */}
+                <th className="px-2.5 py-3 text-center">
+                  <div className="flex items-center justify-center space-x-1 cursor-pointer">
                     <span className="font-bold text-slate-800">Loại đơn hàng</span>
                     <button
                       type="button"
                       onClick={() => setShowColumnFilters(true)}
-                      className={`p-1 rounded hover:bg-slate-200 transition-colors ${
+                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
                         columnFilters.type ? "text-[#005a46] font-bold" : "text-slate-400"
                       }`}
                       title="Lọc theo Loại đơn hàng"
@@ -463,14 +518,14 @@ export default function OrderListPage() {
                   </div>
                 </th>
 
-                {/* Cột 7: Tuổi vàng (Kèm icon Filter) */}
-                <th className="px-3 py-3 text-center">
-                  <div className="flex items-center justify-center space-x-1.5 cursor-pointer">
+                {/* 6. Tuổi vàng */}
+                <th className="px-2 py-3 text-center">
+                  <div className="flex items-center justify-center space-x-1 cursor-pointer">
                     <span className="font-bold text-slate-800">Tuổi vàng</span>
                     <button
                       type="button"
                       onClick={() => setShowColumnFilters(true)}
-                      className={`p-1 rounded hover:bg-slate-200 transition-colors ${
+                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
                         columnFilters.gold ? "text-[#005a46] font-bold" : "text-slate-400"
                       }`}
                       title="Lọc theo Tuổi vàng"
@@ -480,14 +535,14 @@ export default function OrderListPage() {
                   </div>
                 </th>
 
-                {/* Cột 8: Ngày đặt hàng (Kèm icon Filter) */}
-                <th className="px-3 py-3 text-center">
-                  <div className="flex items-center justify-center space-x-1.5 cursor-pointer">
+                {/* 7. Ngày đặt hàng */}
+                <th className="px-2.5 py-3 text-center">
+                  <div className="flex items-center justify-center space-x-1 cursor-pointer">
                     <span className="font-bold text-slate-800">Ngày đặt hàng</span>
                     <button
                       type="button"
                       onClick={() => setShowColumnFilters(true)}
-                      className={`p-1 rounded hover:bg-slate-200 transition-colors ${
+                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
                         columnFilters.date ? "text-[#005a46] font-bold" : "text-slate-400"
                       }`}
                       title="Lọc theo Ngày đặt hàng"
@@ -497,13 +552,79 @@ export default function OrderListPage() {
                   </div>
                 </th>
 
-                {/* Cột 9: Thời gian chào hàng */}
-                <th className="px-3 py-3 text-center text-slate-800">
+                {/* 8. Thời gian chào hàng */}
+                <th className="px-2 py-3 text-center text-slate-800">
                   Thời gian chào hàng
                 </th>
 
-                {/* Cột 10: Actions */}
-                <th className="px-3 py-3 text-center w-28 text-slate-800">
+                {/* 9. Ghi chú */}
+                <th className="px-2.5 py-3 text-center text-slate-800">
+                  <div className="flex items-center justify-center space-x-1 cursor-pointer">
+                    <span>Ghi chú</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowColumnFilters(true)}
+                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
+                        columnFilters.note ? "text-[#005a46] font-bold" : "text-slate-400"
+                      }`}
+                      title="Lọc theo Ghi chú"
+                    >
+                      <Filter className="h-3 w-3" />
+                    </button>
+                  </div>
+                </th>
+
+                {/* 10. Trạng thái (Bổ sung mới chuẩn ảnh) */}
+                <th className="px-2.5 py-3 text-center text-slate-800">
+                  <div className="flex items-center justify-center space-x-1 cursor-pointer">
+                    <span className="font-bold">Trạng thái</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowColumnFilters(true)}
+                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
+                        columnFilters.status ? "text-[#005a46] font-bold" : "text-slate-400"
+                      }`}
+                      title="Lọc theo Trạng thái"
+                    >
+                      <Filter className="h-3 w-3" />
+                    </button>
+                  </div>
+                </th>
+
+                {/* 11. Số lượng (Bổ sung mới chuẩn ảnh) */}
+                <th className="px-2.5 py-3 text-right font-bold text-slate-800">
+                  Số lượng
+                </th>
+
+                {/* 12. Tổng tiền (Bổ sung mới chuẩn ảnh) */}
+                <th className="px-3 py-3 text-right font-bold text-slate-800">
+                  Tổng tiền
+                </th>
+
+                {/* 13. Chiết khấu (Bổ sung mới chuẩn ảnh) */}
+                <th className="px-2 py-3 text-center text-slate-800">
+                  Chiết khấu
+                </th>
+
+                {/* 14. Tên & loại chương trình (Bổ sung mới chuẩn ảnh) */}
+                <th className="px-3 py-3 text-left text-slate-800">
+                  <div className="flex items-center space-x-1 cursor-pointer">
+                    <span>Tên & loại chương trình</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowColumnFilters(true)}
+                      className={`p-0.5 rounded hover:bg-slate-200 transition-colors ${
+                        columnFilters.programName ? "text-[#005a46] font-bold" : "text-slate-400"
+                      }`}
+                      title="Lọc theo Tên chương trình"
+                    >
+                      <Filter className="h-3 w-3" />
+                    </button>
+                  </div>
+                </th>
+
+                {/* 15. Actions */}
+                <th className="px-2.5 py-3 text-center w-24 text-slate-800">
                   Actions
                 </th>
               </tr>
@@ -512,13 +633,13 @@ export default function OrderListPage() {
               {showColumnFilters && (
                 <tr className="bg-emerald-50/40 border-t border-b border-emerald-100">
                   {/* Ô trống tương ứng checkbox */}
-                  <th className="px-2 py-1.5 text-center"></th>
+                  <th className="px-1 py-1.5 text-center"></th>
 
                   {/* Ô trống tương ứng STT */}
-                  <th className="px-2 py-1.5 text-center"></th>
+                  <th className="px-1 py-1.5 text-center"></th>
 
-                  {/* Input lọc Mã đơn hàng */}
-                  <th className="px-2 py-1.5">
+                  {/* 3. Lọc Mã đơn hàng */}
+                  <th className="px-1.5 py-1.5">
                     <div className="relative">
                       <input
                         type="text"
@@ -531,7 +652,7 @@ export default function OrderListPage() {
                         <button
                           type="button"
                           onClick={() => handleColumnFilterChange("code", "")}
-                          className="absolute right-1.5 top-1.5 text-slate-400 hover:text-slate-600"
+                          className="absolute right-1 top-1 text-slate-400 hover:text-slate-600"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -539,8 +660,8 @@ export default function OrderListPage() {
                     </div>
                   </th>
 
-                  {/* Input lọc Khách hàng */}
-                  <th className="px-2 py-1.5">
+                  {/* 4. Lọc Khách hàng */}
+                  <th className="px-1.5 py-1.5">
                     <div className="relative">
                       <input
                         type="text"
@@ -553,7 +674,7 @@ export default function OrderListPage() {
                         <button
                           type="button"
                           onClick={() => handleColumnFilterChange("customer", "")}
-                          className="absolute right-1.5 top-1.5 text-slate-400 hover:text-slate-600"
+                          className="absolute right-1 top-1 text-slate-400 hover:text-slate-600"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -561,63 +682,49 @@ export default function OrderListPage() {
                     </div>
                   </th>
 
-                  {/* Dropdown lọc Đội nhóm phụ trách */}
-                  <th className="px-2 py-1.5">
-                    <select
-                      value={columnFilters.team}
-                      onChange={(e) => handleColumnFilterChange("team", e.target.value)}
-                      className="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
-                    >
-                      <option value="">Tất cả đội nhóm</option>
-                      {teamOptions.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                  </th>
-
-                  {/* Dropdown lọc Loại đơn hàng */}
-                  <th className="px-2 py-1.5">
+                  {/* 5. Lọc Loại đơn hàng */}
+                  <th className="px-1.5 py-1.5">
                     <select
                       value={columnFilters.type}
                       onChange={(e) => handleColumnFilterChange("type", e.target.value)}
-                      className="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
+                      className="w-full px-1 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
                     >
-                      <option value="">Tất cả loại đơn</option>
+                      <option value="">Tất cả</option>
                       {typeOptions.map((tp) => (
                         <option key={tp} value={tp}>{tp}</option>
                       ))}
                     </select>
                   </th>
 
-                  {/* Dropdown lọc Tuổi vàng */}
-                  <th className="px-2 py-1.5">
+                  {/* 6. Lọc Tuổi vàng */}
+                  <th className="px-1 py-1.5">
                     <select
                       value={columnFilters.gold}
                       onChange={(e) => handleColumnFilterChange("gold", e.target.value)}
-                      className="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
+                      className="w-full px-1 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
                     >
-                      <option value="">Tất cả tuổi vàng</option>
+                      <option value="">Tất cả</option>
                       {goldOptions.map((g) => (
                         <option key={g} value={g}>{g}</option>
                       ))}
                     </select>
                   </th>
 
-                  {/* Input lọc Ngày đặt hàng */}
-                  <th className="px-2 py-1.5">
+                  {/* 7. Lọc Ngày đặt hàng */}
+                  <th className="px-1.5 py-1.5">
                     <div className="relative">
                       <input
                         type="text"
                         value={columnFilters.date}
                         onChange={(e) => handleColumnFilterChange("date", e.target.value)}
-                        placeholder="Lọc ngày đặt..."
-                        className="w-full px-2 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
+                        placeholder="Lọc ngày..."
+                        className="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
                       />
                       {columnFilters.date && (
                         <button
                           type="button"
                           onClick={() => handleColumnFilterChange("date", "")}
-                          className="absolute right-1.5 top-1.5 text-slate-400 hover:text-slate-600"
+                          className="absolute right-1 top-1 text-slate-400 hover:text-slate-600"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -625,11 +732,56 @@ export default function OrderListPage() {
                     </div>
                   </th>
 
-                  {/* Cột thời gian chào hàng */}
-                  <th className="px-2 py-1.5 text-center"></th>
+                  {/* 8. Thời gian chào hàng */}
+                  <th className="px-1 py-1.5 text-center"></th>
 
-                  {/* Nút reset filter */}
-                  <th className="px-2 py-1.5 text-center">
+                  {/* 9. Ghi chú */}
+                  <th className="px-1.5 py-1.5">
+                    <input
+                      type="text"
+                      value={columnFilters.note}
+                      onChange={(e) => handleColumnFilterChange("note", e.target.value)}
+                      placeholder="Lọc ghi chú..."
+                      className="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
+                    />
+                  </th>
+
+                  {/* 10. Trạng thái */}
+                  <th className="px-1.5 py-1.5">
+                    <select
+                      value={columnFilters.status}
+                      onChange={(e) => handleColumnFilterChange("status", e.target.value)}
+                      className="w-full px-1 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
+                    >
+                      <option value="">Tất cả</option>
+                      {statusOptions.map((st) => (
+                        <option key={st} value={st}>{st}</option>
+                      ))}
+                    </select>
+                  </th>
+
+                  {/* 11. Số lượng */}
+                  <th className="px-1 py-1.5 text-center"></th>
+
+                  {/* 12. Tổng tiền */}
+                  <th className="px-1 py-1.5 text-center"></th>
+
+                  {/* 13. Chiết khấu */}
+                  <th className="px-1 py-1.5 text-center"></th>
+
+                  {/* 14. Tên & loại chương trình */}
+                  <th className="px-1.5 py-1.5">
+                    <input
+                      type="text"
+                      value={columnFilters.programName}
+                      onChange={(e) => handleColumnFilterChange("programName", e.target.value)}
+                      placeholder="Lọc chương trình..."
+                      className="w-full px-1.5 py-1 text-[11px] font-normal border border-slate-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#005a46]"
+                    />
+                  </th>
+
+                  {/* 15. Nút Reset bộ lọc cột */}
+                  <th className="px-1 py-1.5 text-center">
                     {isAnyFilterActive && (
                       <button
                         type="button"
@@ -645,14 +797,12 @@ export default function OrderListPage() {
               )}
             </thead>
 
-            {/* THÂN BẢNG DỮ LIỆU (TBODY) */}
+            {/* THÂN BẢNG DỮ LIỆU (TBODY - 15 CỘT CHUẨN XÁC) */}
             <tbody className="divide-y divide-slate-100 bg-white">
               {paginatedOrders.length > 0 ? (
                 paginatedOrders.map((order, idx) => {
                   const isChecked = selectedIds.has(order.id);
                   const displayIndex = (currentPage - 1) * itemsPerPage + idx + 1;
-
-                  // Màu badge Loại đơn hàng chuẩn theo ảnh chụp của Chị đẹp
                   const isProcessing = order.type === "Đơn hàng Gia công";
 
                   return (
@@ -662,8 +812,8 @@ export default function OrderListPage() {
                         isChecked ? "bg-emerald-50/20" : ""
                       }`}
                     >
-                      {/* Checkbox chọn dòng */}
-                      <td className="px-3 py-3.5 text-center">
+                      {/* 1. Checkbox chọn dòng */}
+                      <td className="px-2.5 py-3 text-center">
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -672,13 +822,13 @@ export default function OrderListPage() {
                         />
                       </td>
 
-                      {/* STT */}
-                      <td className="px-3 py-3.5 text-center font-mono font-medium text-slate-500">
+                      {/* 2. STT */}
+                      <td className="px-2 py-3 text-center font-mono font-medium text-slate-500">
                         {displayIndex}
                       </td>
 
-                      {/* Mã đơn hàng (Link click xem chi tiết) */}
-                      <td className="px-3 py-3.5 whitespace-nowrap">
+                      {/* 3. Mã đơn hàng (Link click xem chi tiết) */}
+                      <td className="px-2.5 py-3 whitespace-nowrap">
                         <Link
                           href={`/orders/${order.id === 11 ? "11" : order.id}`}
                           className="font-mono font-bold text-[#007a5e] hover:text-[#004737] hover:underline"
@@ -688,74 +838,99 @@ export default function OrderListPage() {
                         </Link>
                       </td>
 
-                      {/* Khách hàng */}
-                      <td className="px-3 py-3.5 text-slate-800 max-w-xs truncate" title={order.customer}>
+                      {/* 4. Khách hàng */}
+                      <td className="px-2.5 py-3 text-slate-800 max-w-[200px] truncate" title={order.customer}>
                         <span className="font-mono font-bold text-slate-700">{order.customerCode}</span>
                         <span className="text-slate-400 mx-1">-</span>
                         <span className="font-medium text-slate-900">{order.customerName || order.customer}</span>
                       </td>
 
-                      {/* Đội nhóm phụ trách */}
-                      <td className="px-3 py-3.5 whitespace-nowrap text-slate-700 font-medium">
-                        {order.team}
-                      </td>
-
-                      {/* Loại đơn hàng (Badge màu vàng cam cho Gia công, xanh lá cho Bán chuẩn ảnh) */}
-                      <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                      {/* 5. Loại đơn hàng (Badge màu vàng cam cho Gia công, xanh lá cho Bán chuẩn ảnh) */}
+                      <td className="px-2.5 py-3 text-center whitespace-nowrap">
                         {isProcessing ? (
-                          <span className="px-2.5 py-1 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
                             Đơn hàng Gia công
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                             Đơn hàng Bán
                           </span>
                         )}
                       </td>
 
-                      {/* Tuổi vàng */}
-                      <td className="px-3 py-3.5 text-center font-mono font-bold text-slate-700">
+                      {/* 6. Tuổi vàng */}
+                      <td className="px-2 py-3 text-center font-mono font-bold text-slate-700">
                         {order.gold}
                       </td>
 
-                      {/* Ngày đặt hàng */}
-                      <td className="px-3 py-3.5 text-center font-mono text-slate-600">
+                      {/* 7. Ngày đặt hàng */}
+                      <td className="px-2.5 py-3 text-center font-mono text-slate-600 whitespace-nowrap">
                         {order.date}
                       </td>
 
-                      {/* Thời gian chào hàng */}
-                      <td className="px-3 py-3.5 text-center text-slate-400 font-mono">
+                      {/* 8. Thời gian chào hàng */}
+                      <td className="px-2 py-3 text-center text-slate-400 font-mono">
                         {order.offerTime || "---"}
                       </td>
 
-                      {/* Actions (3 icons: Sổ/Xem, Lưới, Cài đặt chuẩn ảnh) */}
-                      <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                      {/* 9. Ghi chú (Bổ sung mới) */}
+                      <td className="px-2.5 py-3 text-center text-slate-400 max-w-[100px] truncate font-mono" title={order.note}>
+                        {order.note || "---"}
+                      </td>
+
+                      {/* 10. Trạng thái (Bổ sung mới chuẩn badge) */}
+                      <td className="px-2.5 py-3 text-center whitespace-nowrap">
+                        {renderStatusBadge(order.status)}
+                      </td>
+
+                      {/* 11. Số lượng (Bổ sung mới) */}
+                      <td className="px-2.5 py-3 text-right font-mono font-bold text-slate-900">
+                        {order.qty}
+                      </td>
+
+                      {/* 12. Tổng tiền (Bổ sung mới chuẩn format dấu phẩy) */}
+                      <td className="px-3 py-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                        {typeof order.total === "number" ? order.total.toLocaleString("en-US") : order.total}
+                      </td>
+
+                      {/* 13. Chiết khấu (Bổ sung mới) */}
+                      <td className="px-2 py-3 text-center font-mono text-slate-700 font-semibold">
+                        {order.discount || "---"}
+                      </td>
+
+                      {/* 14. Tên & loại chương trình (Bổ sung mới) */}
+                      <td className="px-3 py-3 text-left text-slate-600 max-w-[180px] truncate text-[11px]" title={order.programName}>
+                        {order.programName || "---"}
+                      </td>
+
+                      {/* 15. Actions (3 icons: Sổ/Xem đỏ cam, Lưới, Cài đặt chuẩn ảnh) */}
+                      <td className="px-2.5 py-3 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center space-x-1.5 text-slate-400">
-                          {/* Nút xem chi tiết */}
+                          {/* Nút xem chi tiết màu đỏ cam / sổ */}
                           <Link
                             href={`/orders/${order.id === 11 ? "11" : order.id}`}
-                            className="p-1 text-amber-700 hover:text-amber-900 hover:bg-amber-50 rounded transition-colors"
+                            className="p-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded transition-colors"
                             title="Xem chi tiết đơn hàng"
                           >
-                            <Eye className="h-4 w-4" />
+                            <FileText className="h-3.5 w-3.5" />
                           </Link>
 
                           {/* Nút lưới / tác vụ */}
                           <button
                             type="button"
-                            className="p-1 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors cursor-pointer"
+                            className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                             title="Tác vụ"
                           >
-                            <LayoutGrid className="h-4 w-4" />
+                            <LayoutGrid className="h-3.5 w-3.5" />
                           </button>
 
                           {/* Nút cài đặt */}
                           <button
                             type="button"
-                            className="p-1 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors cursor-pointer"
+                            className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                             title="Cấu hình"
                           >
-                            <Settings className="h-4 w-4" />
+                            <Settings className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </td>
@@ -765,7 +940,7 @@ export default function OrderListPage() {
               ) : (
                 /* Trạng thái Không tìm thấy kết quả */
                 <tr>
-                  <td colSpan={10} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={15} className="px-6 py-12 text-center text-slate-400">
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <Filter className="h-8 w-8 text-slate-300 stroke-[1.5]" />
                       <p className="text-sm font-semibold text-slate-600">
