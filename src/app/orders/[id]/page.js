@@ -426,7 +426,7 @@ export default function OrderDetailPage({ params }) {
                 <th className="px-4 py-3 text-right">Đơn giá</th>
                 <th className="px-3 py-3 text-center">Ghi chú</th>
                 <th className="px-3 py-3 text-center whitespace-nowrap min-w-[130px]">Trạng thái BOM/Routing</th>
-                <th className="px-4 py-3 text-center w-36">Tác vụ Kho TP</th>
+                <th className="px-4 py-3 text-center min-w-[170px]">Tác vụ Kho TP</th>
                 <th className="px-3 py-3 text-center w-14">Thao tác</th>
               </tr>
             </thead>
@@ -456,12 +456,6 @@ export default function OrderDetailPage({ params }) {
                       <div className="font-mono font-bold text-slate-900 text-xs">
                         {item.itemCode?.replace(/\//g, "")}
                       </div>
-                      {isSynced && (
-                        <div className="mt-1 flex items-center space-x-1 text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded font-bold">
-                          <Warehouse className="h-3 w-3 mr-0.5 text-emerald-700" />
-                          <span>Đã gán {item.qtyFromStock} món từ Kho TP (SO cũ: {item.assignedStock?.oldOrderCode})</span>
-                        </div>
-                      )}
                     </td>
 
                     {/* Mã Drawing */}
@@ -524,17 +518,22 @@ export default function OrderDetailPage({ params }) {
                       )}
                     </td>
 
-                    {/* Tác vụ Kho TP: Chỉ hiển thị nút đồng bộ kho cho item trùng với item trong kho */}
-                    <td className="px-4 py-3.5 text-center">
+                    {/* Tác vụ Kho TP: Hiển thị nút Hủy chọn kho kèm tỉ lệ pick (VD: 40/100) theo ghi chú đỏ của Chị đẹp */}
+                    <td className="px-4 py-3.5 text-center whitespace-nowrap">
                       {isSynced ? (
-                        <button
-                          type="button"
-                          onClick={() => handleRevertItem(item.stt)}
-                          className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors cursor-pointer"
-                        >
-                          <RotateCcw className="h-3 w-3 inline mr-1" />
-                          Hủy chọn kho
-                        </button>
+                        <div className="inline-flex items-center justify-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => handleRevertItem(item.stt)}
+                            className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors cursor-pointer"
+                          >
+                            <RotateCcw className="h-3 w-3 inline mr-1" />
+                            Hủy chọn kho
+                          </button>
+                          <span className="font-mono font-bold text-rose-600 text-xs">
+                            {item.qtyFromStock}/{item.qty}
+                          </span>
+                        </div>
                       ) : isItemInStock ? (
                         <button
                           type="button"
