@@ -175,6 +175,15 @@ export default function CreateOrder() {
             </span>
           </h2>
         </div>
+        <div>
+          <Link
+            href="/orders/warehouse-picker"
+            className="flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-sm transition-all"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-slate-950 animate-spin" />
+            <span>Mở Prototype Chọn Item Kho (Phase 1)</span>
+          </Link>
+        </div>
       </div>
 
       {/* Thông tin chung */}

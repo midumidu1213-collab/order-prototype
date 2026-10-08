@@ -83,12 +83,25 @@ export default function Sidebar() {
             <Link
               href="/"
               className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                pathname === "/" || pathname.startsWith("/orders")
+                pathname === "/" || pathname === "/orders/create"
                   ? "bg-white/20 text-white font-semibold"
                   : "hover:bg-[#004737] text-gray-300"
               }`}
             >
               Thông tin đơn hàng
+            </Link>
+            <Link
+              href="/orders/warehouse-picker"
+              className={`group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                pathname === "/orders/warehouse-picker"
+                  ? "bg-amber-400 text-slate-950 font-bold shadow-xs"
+                  : "hover:bg-[#004737] text-amber-300 font-semibold"
+              }`}
+            >
+              <span>Chọn Item Kho TP</span>
+              <span className="text-[9px] font-black uppercase px-1 py-0.5 rounded bg-amber-500/30 text-amber-200">
+                Phase 1
+              </span>
             </Link>
             <Link
               href="#"
