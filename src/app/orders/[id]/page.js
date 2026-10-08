@@ -425,15 +425,14 @@ export default function OrderDetailPage({ params }) {
                 <th className="px-3 py-3 text-right">Trọng lượng (L)</th>
                 <th className="px-4 py-3 text-right">Đơn giá</th>
                 <th className="px-3 py-3 text-center">Ghi chú</th>
-                <th className="px-3 py-3 text-center whitespace-nowrap min-w-[130px]">Trạng thái BOM/Routing</th>
-                <th className="px-4 py-3 text-center min-w-[170px]">Tác vụ Kho TP</th>
-                <th className="px-3 py-3 text-center w-14">Thao tác</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap min-w-[120px]">Trạng thái BOM/Routing</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap min-w-[130px]">SL Pick Kho TP</th>
+                <th className="px-3 py-3 text-center w-20">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {order.items?.map((item) => {
                 const isSynced = item.sourceType === "WAREHOUSE_REWORK" || item.sourceType === "SPLIT_ALLOCATION";
-                // Chỉ hiển thị nút đồng bộ kho cho item trùng với item trong kho theo yêu cầu của Chị đẹp
                 const isItemInStock = matchedStockList.some(
                   (s) => s.itemCode?.toLowerCase() === item.itemCode?.toLowerCase()
                 );
@@ -518,50 +517,39 @@ export default function OrderDetailPage({ params }) {
                       )}
                     </td>
 
-                    {/* Tác vụ Kho TP: Hiển thị nút Hủy chọn kho kèm tỉ lệ pick (VD: 40/100) theo ghi chú đỏ của Chị đẹp */}
-                    <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                      {isSynced ? (
-                        <div className="inline-flex items-center justify-center space-x-2">
-                          <button
-                            type="button"
-                            onClick={() => handleRevertItem(item.stt)}
-                            className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors cursor-pointer"
-                          >
-                            <RotateCcw className="h-3 w-3 inline mr-1" />
-                            Hủy chọn kho
-                          </button>
-                          <span className="font-mono font-bold text-rose-600 text-xs">
-                            {item.qtyFromStock}/{item.qty}
-                          </span>
-                        </div>
-                      ) : isItemInStock ? (
-                        <button
-                          type="button"
-                          onClick={handleTriggerSync}
-                          disabled={!isSyncAllowed}
-                          className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all cursor-pointer ${
-                            isSyncAllowed
-                              ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300 shadow-2xs"
-                              : "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
-                          }`}
-                        >
-                          Đồng bộ kho
-                        </button>
+                    {/* SL Pick Kho TP: Hiển thị tinh gọn số lượng đã pick chọn từ kho, loại bỏ các nút thừa lộn xộn */}
+                    <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                      {item.qtyFromStock > 0 ? (
+                        <span className="font-mono font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md text-xs inline-block">
+                          {item.qtyFromStock} / {item.qty}
+                        </span>
                       ) : (
-                        <span className="text-slate-300 font-mono text-xs">---</span>
+                        <span className="text-slate-300 font-mono text-xs">0</span>
                       )}
                     </td>
 
-                    {/* Thao tác: Nút Xóa dòng sản phẩm theo yêu cầu của Chị đẹp */}
-                    <td className="px-3 py-3.5 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteItem(item.stt)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                        title="Xóa dòng sản phẩm khỏi đơn hàng"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                    {/* Thao tác: Gồm nút Hủy pick kho (nếu dòng có pick) và nút Xóa dòng */}
+                    <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center space-x-1">
+                        {item.qtyFromStock > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRevertItem(item.stt)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Hủy pick kho dòng này"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteItem(item.stt)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Xóa dòng sản phẩm khỏi đơn hàng"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
