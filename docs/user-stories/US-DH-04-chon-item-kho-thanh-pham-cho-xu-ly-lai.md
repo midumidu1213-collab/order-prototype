@@ -75,7 +75,7 @@ flowchart TD
 | **BR-04** | **Phân loại nguồn hàng (Source Type)** | • Nếu $\text{SL Pick} = \text{SL Đặt}$: Nguồn hàng là `WAREHOUSE_REWORK` (Tận dụng kho 100%, không cần đúc mới).<br>• Nếu $0 < \text{SL Pick} < \text{SL Đặt}$: Nguồn hàng là `SPLIT_ALLOCATION` (Tách nguồn: Đã pick kho X món, sản xuất mới phần còn lại). |
 | **BR-05** | **Áp dụng tiền công khách hàng mới** | Sản phẩm pick từ kho cũ vẫn áp dụng theo bảng đơn giá tiền công của khách hàng hiện tại trên SO mới (không phụ thuộc vào tiền công của SO cũ). |
 | **BR-06** | **Tự động điều tiết đá (Stone Release)** | Ngay khi xác nhận pick $N$ món từ kho, trạng thái giữ chỗ đá của dòng chuyển sang `PARTIALLY_RELEASED`. Hệ thống tự động giải phóng $N$ phần đá giữ chỗ trả về tồn kho phụ liệu. |
-| **BR-07** | **Lưu vết truy xuất (Audit Trail)** | Hệ thống tự động ghi vết vào Ghi chú dòng sản phẩm: `Đã pick {SL} món từ Kho TP ({BagCode} - SO cũ: {OldOrderCode})` để phục vụ đối soát và xuất kho. |
+| **BR-07** | **Phân biệt Ghi chú sản phẩm & Dữ liệu kho** | Cột **Ghi chú** trên bảng dòng đơn hàng là thông tin kỹ thuật/gia công riêng của sản phẩm, tuyệt đối không tự ý chèn text pick kho vào cột này. Thông tin gán kho được thể hiện tập trung và trực quan qua cột **SL PICK KHO TP** và trường dữ liệu `assignedStock` phục vụ xuất kho. |
 
 ---
 
@@ -168,7 +168,7 @@ Bảng dữ liệu trong Popup gồm các cột chuẩn nghiệp vụ:
 *   **And:** Hệ thống hiển thị Toast thông báo: *"Đã đồng bộ và pick chọn thành công sản phẩm từ Kho Thành Phẩm vào đơn hàng!"*.
 *   **And:** Tại bảng chi tiết sản phẩm của đơn hàng:
     *   Cột `SL PICK KHO TP` hiển thị tỷ lệ đã gán (VD: `40/100`, `60/100`, `30/100`).
-    *   Cột `Ghi chú` hiển thị chi tiết: `Đã pick {SL} món từ Kho TP ({BagCode} - SO cũ: {OldSO})`.
+    *   Cột `Ghi chú` giữ nguyên thông tin ghi chú kỹ thuật riêng của sản phẩm (hoặc `---`), không chèn văn bản pick kho.
     *   Cột `Thao tác` xuất hiện thêm icon Hoàn tác `⟲`.
 
 ### AC 6: Hoàn tác / Hủy gán kho cho từng dòng sản phẩm

@@ -98,7 +98,8 @@ export default function OrderDetailPage({ params }) {
             qtyNewProduction: newProd,
             assignedStock: matchedStockItem,
             stoneHoldStatus: "PARTIALLY_RELEASED",
-            note: `Đã pick ${pickedForThisItem} món từ Kho TP (${matchedStockItem.bagCode} - SO cũ: ${matchedStockItem.oldOrderCode})`
+            // Giữ nguyên ghi chú riêng của sản phẩm, không chèn text pick kho theo chỉ đạo của Chị đẹp
+            note: item.note && !item.note.startsWith("Đã pick") ? item.note : "---"
           };
         }
         return item;
@@ -106,8 +107,7 @@ export default function OrderDetailPage({ params }) {
 
       return {
         ...prevOrder,
-        items: updatedItems,
-        note: `Đồng bộ tồn kho: Đã pick chọn từ Kho Thành Phẩm Chờ Xử Lý Lại`
+        items: updatedItems
       };
     });
 
