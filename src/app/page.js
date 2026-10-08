@@ -46,14 +46,17 @@ export default function OrderListPage() {
 
   // 4. Quản lý bộ lọc trực tiếp trên từng cột (Theo đúng yêu cầu ERP không tách hàng thứ 2)
   const [columnFilters, setColumnFilters] = useState({
-    code: { sort: null, selectedValues: null },
-    customer: { sort: null, selectedValues: null },
-    type: { sort: null, selectedValues: null },
-    gold: { sort: null, selectedValues: null },
+    code: { sort: null, selectedValues: null, searchQuery: "" },
+    customer: { sort: null, selectedValues: null, searchQuery: "" },
+    type: { sort: null, selectedValues: null, searchQuery: "" },
+    gold: { sort: null, selectedValues: null, searchQuery: "" },
     date: { sort: null, dateCondition: "between", dateFrom: "", dateTo: "" },
-    note: { sort: null, selectedValues: null },
-    status: { sort: null, selectedValues: null },
-    programName: { sort: null, selectedValues: null }
+    note: { sort: null, selectedValues: null, searchQuery: "" },
+    status: { sort: null, selectedValues: null, searchQuery: "" },
+    qty: { sort: null, selectedValues: null, searchQuery: "" },
+    total: { sort: null, selectedValues: null, searchQuery: "" },
+    discount: { sort: null, selectedValues: null, searchQuery: "" },
+    programName: { sort: null, selectedValues: null, searchQuery: "" }
   });
 
   // Cột nào đang mở Popover lọc
@@ -71,7 +74,7 @@ export default function OrderListPage() {
     offerTime: 135,
     note: 130,
     status: 160,
-    qty: 85,
+    qty: 90,
     total: 135,
     discount: 95,
     programName: 200,
@@ -137,11 +140,28 @@ export default function OrderListPage() {
     const counts = { ALL: orders.length };
     ORDER_TABS_CONFIG.forEach((tab) => {
       if (tab.id !== "ALL") {
-        counts[tab.id] = orders.filter((o) => o.status === tab.status).length;
+        counts[tab.id] = orders.filter((o) => {
+          if (o.status === tab.status) return true;
+          if (tab.aliases && tab.aliases.includes(o.status)) return true;
+          return false;
+        }).length;
       }
     });
     return counts;
   }, [orders]);
+
+  // Xử lý chuyển tab trạng thái
+  const handleSelectTab = (tabId) => {
+    setActiveTab(tabId);
+    setCurrentPage(1);
+    // Khi chọn 1 tab trạng thái cụ thể, reset bộ lọc cột status để tránh xung đột
+    if (tabId !== "ALL") {
+      setColumnFilters((prev) => ({
+        ...prev,
+        status: { sort: prev.status?.sort || null, selectedValues: null, searchQuery: "" }
+      }));
+    }
+  };
 
   // Lấy danh sách các giá trị duy nhất của từng cột để đưa vào bộ lọc
   const uniqueValuesMap = useMemo(() => {
@@ -164,7 +184,7 @@ export default function OrderListPage() {
         "Hoàn thành",
         "Đã hủy"
       ],
-      discount: ["0%", "2%", "3%", "4%", "5%"],
+      discount: ["---", "0%", "2%", "3%", "4%", "5%"],
       programName: Array.from(new Set(orders.map((o) => o.programName).filter(Boolean)))
     };
   }, [orders]);
@@ -174,7 +194,8 @@ export default function OrderListPage() {
     const filter = columnFilters[colKey];
     if (!filter) return false;
     if (filter.sort) return true;
-    if (filter.selectedValues && filter.selectedValues.size > 0) return true;
+    if (filter.searchQuery && filter.searchQuery.trim() !== "") return true;
+    if (filter.selectedValues !== null && filter.selectedValues !== undefined) return true;
     if (filter.dateFrom || filter.dateTo) return true;
     return false;
   };
@@ -191,14 +212,17 @@ export default function OrderListPage() {
     setActiveTab("ALL");
     setSearchQuery("");
     setColumnFilters({
-      code: { sort: null, selectedValues: null },
-      customer: { sort: null, selectedValues: null },
-      type: { sort: null, selectedValues: null },
-      gold: { sort: null, selectedValues: null },
+      code: { sort: null, selectedValues: null, searchQuery: "" },
+      customer: { sort: null, selectedValues: null, searchQuery: "" },
+      type: { sort: null, selectedValues: null, searchQuery: "" },
+      gold: { sort: null, selectedValues: null, searchQuery: "" },
       date: { sort: null, dateCondition: "between", dateFrom: "", dateTo: "" },
-      note: { sort: null, selectedValues: null },
-      status: { sort: null, selectedValues: null },
-      programName: { sort: null, selectedValues: null }
+      note: { sort: null, selectedValues: null, searchQuery: "" },
+      status: { sort: null, selectedValues: null, searchQuery: "" },
+      qty: { sort: null, selectedValues: null, searchQuery: "" },
+      total: { sort: null, selectedValues: null, searchQuery: "" },
+      discount: { sort: null, selectedValues: null, searchQuery: "" },
+      programName: { sort: null, selectedValues: null, searchQuery: "" }
     });
     setActiveFilterColKey(null);
     setCurrentPage(1);
@@ -219,7 +243,7 @@ export default function OrderListPage() {
   const handleClearColumnFilter = (colKey) => {
     setColumnFilters((prev) => ({
       ...prev,
-      [colKey]: { sort: null, selectedValues: null, dateFrom: "", dateTo: "" }
+      [colKey]: { sort: null, selectedValues: null, searchQuery: "", dateFrom: "", dateTo: "" }
     }));
     setActiveFilterColKey(null);
     setCurrentPage(1);
@@ -233,7 +257,11 @@ export default function OrderListPage() {
     if (activeTab !== "ALL") {
       const tabConfig = ORDER_TABS_CONFIG.find((t) => t.id === activeTab);
       if (tabConfig?.status) {
-        result = result.filter((o) => o.status === tabConfig.status);
+        result = result.filter((o) => {
+          if (o.status === tabConfig.status) return true;
+          if (tabConfig.aliases && tabConfig.aliases.includes(o.status)) return true;
+          return false;
+        });
       }
     }
 
@@ -241,51 +269,73 @@ export default function OrderListPage() {
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter((o) => 
-        o.code?.toLowerCase().includes(q) ||
-        o.customer?.toLowerCase().includes(q) ||
-        o.customerCode?.toLowerCase().includes(q) ||
-        o.team?.toLowerCase().includes(q) ||
-        o.phone?.toLowerCase().includes(q) ||
-        o.type?.toLowerCase().includes(q) ||
-        o.status?.toLowerCase().includes(q)
+        (o.code && o.code.toLowerCase().includes(q)) ||
+        (o.customer && o.customer.toLowerCase().includes(q)) ||
+        (o.customerCode && o.customerCode.toLowerCase().includes(q)) ||
+        (o.customerName && o.customerName.toLowerCase().includes(q)) ||
+        (o.team && o.team.toLowerCase().includes(q)) ||
+        (o.phone && o.phone.toLowerCase().includes(q)) ||
+        (o.type && o.type.toLowerCase().includes(q)) ||
+        (o.gold && o.gold.toLowerCase().includes(q)) ||
+        (o.status && o.status.toLowerCase().includes(q)) ||
+        (o.note && o.note.toLowerCase().includes(q)) ||
+        (o.programName && o.programName.toLowerCase().includes(q))
       );
     }
 
-    // 3. Lọc theo từng cột (Checkbox values hoặc Date range)
+    // 3. Lọc theo từng cột (Text query, Checkbox values hoặc Date range)
     Object.entries(columnFilters).forEach(([colKey, filter]) => {
-      // Lọc danh sách giá trị checkbox
-      if (filter.selectedValues && filter.selectedValues.size > 0) {
+      if (!filter) return;
+
+      // 3.1. Lọc Text Query nếu người dùng gõ tìm kiếm trong popover cột
+      if (filter.searchQuery && filter.searchQuery.trim() !== "") {
+        const q = filter.searchQuery.toLowerCase().trim();
         result = result.filter((o) => {
-          const val = String(o[colKey] || "---");
+          if (colKey === "customer") {
+            return (
+              (o.customer && o.customer.toLowerCase().includes(q)) ||
+              (o.customerCode && o.customerCode.toLowerCase().includes(q)) ||
+              (o.customerName && o.customerName.toLowerCase().includes(q)) ||
+              (o.phone && o.phone.toLowerCase().includes(q))
+            );
+          }
+          const val = String(o[colKey] ?? "");
+          return val.toLowerCase().includes(q);
+        });
+      }
+
+      // 3.2. Lọc danh sách giá trị checkbox
+      if (filter.selectedValues !== null && filter.selectedValues !== undefined) {
+        result = result.filter((o) => {
+          // Bỏ chọn tất cả -> không trả về dòng nào
+          if (filter.selectedValues.size === 0) return false;
+          const val = String(o[colKey] ?? "---");
           return filter.selectedValues.has(val);
         });
       }
 
-      // Lọc theo ngày tháng
+      // 3.3. Lọc theo ngày tháng (date)
       if (colKey === "date" && (filter.dateFrom || filter.dateTo)) {
         result = result.filter((o) => {
           if (!o.date) return false;
           // Format date của order: "DD/MM/YYYY HH:mm"
           const parts = o.date.split(" ")[0].split("/");
           if (parts.length < 3) return true;
-          const orderDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+          const orderDateStr = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
 
           if (filter.dateCondition === "between") {
-            const from = filter.dateFrom ? new Date(filter.dateFrom) : null;
-            const to = filter.dateTo ? new Date(filter.dateTo) : null;
-            if (from && orderDate < from) return false;
-            if (to && orderDate > to) return false;
+            if (filter.dateFrom && orderDateStr < filter.dateFrom) return false;
+            if (filter.dateTo && orderDateStr > filter.dateTo) return false;
             return true;
           }
-          if (filter.dateCondition === "equals" && filter.dateFrom) {
-            const target = new Date(filter.dateFrom);
-            return orderDate.toDateString() === target.toDateString();
+          if (filter.dateCondition === "equals") {
+            return filter.dateFrom ? orderDateStr === filter.dateFrom : true;
           }
-          if (filter.dateCondition === "before" && filter.dateFrom) {
-            return orderDate <= new Date(filter.dateFrom);
+          if (filter.dateCondition === "before") {
+            return filter.dateFrom ? orderDateStr <= filter.dateFrom : true;
           }
-          if (filter.dateCondition === "after" && filter.dateFrom) {
-            return orderDate >= new Date(filter.dateFrom);
+          if (filter.dateCondition === "after") {
+            return filter.dateFrom ? orderDateStr >= filter.dateFrom : true;
           }
           return true;
         });
@@ -300,11 +350,25 @@ export default function OrderListPage() {
       result.sort((a, b) => {
         let valA = a[colKey];
         let valB = b[colKey];
+
+        if (colKey === "date") {
+          const parseDateTime = (dStr) => {
+            if (!dStr) return 0;
+            const [dateP, timeP = "00:00"] = dStr.split(" ");
+            const [d, m, y] = dateP.split("/");
+            const [hh, mm] = timeP.split(":");
+            return new Date(y, m - 1, d, hh, mm).getTime();
+          };
+          const tA = parseDateTime(valA);
+          const tB = parseDateTime(valB);
+          return isAsc ? tA - tB : tB - tA;
+        }
+
         if (typeof valA === "number" && typeof valB === "number") {
           return isAsc ? valA - valB : valB - valA;
         }
-        valA = String(valA || "");
-        valB = String(valB || "");
+        valA = String(valA ?? "");
+        valB = String(valB ?? "");
         return isAsc ? valA.localeCompare(valB, "vi") : valB.localeCompare(valA, "vi");
       });
     }
@@ -482,10 +546,7 @@ export default function OrderListPage() {
             return (
               <button
                 key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  setCurrentPage(1);
-                }}
+                onClick={() => handleSelectTab(tab.id)}
                 className={`whitespace-nowrap pb-2.5 px-0.5 border-b-2 font-medium text-xs transition-colors cursor-pointer flex items-center space-x-1 ${
                   isActive
                     ? "border-[#005a46] text-[#005a46] font-bold"
@@ -915,7 +976,36 @@ export default function OrderListPage() {
                   style={{ width: `${columnWidths.qty}px`, minWidth: `${columnWidths.qty}px` }}
                   className="relative px-2.5 py-3 text-right font-bold text-slate-800"
                 >
-                  <span className="truncate">Số lượng</span>
+                  <div className="flex items-center justify-end space-x-1">
+                    <span className="truncate">Số lượng</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "qty" ? null : "qty");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("qty")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
+                      }`}
+                      title="Sắp xếp cột Số lượng"
+                    >
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("qty") ? "fill-[#005a46]" : ""}`} />
+                    </button>
+                  </div>
+                  {activeFilterColKey === "qty" && (
+                    <ColumnFilterPopover
+                      columnKey="qty"
+                      columnTitle="Số lượng"
+                      columnType="sort-only"
+                      uniqueValues={[]}
+                      filterState={columnFilters.qty}
+                      onApply={(data) => handleApplyColumnFilter("qty", data)}
+                      onClear={() => handleClearColumnFilter("qty")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
                   <div
                     onMouseDown={(e) => handleResizeMouseDown("qty", e)}
                     className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
@@ -927,7 +1017,36 @@ export default function OrderListPage() {
                   style={{ width: `${columnWidths.total}px`, minWidth: `${columnWidths.total}px` }}
                   className="relative px-3 py-3 text-right font-bold text-slate-800"
                 >
-                  <span className="truncate">Tổng tiền</span>
+                  <div className="flex items-center justify-end space-x-1">
+                    <span className="truncate">Tổng tiền</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "total" ? null : "total");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("total")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
+                      }`}
+                      title="Sắp xếp cột Tổng tiền"
+                    >
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("total") ? "fill-[#005a46]" : ""}`} />
+                    </button>
+                  </div>
+                  {activeFilterColKey === "total" && (
+                    <ColumnFilterPopover
+                      columnKey="total"
+                      columnTitle="Tổng tiền"
+                      columnType="sort-only"
+                      uniqueValues={[]}
+                      filterState={columnFilters.total}
+                      onApply={(data) => handleApplyColumnFilter("total", data)}
+                      onClear={() => handleClearColumnFilter("total")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
                   <div
                     onMouseDown={(e) => handleResizeMouseDown("total", e)}
                     className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
@@ -939,7 +1058,36 @@ export default function OrderListPage() {
                   style={{ width: `${columnWidths.discount}px`, minWidth: `${columnWidths.discount}px` }}
                   className="relative px-2 py-3 text-center text-slate-800"
                 >
-                  <span className="truncate">Chiết khấu</span>
+                  <div className="flex items-center justify-center space-x-1">
+                    <span className="truncate">Chiết khấu</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveFilterColKey(activeFilterColKey === "discount" ? null : "discount");
+                      }}
+                      className={`p-1 rounded transition-colors cursor-pointer ${
+                        isColumnFiltered("discount")
+                          ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                          : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
+                      }`}
+                      title="Lọc cột Chiết khấu"
+                    >
+                      <Filter className={`h-3 w-3 ${isColumnFiltered("discount") ? "fill-[#005a46]" : ""}`} />
+                    </button>
+                  </div>
+                  {activeFilterColKey === "discount" && (
+                    <ColumnFilterPopover
+                      columnKey="discount"
+                      columnTitle="Chiết khấu"
+                      columnType="select"
+                      uniqueValues={uniqueValuesMap.discount}
+                      filterState={columnFilters.discount}
+                      onApply={(data) => handleApplyColumnFilter("discount", data)}
+                      onClear={() => handleClearColumnFilter("discount")}
+                      onClose={() => setActiveFilterColKey(null)}
+                    />
+                  )}
                   <div
                     onMouseDown={(e) => handleResizeMouseDown("discount", e)}
                     className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#005a46] z-10"
