@@ -288,18 +288,15 @@ export default function WarehouseSyncPopup({
       {/* POPUP CONTAINER: RỘNG RÃI, THOÁNG ĐÃNG, CÓ CẤU TRÚC (W-[95VW] MAX-W-[1480PX]) */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[1480px] border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         
-        {/* HEADER POPUP */}
+        {/* HEADER POPUP - TINH GỌN, CHUẨN MỰC, KHÔNG BADGE RƯỜM RÀ */}
         <div className="bg-gradient-to-r from-[#005a46] via-[#004737] to-[#013328] text-white px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-emerald-500/20 rounded-lg border border-emerald-400/30">
               <Warehouse className="h-5 w-5 text-emerald-300" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white flex items-center space-x-2">
-                <span>Danh Sách Mặt Hàng Trong Kho Thành Phẩm Chờ Xử Lý</span>
-                <span className="text-[11px] bg-emerald-400/20 text-emerald-200 px-2.5 py-0.5 rounded-full border border-emerald-400/30 font-medium">
-                  Quản lý theo Cấp Lô (1 Lô / Túi ≤ 10 món)
-                </span>
+              <h3 className="text-base font-bold text-white">
+                Danh Sách Mặt Hàng Trong Kho Thành Phẩm Chờ Xử Lý
               </h3>
               <p className="text-xs text-emerald-100/80 mt-0.5">
                 Đơn hàng: <strong className="text-white font-mono">{order.code}</strong> • Trạng thái: <span className="bg-white/20 px-2 py-0.5 rounded font-semibold">{order.status}</span>
@@ -318,22 +315,13 @@ export default function WarehouseSyncPopup({
         {/* NỘI DUNG CUỘN CHÍNH */}
         <div className="p-6 space-y-4 max-h-[82vh] overflow-y-auto">
           
-          {/* BANNER NGUYÊN TẮC NGHIỆP VỤ & ROUTING FG CỐ ĐỊNH */}
-          <div className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 text-xs text-amber-950 space-y-1.5 shadow-2xs">
-            <div className="flex items-center space-x-2 font-bold text-amber-900 text-[13px]">
+          {/* BANNER NGUYÊN TẮC NGHIỆP VỤ: ĐÚNG & ĐỦ, TINH GỌN 1 DÒNG */}
+          <div className="px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200/80 text-xs text-amber-950 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center space-x-2">
               <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-              <span>Quy tắc khớp 100% thuộc tính & Tách 2 luồng KHSX theo Cấp Lô:</span>
-            </div>
-            <div className="pl-6 space-y-1 text-slate-700">
-              <div>
-                • <strong>1 Lô ~ 1 Bag (SL không quá 10 món):</strong> Một Item trong kho gồm nhiều lô/túi khác nhau. Cho phép tùy chọn số lượng từng lô hoặc chọn hết lô. Số lượng còn lại tự động chuyển sang luồng <strong>Sản xuất mới</strong>.
-              </div>
-              <div className="flex items-center space-x-1.5 text-emerald-900">
-                <PackageCheck className="h-4 w-4 text-emerald-700 shrink-0" />
-                <span>
-                  • <strong>Gán Routing cố định (Type: FG):</strong> Phần số lượng pick từ kho được cố định 2 công đoạn: <span className="font-bold text-[#005a46] bg-emerald-100/80 px-1.5 py-0.5 rounded font-mono">1. Serve FG (Phục vụ kho TP)</span> → <span className="font-bold text-[#005a46] bg-emerald-100/80 px-1.5 py-0.5 rounded font-mono">2. Packing Out (Đóng gói xuất kho)</span>.
-                </span>
-              </div>
+              <span>
+                <strong>Quy tắc phân bổ 2 luồng:</strong> Số lượng pick từ kho thành phẩm được gán Routing cố định (Type: <strong className="text-emerald-800">FG</strong>: <em>1. Serve FG → 2. Packing Out</em>). Số lượng còn lại tự động chuyển sang luồng <strong>Sản xuất mới</strong>.
+              </span>
             </div>
           </div>
 
@@ -434,26 +422,20 @@ export default function WarehouseSyncPopup({
                         />
                       </td>
 
-                      {/* Mã Item, Tên hàng, Thuộc tính và Nút Thu gọn / Mở rộng Item này */}
+                      {/* Mã Item, Tên hàng, Thuộc tính và Icon Thu gọn / Mở rộng */}
                       <td className="px-4 py-3 align-middle border-r border-slate-200">
-                        <div className="flex items-start space-x-2.5">
-                          {/* NÚT THU GỌN / MỞ RỘNG THEO TỪNG ITEM */}
+                        <div className="flex items-center space-x-2.5">
+                          {/* ICON CHEVRON THU GỌN / MỞ RỘNG TINH TẾ, KHÔNG CỒNG KỀNH */}
                           <button
                             type="button"
                             onClick={() => handleToggleItemExpand(group.itemCode)}
-                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer bg-white border border-slate-300 text-slate-700 hover:text-[#005a46] hover:border-[#005a46] shadow-2xs shrink-0 mt-0.5"
+                            className="p-1 rounded-md hover:bg-slate-200/80 text-slate-500 hover:text-emerald-800 transition-colors cursor-pointer shrink-0"
                             title={isExpanded ? "Thu gọn danh sách các lô của item này" : "Mở rộng xem chi tiết từng lô của item này"}
                           >
                             {isExpanded ? (
-                              <>
-                                <ChevronDown className="h-3.5 w-3.5 text-emerald-700 shrink-0" />
-                                <span>Thu gọn ({group.lots.length} lô)</span>
-                              </>
+                              <ChevronDown className="h-4 w-4 text-emerald-700" />
                             ) : (
-                              <>
-                                <ChevronRight className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                                <span>Mở rộng ({group.lots.length} lô)</span>
-                              </>
+                              <ChevronRight className="h-4 w-4 text-slate-400" />
                             )}
                           </button>
 
@@ -461,11 +443,8 @@ export default function WarehouseSyncPopup({
                             <span className="font-mono font-black text-xs text-slate-900 tracking-tight block">
                               {group.itemCode30?.replace(/\//g, "")}
                             </span>
-                            <span className="text-xs font-bold text-slate-800 block mt-0.5">
-                              {group.itemName}
-                            </span>
-                            <span className="font-normal text-slate-500 text-[11px] block">
-                              Ni: {group.size || "---"} • Đá: {group.stoneColor || "Trắng"}
+                            <span className="text-xs text-slate-700 block mt-0.5">
+                              <strong className="text-slate-900 font-bold">{group.itemName}</strong> • <span className="text-slate-500 text-[11px]">Ni: {group.size || "---"} • Đá: {group.stoneColor || "Trắng"}</span>
                             </span>
                           </div>
                         </div>
@@ -656,24 +635,18 @@ export default function WarehouseSyncPopup({
           </div>
 
           {/* TỔNG KẾT PHÂN BỔ 2 LUỒNG TRONG POPUP */}
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-4 text-xs">
-            <div className="flex items-center space-x-6">
-              <div>
-                <span className="text-slate-500 block text-[11px]">Tổng SL cần giao:</span>
-                <span className="font-mono font-black text-sm text-slate-900">{totalRequestedCount} món</span>
-              </div>
-              <div className="border-l border-slate-200 pl-4">
-                <span className="text-emerald-700 block text-[11px] font-bold">Luồng 1: Kho TP (Routing FG - 2 CĐ):</span>
-                <span className="font-mono font-black text-sm text-emerald-800">{totalPickedCount} món</span>
-              </div>
-              <div className="border-l border-slate-200 pl-4">
-                <span className="text-sky-700 block text-[11px] font-bold">Luồng 2: Sản xuất mới (Full Routing):</span>
-                <span className="font-mono font-black text-sm text-sky-800">{totalNewProductionCount} món</span>
-              </div>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center space-x-8 text-xs shadow-2xs">
+            <div>
+              <span className="text-slate-500 block text-[11px]">Tổng SL cần giao:</span>
+              <span className="font-mono font-black text-sm text-slate-900">{totalRequestedCount} món</span>
             </div>
-            
-            <div className="text-right text-[11px] text-slate-500">
-              ✓ Đã phân bổ <strong>{totalPickedCount} món</strong> từ <strong>{selectedIds.size} lô</strong> kho TP + <strong>{totalNewProductionCount} món</strong> chuyển sản xuất mới
+            <div className="border-l border-slate-200 pl-6">
+              <span className="text-emerald-700 block text-[11px] font-bold">Luồng 1: Kho TP (Routing FG - 2 CĐ):</span>
+              <span className="font-mono font-black text-sm text-emerald-800">{totalPickedCount} món</span>
+            </div>
+            <div className="border-l border-slate-200 pl-6">
+              <span className="text-sky-700 block text-[11px] font-bold">Luồng 2: Sản xuất mới (Full Routing):</span>
+              <span className="font-mono font-black text-sm text-sky-800">{totalNewProductionCount} món</span>
             </div>
           </div>
 
