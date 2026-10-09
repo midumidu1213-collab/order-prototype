@@ -108,15 +108,15 @@ Kích thước: `w-[96vw] max-w-[1550px]`. Cấu trúc phân cấp Master-Detail
 | 3 | **MÃ LÔ** | Căn giữa | **Format chuẩn:** `SO-260900106` (font mono, in đậm). Đã loại bỏ hoàn toàn các râu ria thừa thãi (mã túi `[BAG-TP-...]` và vị trí két kho). Khi thu gọn: hiển thị tóm tắt số lô tồn (VD: `5 lô tồn`). |
 | 4 | **SL ĐẶT** | Căn giữa | **Dòng Item:** Số lượng đặt của dòng hàng (`100 món`).<br>**Dòng Lô con:** Hiển thị `-` (thoáng đãng, tránh hiểu nhầm số 100 lặp lại). |
 | 5 | **MÃ ĐƠN CŨ** | Căn giữa | **(ĐÃ ĐỔI VỊ TRÍ SANG TRƯỚC SL TỒN)**: Mã SO cũ kèm icon `ⓘ` (Tooltip: Lý do tồn kho & Tên khách hàng cũ). |
-| 6 | **SL TỒN CỦA LÔ** | Căn giữa | **(ĐÃ ĐỔI VỊ TRÍ SANG SAU MÃ ĐƠN CŨ)**: Badge số lượng tồn khả dụng của lô ($\le 10$ món, VD: `5 món`, `8 món`, `6 món`). Khi thu gọn: hiển thị Tổng tồn của Item. |
+| 6 | **SL TỒN CỦA LÔ** | Căn giữa | **(ĐÃ ĐỔI VỊ TRÍ SANG SAU MÃ ĐƠN CŨ - ĐƠN GIẢN HƠN)**: Hiển thị dạng số phẳng font-mono thanh lịch, không dùng badge viên thuốc (VD: `36` ở dòng Item, `8`, `6`, `7` ở dòng lô con). |
 | 7 | **NGUYÊN LIỆU - TUỔI VÀNG** | Căn giữa | Nhãn tuổi vàng (VD: `Vàng - 61Y`). |
 | 8 | **NGÀY NHẬP KHO** | Căn giữa | Ngày sản phẩm vào kho kèm icon Lịch. |
-| 9 | **SL PICK CHỌN (TỪNG LÔ)** | Căn giữa | **Khi mở rộng:** Ô nhập số lượng pick lẻ + Nút chọn nhanh `[Hết lô]` thoáng đãng (đã loại bỏ nhãn thừa `/ X món`).<br>**Khi thu gọn:** Hiển thị **TỔNG SỐ LƯỢNG CHỌN** của Item (`A / B món`) kèm nút chọn nhanh `Hết tồn`. |
+| 9 | **SL PICK CHỌN (TỪNG LÔ)** | Căn giữa | **Ô nhập số lượng / Tăng giảm Stepper (`-` [ Input ] `+`)**: Cho phép người dùng nhập trực tiếp hoặc bấm tăng/giảm ở cả cấp Item (tự động phân bổ FIFO) và từng Lô con. **Đã loại bỏ hoàn toàn các nút rườm rà `[Hết tồn]` và `[Hết lô]`**. |
 
 *   **Footer Popup:**
-    *   Tổng quan 2 luồng: `Tổng SL cần giao` | `Luồng 1: Kho TP (Routing FG - 2 CĐ)` | `Luồng 2: Sản xuất mới (Full Routing)`.
+    *   Đã bỏ đoạn text rườm rà góc trái.
     *   Nút **`[Đóng]`**.
-    *   Nút **`[Xác nhận pick chọn (X món Kho TP + Y món SX mới)]`**.
+    *   Nút **`[Xác nhận (...món)]`** (VD: `Xác nhận (36 món)`).
 
 ---
 
