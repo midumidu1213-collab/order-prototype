@@ -754,12 +754,18 @@ export default function OrderDetailPage({ params }) {
                         </span>
                         <div className="space-y-1">
                           {selectedPlanItem.pickedLots.map((lot, idx) => (
-                            <div key={idx} className="flex items-center justify-between bg-slate-50 p-1.5 rounded border border-slate-200 text-[11px]">
+                            <div key={idx} className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200 text-[11px]">
                               <div>
-                                <span className="font-mono font-bold text-slate-900">{lot.lotCode}</span>
-                                <span className="text-slate-500 ml-1.5">(SO cũ: {lot.oldOrderCode})</span>
+                                <span className="font-mono font-black text-slate-900 text-xs">{lot.lotCode}</span>
+                                {lot.bagCode && (
+                                  <span className="text-slate-500 ml-1 font-mono text-[10px]">[{lot.bagCode}]</span>
+                                )}
+                                <span className="text-slate-500 ml-1.5 font-medium">(SO cũ: {lot.oldOrderCode})</span>
+                                {lot.location && (
+                                  <span className="text-slate-400 ml-1.5 text-[10px] block sm:inline">• {lot.location.split("(")[0].trim()}</span>
+                                )}
                               </div>
-                              <div className="font-mono font-bold text-emerald-800">
+                              <div className="font-mono font-black text-emerald-800 text-xs bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
                                 {lot.pickedQty} món
                               </div>
                             </div>
