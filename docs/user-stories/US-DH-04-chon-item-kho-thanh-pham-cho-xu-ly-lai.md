@@ -105,13 +105,13 @@ Kích thước: `w-[96vw] max-w-[1550px]`. Cấu trúc phân cấp Master-Detail
 | :---: | :--- | :---: | :--- |
 | 1 | **Checkbox** | Căn giữa | Chọn/Bỏ chọn riêng lô này (hoặc chọn cả item khi thu gọn). Có checkbox tổng tại header. |
 | 2 | **MÃ ITEM & THUỘC TÍNH** | Căn trái | **Có nút Thu gọn / Mở rộng** (`▼ Thu gọn` / `▶ Mở rộng`). Hiển thị Mã Item 30 ký tự, Tên sản phẩm, Ni tay, Đá và **Tổng số lượng chọn của Item** (`Tổng chọn: X / Y món`). Đã loại bỏ triệt để các badge rườm rà. |
-| 3 | **MÃ LÔ** | Căn giữa | **Nằm ngay sau Mã Item**. Badge Mã Lô (`LOT-TP-2607-06`), Mã túi (`BAG-TP-9915`) và Vị trí két kho bên dưới (`Két K1 - Ngăn A03`). |
-| 4 | **SL ĐẶT** | Căn giữa | Số lượng khách đặt của dòng hàng (VD: `100`). Gộp `rowSpan` khi mở rộng. |
+| 3 | **MÃ LÔ** | Căn giữa | **Format chuẩn:** `SO-260900106` (font mono, in đậm). Đã loại bỏ hoàn toàn các râu ria thừa thãi (mã túi `[BAG-TP-...]` và vị trí két kho). Khi thu gọn: hiển thị tóm tắt số lô tồn (VD: `5 lô tồn`). |
+| 4 | **SL ĐẶT** | Căn giữa | **Dòng Item:** Số lượng đặt của dòng hàng (`100 món`).<br>**Dòng Lô con:** Hiển thị `-` (thoáng đãng, tránh hiểu nhầm số 100 lặp lại). |
 | 5 | **MÃ ĐƠN CŨ** | Căn giữa | **(ĐÃ ĐỔI VỊ TRÍ SANG TRƯỚC SL TỒN)**: Mã SO cũ kèm icon `ⓘ` (Tooltip: Lý do tồn kho & Tên khách hàng cũ). |
 | 6 | **SL TỒN CỦA LÔ** | Căn giữa | **(ĐÃ ĐỔI VỊ TRÍ SANG SAU MÃ ĐƠN CŨ)**: Badge số lượng tồn khả dụng của lô ($\le 10$ món, VD: `5 món`, `8 món`, `6 món`). Khi thu gọn: hiển thị Tổng tồn của Item. |
 | 7 | **NGUYÊN LIỆU - TUỔI VÀNG** | Căn giữa | Nhãn tuổi vàng (VD: `Vàng - 61Y`). |
 | 8 | **NGÀY NHẬP KHO** | Căn giữa | Ngày sản phẩm vào kho kèm icon Lịch. |
-| 9 | **SL PICK CHỌN (TỪNG LÔ)** | Căn giữa | **Khi mở rộng:** Ô nhập số lượng pick lẻ + Nút chọn nhanh `[Hết lô]` + Nhãn `/ X món`.<br>**Khi thu gọn:** Hiển thị **TỔNG SỐ LƯỢNG CHỌN** của Item (`A / B món`) kèm nút chọn nhanh `Hết tồn`. |
+| 9 | **SL PICK CHỌN (TỪNG LÔ)** | Căn giữa | **Khi mở rộng:** Ô nhập số lượng pick lẻ + Nút chọn nhanh `[Hết lô]` thoáng đãng (đã loại bỏ nhãn thừa `/ X món`).<br>**Khi thu gọn:** Hiển thị **TỔNG SỐ LƯỢNG CHỌN** của Item (`A / B món`) kèm nút chọn nhanh `Hết tồn`. |
 
 *   **Footer Popup:**
     *   Tổng quan 2 luồng: `Tổng SL cần giao` | `Luồng 1: Kho TP (Routing FG - 2 CĐ)` | `Luồng 2: Sản xuất mới (Full Routing)`.
