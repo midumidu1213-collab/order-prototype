@@ -10,11 +10,7 @@ import {
   Info,
   Layers,
   PackageCheck,
-  CheckSquare,
-  Square,
-  Zap,
-  FolderOpen,
-  ArrowRight
+  Zap
 } from "lucide-react";
 import { ROUTING_FG_FIXED } from "@/data/warehouseStockData";
 
@@ -258,8 +254,8 @@ export default function WarehouseSyncPopup({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
-      {/* POPUP CONTAINER MỞ RỘNG RỘNG RÃI (W-[96VW] MAX-W-[1550PX]) ĐỂ XEM FULL 100% THÔNG TIN */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-[96vw] max-w-[1550px] border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      {/* POPUP CONTAINER: RỘNG RÃI, VỪA VẶN MÀN HÌNH (W-[95VW] MAX-W-[1480PX]) */}
+      <div className="relative bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[1480px] border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         
         {/* HEADER POPUP */}
         <div className="bg-gradient-to-r from-[#005a46] via-[#004737] to-[#013328] text-white px-6 py-4 flex items-center justify-between">
@@ -289,7 +285,7 @@ export default function WarehouseSyncPopup({
         </div>
 
         {/* NỘI DUNG CUỘN CHÍNH */}
-        <div className="p-6 space-y-4 max-h-[84vh] overflow-y-auto">
+        <div className="p-6 space-y-4 max-h-[82vh] overflow-y-auto">
           
           {/* BANNER NGUYÊN TẮC NGHIỆP VỤ & ROUTING FG CỐ ĐỊNH */}
           <div className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 text-xs text-amber-950 space-y-1.5 shadow-2xs">
@@ -310,12 +306,12 @@ export default function WarehouseSyncPopup({
             </div>
           </div>
 
-          {/* BẢNG CHI TIẾT THEO ITEM VÀ CÁC LÔ CON (KHÔNG BỊ CO ÉP, XEM ĐẦY ĐỦ 100%) */}
+          {/* BẢNG CHUẨN MỰC ERP: KHÔNG LỒNG TBODY, KHÔNG LỆCH CỘT */}
           <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs overflow-x-auto">
-            <table className="w-full min-w-[1300px] divide-y divide-slate-200 text-left text-xs">
+            <table className="w-full border-collapse text-left text-xs">
               
-              {/* HEADER BẢNG */}
-              <thead className="bg-slate-100/90 font-bold text-slate-700 uppercase tracking-wider text-[11px] whitespace-nowrap">
+              {/* THEAD CHUẨN XÁC VỚI 9 CỘT THẲNG HÀNG */}
+              <thead className="bg-slate-100/90 font-bold text-slate-700 uppercase tracking-wider text-[11px] whitespace-nowrap border-b border-slate-200">
                 <tr>
                   <th className="px-3 py-3 text-center w-12">
                     <input
@@ -323,246 +319,213 @@ export default function WarehouseSyncPopup({
                       checked={isAllSelected}
                       onChange={handleToggleSelectAllGlobal}
                       className="w-4 h-4 rounded text-[#005a46] focus:ring-[#005a46] border-slate-300 cursor-pointer"
-                      title="Chọn tất cả các lô trên toàn bộ popup"
+                      title="Chọn tất cả các lô trên toàn bộ bảng"
                     />
                   </th>
-                  <th className="px-4 py-3 min-w-[240px]">Mã Item & Sản Phẩm</th>
+                  <th className="px-4 py-3 min-w-[230px] w-64 text-left">MÃ ITEM & THUỘC TÍNH</th>
                   
-                  {/* CỘT ĐỎ: CẤP LÔ HÀNG (NẰM GIỮA MÃ ITEM VÀ SL ĐẶT) */}
-                  <th className="px-3 py-3 text-center bg-emerald-50/80 border-x border-emerald-200 text-[#005a46] font-black w-44">
+                  {/* CỘT ĐỎ: CẤP LÔ HÀNG (NẰM CHÍNH GIỮA MÃ ITEM VÀ SL ĐẶT) */}
+                  <th className="px-3 py-3 text-center bg-emerald-50/70 border-x border-emerald-200 text-[#005a46] font-black w-44">
                     <div className="flex items-center justify-center space-x-1">
                       <Layers className="h-3.5 w-3.5" />
                       <span>LÔ HÀNG (LOT)</span>
                     </div>
                   </th>
 
-                  <th className="px-3 py-3 text-center text-emerald-950 bg-emerald-50/40 w-24">SL ĐẶT</th>
-                  <th className="px-3 py-3 text-center w-36 text-[#005a46] font-black">SL TỒN CỦA LÔ</th>
+                  <th className="px-3 py-3 text-center text-emerald-950 bg-emerald-50/30 w-24">SL ĐẶT</th>
+                  <th className="px-3 py-3 text-center w-32 text-[#005a46] font-black">SL TỒN CỦA LÔ</th>
                   <th className="px-3 py-3 text-center w-32">MÃ ĐƠN CŨ</th>
                   <th className="px-3 py-3 text-center w-36">NGUYÊN LIỆU - TUỔI VÀNG</th>
                   <th className="px-3 py-3 text-center w-32">NGÀY NHẬP KHO</th>
-                  <th className="px-4 py-3 text-center min-w-[210px] w-56 bg-emerald-50/30 text-[#005a46] font-black">
+                  <th className="px-4 py-3 text-center w-52 bg-emerald-50/20 text-[#005a46] font-black">
                     SL PICK CHỌN (TỪNG LÔ)
                   </th>
                 </tr>
               </thead>
 
-              {/* BODY BẢNG: PHÂN CẤP THEO ITEM VÀ CÁC LÔ CON */}
+              {/* TBODY DUY NHẤT: SỬ DỤNG ROWSPAN CHO CỘT ITEM VÀ SL ĐẶT */}
               <tbody className="divide-y divide-slate-100 bg-white">
-                {groupedItems.map((group) => {
+                {groupedItems.map((group, groupIdx) => {
                   const itemPickedTotal = getItemPickedQty(group);
-                  const isItemFullyPicked = itemPickedTotal >= group.orderQty;
-                  const itemRemainingNewProd = Math.max(0, group.orderQty - itemPickedTotal);
                   const selectedLotsInGroup = group.lots.filter((l) => selectedIds.has(l.id)).length;
+                  const itemRemainingNewProd = Math.max(0, group.orderQty - itemPickedTotal);
+                  const isLastGroup = groupIdx === groupedItems.length - 1;
 
-                  return (
-                    <tbody key={group.itemCode} className="border-b-2 border-slate-200">
-                      
-                      {/* 1. THANH TỔNG QUAN ITEM (ITEM GROUP HEADER BAR) */}
-                      <tr className="bg-slate-50/95 border-t border-b border-slate-200 font-medium">
-                        <td className="px-3 py-2.5 text-center">
+                  return group.lots.map((lot, lotIdx) => {
+                    const isFirstLotOfItem = lotIdx === 0;
+                    const isLastLotOfItem = lotIdx === group.lots.length - 1;
+                    const isSelected = selectedIds.has(lot.id);
+                    const currentPick = pickQuantities[lot.id] || 0;
+
+                    return (
+                      <tr 
+                        key={lot.id} 
+                        className={`transition-colors ${
+                          isSelected ? "bg-emerald-50/25" : "hover:bg-slate-50/80"
+                        } ${isLastLotOfItem && !isLastGroup ? "border-b-2 border-slate-300" : ""}`}
+                      >
+                        {/* 1. Checkbox của riêng từng Lô */}
+                        <td className="px-3 py-3.5 text-center align-middle border-r border-slate-100">
                           <input
                             type="checkbox"
-                            checked={selectedLotsInGroup === group.lots.length}
-                            onChange={() => {
-                              if (selectedLotsInGroup === group.lots.length) {
-                                handleDeselectAllLotsOfGroup(group);
-                              } else {
-                                handleSelectAllLotsOfGroup(group);
-                              }
-                            }}
+                            checked={isSelected}
+                            onChange={() => handleToggleLot(lot)}
                             className="w-4 h-4 rounded text-[#005a46] focus:ring-[#005a46] border-slate-300 cursor-pointer"
-                            title="Chọn / Bỏ chọn toàn bộ lô của item này"
                           />
                         </td>
-                        <td colSpan={2} className="px-4 py-2.5">
-                          <div className="flex items-center space-x-2">
-                            <span className="font-mono font-black text-xs text-slate-900">
-                              {group.itemCode30?.replace(/\//g, "")}
+
+                        {/* 2. Cột MÃ ITEM (Chỉ render ở dòng đầu tiên của Item với rowSpan) */}
+                        {isFirstLotOfItem && (
+                          <td 
+                            rowSpan={group.lots.length} 
+                            className="px-4 py-3.5 align-top bg-slate-50/60 border-r border-slate-200"
+                          >
+                            <div className="space-y-1.5 sticky top-2">
+                              <div className="font-mono font-black text-xs text-slate-900 tracking-tight leading-tight">
+                                {group.itemCode30?.replace(/\//g, "")}
+                              </div>
+                              <div className="text-xs font-bold text-slate-800">
+                                {group.itemName}
+                              </div>
+                              <div className="text-[11px] text-slate-600 font-medium">
+                                Ni: <strong className="text-slate-800">{group.size || "---"}</strong> • Đá: <strong className="text-slate-800">{group.stoneColor || "Trắng"}</strong>
+                              </div>
+
+                              {/* Tóm tắt tồn & thao tác nhanh của Item */}
+                              <div className="pt-2 border-t border-slate-200/80 space-y-1">
+                                <div className="text-[11px] text-slate-700">
+                                  📦 <strong>{group.lots.length} lô tồn</strong> (Tổng: <strong className="text-emerald-800 font-mono">{group.totalStockQty} món</strong>)
+                                </div>
+                                <div className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-200 inline-block">
+                                  Đã pick: {itemPickedTotal} / {group.orderQty} món ({selectedLotsInGroup}/{group.lots.length} lô)
+                                </div>
+                                <div className="flex items-center space-x-1.5 pt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSelectAllLotsOfGroup(group)}
+                                    className="text-[10px] font-bold text-[#005a46] hover:text-[#004737] hover:underline cursor-pointer"
+                                  >
+                                    ⚡ Pick hết lô
+                                  </button>
+                                  <span className="text-slate-300">•</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeselectAllLotsOfGroup(group)}
+                                    className="text-[10px] text-slate-500 hover:text-slate-800 hover:underline cursor-pointer"
+                                  >
+                                    Bỏ chọn
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        )}
+
+                        {/* 3. CỘT ĐỎ: MÃ LÔ HÀNG (LOT CODE) */}
+                        <td className="px-3 py-3.5 text-center bg-emerald-50/30 border-x border-emerald-100 align-middle">
+                          <div className="inline-flex flex-col items-center">
+                            <span className="font-mono font-black text-xs text-[#005a46] bg-white border border-emerald-300 px-2.5 py-1 rounded-md shadow-2xs">
+                              {lot.lotCode || `LOT-${lot.id}`}
                             </span>
-                            <span className="text-xs font-bold text-slate-700">
-                              • {group.itemName}
-                            </span>
-                            <span className="text-[11px] text-slate-500">
-                              (Ni: {group.size} | Đá: {group.stoneColor || "Trắng"})
-                            </span>
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 font-mono">
-                              {group.lots.length} lô tồn kho (≤10 món/lô)
-                            </span>
+                            <div className="flex items-center space-x-1 text-[10px] text-slate-500 mt-0.5">
+                              <span className="font-mono">[{lot.bagCode}]</span>
+                              <span>•</span>
+                              <span title={lot.location}>{lot.location ? lot.location.split("(")[0].trim() : "Két K1"}</span>
+                            </div>
                           </div>
                         </td>
-                        <td className="px-3 py-2.5 text-center font-mono font-black text-xs text-slate-900">
-                          {group.orderQty}
+
+                        {/* 4. Cột SL ĐẶT (Chỉ render ở dòng đầu tiên của Item với rowSpan) */}
+                        {isFirstLotOfItem && (
+                          <td 
+                            rowSpan={group.lots.length} 
+                            className="px-3 py-3.5 text-center align-middle bg-emerald-50/15 border-r border-slate-200 font-mono font-black text-sm text-emerald-950"
+                          >
+                            {group.orderQty}
+                          </td>
+                        )}
+
+                        {/* 5. SL TỒN CỦA LÔ NÀY (LUÔN <= 10 MÓN THEO CHUẨN THỰC TẾ) */}
+                        <td className="px-3 py-3.5 text-center align-middle">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs">
+                            {lot.availableQty} món
+                          </span>
                         </td>
-                        <td className="px-3 py-2.5 text-center font-mono font-bold text-xs text-slate-700">
-                          Tổng tồn: <strong className="text-emerald-800">{group.totalStockQty} món</strong>
-                        </td>
-                        <td colSpan={3} className="px-3 py-2.5 text-center">
-                          <div className="flex items-center justify-center space-x-2 text-[11px]">
-                            <span className="font-bold text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                              Đã chọn pick: <strong>{itemPickedTotal} / {group.orderQty} món</strong> ({selectedLotsInGroup}/{group.lots.length} lô)
+
+                        {/* 6. Mã Đơn Hàng Cũ kèm Tooltip */}
+                        <td className="px-3 py-3.5 text-center align-middle">
+                          <div className="relative inline-block group">
+                            <span className="font-mono font-bold text-xs text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 hover:bg-amber-100 hover:border-amber-300 cursor-help transition-colors inline-flex items-center space-x-1">
+                              <span>{lot.oldOrderCode || "-"}</span>
+                              <Info className="h-3 w-3 text-amber-600" />
                             </span>
-                            <span className="font-bold text-sky-800 bg-sky-100/80 px-2.5 py-0.5 rounded-full border border-sky-200">
-                              Còn lại SX mới: <strong>{itemRemainingNewProd} món</strong>
-                            </span>
+
+                            {/* Tooltip lý do hủy */}
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:flex flex-col w-56 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl z-30 pointer-events-none text-left whitespace-normal">
+                              <span className="font-bold text-amber-400 mb-0.5">
+                                📌 Lô: {lot.lotCode || lot.id}
+                              </span>
+                              <span className="leading-tight text-slate-200">
+                                {lot.sourceReason || "Khách hủy do trễ hẹn giao hàng đợt 1"}
+                              </span>
+                              <div className="text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-700">
+                                SO cũ: {lot.oldOrderCode} • {lot.oldCustomer || "Khách hàng cũ"}
+                              </div>
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900" />
+                            </div>
                           </div>
                         </td>
-                        <td className="px-4 py-2.5 text-center">
+
+                        {/* 7. Nguyên Liệu - Tuổi Vàng */}
+                        <td className="px-3 py-3.5 text-center align-middle">
+                          <span className="font-bold text-xs text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 inline-block font-mono">
+                            Vàng - {lot.goldType}
+                          </span>
+                        </td>
+
+                        {/* 8. Ngày Nhập Kho */}
+                        <td className="px-3 py-3.5 text-center align-middle">
+                          <span className="font-mono text-xs font-semibold text-slate-700 inline-flex items-center">
+                            <Calendar className="h-3 w-3 mr-1 text-slate-400" />
+                            {lot.dateInStock || "-"}
+                          </span>
+                        </td>
+
+                        {/* 9. SL PICK CHỌN TỪNG LÔ: RỘNG RÃI, THOÁNG ĐÃNG, KHÔNG BỊ CẮT XÉN */}
+                        <td className="px-4 py-3.5 text-center bg-emerald-50/20 align-middle">
                           <div className="flex items-center justify-center space-x-1.5">
+                            <input
+                              type="number"
+                              min="0"
+                              max={lot.availableQty}
+                              disabled={!isSelected}
+                              value={currentPick}
+                              onChange={(e) => handleQtyChange(lot, e.target.value)}
+                              className={`w-16 px-2 py-1.5 text-center font-mono font-black text-xs rounded-lg border focus:outline-none transition-all ${
+                                isSelected
+                                  ? "bg-white border-[#005a46] text-[#005a46] ring-1 ring-[#005a46] shadow-2xs"
+                                  : "bg-slate-100 border-slate-300 text-slate-400 cursor-not-allowed"
+                              }`}
+                            />
+
+                            {/* Nút Chọn Hết Lô Này */}
                             <button
                               type="button"
-                              onClick={() => handleSelectAllLotsOfGroup(group)}
-                              className="px-2 py-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-md transition-colors cursor-pointer"
-                              title="Tự động chọn tất cả các lô cho item này"
+                              onClick={() => handlePickMaxLot(lot)}
+                              className="px-2.5 py-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-lg transition-colors cursor-pointer shrink-0 shadow-2xs"
+                              title={`Pick toàn bộ ${lot.availableQty} món của lô này`}
                             >
-                              ⚡ Pick hết lô
+                              Hết lô
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeselectAllLotsOfGroup(group)}
-                              className="px-2 py-1 text-[10px] font-medium text-slate-600 hover:text-slate-800 bg-slate-200/80 hover:bg-slate-300 rounded-md transition-colors cursor-pointer"
-                              title="Bỏ chọn tất cả các lô của item này"
-                            >
-                              Bỏ chọn
-                            </button>
+
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              / {lot.availableQty}
+                            </span>
                           </div>
                         </td>
                       </tr>
-
-                      {/* 2. CÁC DÒNG LÔ CON CỦA ITEM (LOT ROWS) */}
-                      {group.lots.map((lot, lotIdx) => {
-                        const isSelected = selectedIds.has(lot.id);
-                        const currentPick = pickQuantities[lot.id] || 0;
-
-                        return (
-                          <tr 
-                            key={lot.id} 
-                            className={`transition-colors ${
-                              isSelected ? "bg-emerald-50/20" : "hover:bg-slate-50/70"
-                            }`}
-                          >
-                            {/* Checkbox của từng lô */}
-                            <td className="px-3 py-3 text-center align-middle">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => handleToggleLot(lot)}
-                                className="w-4 h-4 rounded text-[#005a46] focus:ring-[#005a46] border-slate-300 cursor-pointer"
-                              />
-                            </td>
-
-                            {/* Cột Tên & Thứ tự Lô */}
-                            <td className="px-4 py-3 align-middle">
-                              <div className="flex items-center space-x-1.5 pl-3 border-l-2 border-emerald-400">
-                                <span className="text-[11px] font-mono font-bold text-slate-500">
-                                  ↳ Lô {lotIdx + 1}/{group.lots.length}:
-                                </span>
-                                <span className="text-xs text-slate-800 font-semibold">
-                                  {lot.itemName}
-                                </span>
-                              </div>
-                            </td>
-
-                            {/* CỘT ĐỎ: MÃ LÔ HÀNG (LOT CODE) */}
-                            <td className="px-3 py-3 text-center bg-emerald-50/40 border-x border-emerald-200/70 align-middle">
-                              <div className="inline-flex flex-col items-center">
-                                <span className="font-mono font-black text-xs text-[#005a46] bg-white border border-emerald-300 px-2.5 py-1 rounded-md shadow-2xs">
-                                  {lot.lotCode || `LOT-${lot.id}`}
-                                </span>
-                                <span className="text-[10px] text-slate-500 mt-0.5" title={lot.location}>
-                                  {lot.location ? lot.location.split("(")[0].trim() : "Két K1"}
-                                </span>
-                              </div>
-                            </td>
-
-                            {/* SL Đặt của Item */}
-                            <td className="px-3 py-3 text-center bg-emerald-50/15 align-middle font-mono font-bold text-xs text-slate-500">
-                              {group.orderQty}
-                            </td>
-
-                            {/* SL TỒN CỦA LÔ NÀY (LUÔN <= 10 MÓN THEO CHUẨN THỰC TẾ) */}
-                            <td className="px-3 py-3 text-center align-middle">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs">
-                                {lot.availableQty} món
-                              </span>
-                            </td>
-
-                            {/* Mã Đơn Hàng Cũ kèm Tooltip */}
-                            <td className="px-3 py-3 text-center align-middle">
-                              <div className="relative inline-block group">
-                                <span className="font-mono font-bold text-xs text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200 hover:bg-amber-100 hover:border-amber-300 cursor-help transition-colors inline-flex items-center space-x-1">
-                                  <span>{lot.oldOrderCode || "-"}</span>
-                                  <Info className="h-3 w-3 text-amber-600" />
-                                </span>
-
-                                {/* Tooltip lý do hủy */}
-                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:flex flex-col w-56 p-2.5 bg-slate-900 text-white text-[11px] rounded-lg shadow-xl z-30 pointer-events-none text-left whitespace-normal">
-                                  <span className="font-bold text-amber-400 mb-0.5">
-                                    📌 Lô: {lot.lotCode || lot.id} (Túi: {lot.bagCode})
-                                  </span>
-                                  <span className="leading-tight text-slate-200">
-                                    {lot.sourceReason || "Khách hủy do trễ hẹn giao hàng đợt 1"}
-                                  </span>
-                                  <div className="text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-700">
-                                    SO cũ: {lot.oldOrderCode} • {lot.oldCustomer || "Khách hàng cũ"}
-                                  </div>
-                                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900" />
-                                </div>
-                              </div>
-                            </td>
-
-                            {/* Nguyên Liệu - Tuổi Vàng */}
-                            <td className="px-3 py-3 text-center align-middle">
-                              <span className="font-bold text-xs text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 inline-block font-mono">
-                                Vàng - {lot.goldType}
-                              </span>
-                            </td>
-
-                            {/* Ngày Nhập Kho */}
-                            <td className="px-3 py-3 text-center align-middle">
-                              <span className="font-mono text-xs font-semibold text-slate-700 inline-flex items-center">
-                                <Calendar className="h-3 w-3 mr-1 text-slate-400" />
-                                {lot.dateInStock || "-"}
-                              </span>
-                            </td>
-
-                            {/* SL PICK CHỌN TỪNG LÔ: RỘNG RÃI, THOÁNG ĐÃNG, KHÔNG BỊ CẮT XÉN */}
-                            <td className="px-4 py-3 text-center bg-emerald-50/20 align-middle">
-                              <div className="flex items-center justify-center space-x-2">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max={lot.availableQty}
-                                  disabled={!isSelected}
-                                  value={currentPick}
-                                  onChange={(e) => handleQtyChange(lot, e.target.value)}
-                                  className={`w-16 px-2 py-1.5 text-center font-mono font-black text-xs rounded-lg border focus:outline-none transition-all ${
-                                    isSelected
-                                      ? "bg-white border-[#005a46] text-[#005a46] ring-1 ring-[#005a46] shadow-2xs"
-                                      : "bg-slate-100 border-slate-300 text-slate-400 cursor-not-allowed"
-                                  }`}
-                                />
-
-                                {/* Nút Chọn Hết Lô Này */}
-                                <button
-                                  type="button"
-                                  onClick={() => handlePickMaxLot(lot)}
-                                  className="px-2.5 py-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-lg transition-colors cursor-pointer shrink-0 shadow-2xs"
-                                  title={`Pick toàn bộ ${lot.availableQty} món của lô này`}
-                                >
-                                  Hết lô
-                                </button>
-
-                                <span className="text-[10px] text-slate-400 font-mono">
-                                  / max {lot.availableQty}
-                                </span>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  );
+                    );
+                  });
                 })}
               </tbody>
             </table>
