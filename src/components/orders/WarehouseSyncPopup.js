@@ -10,6 +10,9 @@ import {
   Info,
   Layers,
   PackageCheck,
+  ChevronDown,
+  ChevronRight,
+  ChevronsUpDown,
   Zap
 } from "lucide-react";
 import { ROUTING_FG_FIXED } from "@/data/warehouseStockData";
@@ -25,6 +28,8 @@ export default function WarehouseSyncPopup({
   const [pickQuantities, setPickQuantities] = useState({});
   // State lưu danh sách ID các lô được tick chọn qua Checkbox
   const [selectedIds, setSelectedIds] = useState(new Set());
+  // State lưu danh sách các itemCode đang được mở rộng (Expand / Collapse)
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
 
   // Nhóm các lô theo ItemCode để quản lý cấp Item và cấp Lô
   const groupedItems = useMemo(() => {
@@ -61,11 +66,12 @@ export default function WarehouseSyncPopup({
     return groups;
   }, [matchedStockList, order]);
 
-  // Khởi tạo mặc định khi mở popup: Tự động pick từ các lô cũ nhất tới mới (FIFO) cho đến khi đủ SL đặt
+  // Khởi tạo mặc định: Mở rộng tất cả các Item và tự động pick từ các lô theo FIFO
   useEffect(() => {
     if (matchedStockList.length > 0 && order && isOpen) {
       const initialQty = {};
       const initialSelected = new Set();
+      const allItemCodes = new Set(groupedItems.map((g) => g.itemCode?.toLowerCase()));
 
       groupedItems.forEach((group) => {
         let remainingNeeded = group.orderQty;
@@ -87,10 +93,34 @@ export default function WarehouseSyncPopup({
 
       setPickQuantities(initialQty);
       setSelectedIds(initialSelected);
+      setExpandedGroups(allItemCodes);
     }
   }, [matchedStockList, order, isOpen, groupedItems]);
 
   if (!isOpen || !order) return null;
+
+  // Toggle mở rộng / thu gọn một Item cụ thể
+  const toggleGroup = (itemCode) => {
+    const key = itemCode?.toLowerCase();
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  // Mở rộng tất cả / Thu gọn tất cả
+  const handleToggleExpandAll = () => {
+    if (expandedGroups.size === groupedItems.length) {
+      setExpandedGroups(new Set());
+    } else {
+      setExpandedGroups(new Set(groupedItems.map((g) => g.itemCode?.toLowerCase())));
+    }
+  };
 
   // Toggle chọn / bỏ chọn một Lô cụ thể
   const handleToggleLot = (stock) => {
@@ -105,7 +135,6 @@ export default function WarehouseSyncPopup({
         setPickQuantities((q) => ({ ...q, [stockId]: 0 }));
       } else {
         next.add(stockId);
-        // Khi tick chọn, tự động tính số lượng còn cần cho Item này
         const currentOtherLotsPick = (group?.lots || [])
           .filter((l) => l.id !== stockId && next.has(l.id))
           .reduce((sum, l) => sum + (Number(pickQuantities[l.id]) || 0), 0);
@@ -251,6 +280,7 @@ export default function WarehouseSyncPopup({
   };
 
   const isAllSelected = matchedStockList.length > 0 && selectedIds.size === matchedStockList.length;
+  const isAllExpanded = expandedGroups.size === groupedItems.length;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
@@ -306,11 +336,11 @@ export default function WarehouseSyncPopup({
             </div>
           </div>
 
-          {/* BẢNG CHUẨN MỰC ERP: KHÔNG LỒNG TBODY, KHÔNG LỆCH CỘT */}
+          {/* BẢNG CHUẨN MỰC ERP: THỨ TỰ CỘT ĐÃ ĐƯỢC CHUẨN HÓA VÀ ĐỔI VỊ TRÍ CHUẨN XÁC */}
           <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs overflow-x-auto">
             <table className="w-full border-collapse text-left text-xs">
               
-              {/* THEAD CHUẨN XÁC VỚI 9 CỘT THẲNG HÀNG */}
+              {/* THEAD CHUẨN XÁC: ĐỔI VỊ TRÍ 2 CỘT MÃ ĐƠN CŨ VÀ SL TỒN CỦA LÔ */}
               <thead className="bg-slate-100/90 font-bold text-slate-700 uppercase tracking-wider text-[11px] whitespace-nowrap border-b border-slate-200">
                 <tr>
                   <th className="px-3 py-3 text-center w-12">
@@ -322,35 +352,172 @@ export default function WarehouseSyncPopup({
                       title="Chọn tất cả các lô trên toàn bộ bảng"
                     />
                   </th>
-                  <th className="px-4 py-3 min-w-[230px] w-64 text-left">MÃ ITEM & THUỘC TÍNH</th>
                   
-                  {/* CỘT ĐỎ: CẤP LÔ HÀNG (NẰM CHÍNH GIỮA MÃ ITEM VÀ SL ĐẶT) */}
-                  <th className="px-3 py-3 text-center bg-emerald-50/70 border-x border-emerald-200 text-[#005a46] font-black w-44">
+                  {/* CỘT 2: MÃ ITEM & THUỘC TÍNH (CÓ NÚT THU GỌN / MỞ RỘNG TẤT CẢ) */}
+                  <th className="px-4 py-3 min-w-[240px] w-64 text-left">
+                    <div className="flex items-center justify-between">
+                      <span>MÃ ITEM & THUỘC TÍNH</span>
+                      <button
+                        type="button"
+                        onClick={handleToggleExpandAll}
+                        className="text-[10px] font-bold text-[#005a46] hover:underline flex items-center space-x-1 cursor-pointer normal-case"
+                        title={isAllExpanded ? "Thu gọn tất cả các item" : "Mở rộng tất cả các item"}
+                      >
+                        <ChevronsUpDown className="h-3 w-3" />
+                        <span>{isAllExpanded ? "Thu gọn hết" : "Mở rộng hết"}</span>
+                      </button>
+                    </div>
+                  </th>
+                  
+                  {/* CỘT 3: MÃ LÔ (NẰM CHÍNH GIỮA MÃ ITEM VÀ SL ĐẶT) */}
+                  <th className="px-3 py-3 text-center bg-emerald-50/70 border-x border-emerald-200 text-[#005a46] font-black w-40">
                     <div className="flex items-center justify-center space-x-1">
                       <Layers className="h-3.5 w-3.5" />
-                      <span>LÔ HÀNG (LOT)</span>
+                      <span>MÃ LÔ</span>
                     </div>
                   </th>
 
+                  {/* CỘT 4: SL ĐẶT */}
                   <th className="px-3 py-3 text-center text-emerald-950 bg-emerald-50/30 w-24">SL ĐẶT</th>
-                  <th className="px-3 py-3 text-center w-32 text-[#005a46] font-black">SL TỒN CỦA LÔ</th>
+
+                  {/* CỘT 5: MÃ ĐƠN CŨ (ĐÃ ĐỔI VỊ TRÍ SANG ĐÂY THEO YÊU CẦU CỦA CHỊ ĐẸP) */}
                   <th className="px-3 py-3 text-center w-32">MÃ ĐƠN CŨ</th>
+
+                  {/* CỘT 6: SL TỒN CỦA LÔ (ĐÃ ĐỔI VỊ TRÍ SANG ĐÂY THEO YÊU CẦU CỦA CHỊ ĐẸP) */}
+                  <th className="px-3 py-3 text-center w-32 text-[#005a46] font-black bg-emerald-50/20">SL TỒN CỦA LÔ</th>
+
+                  {/* CỘT 7: NGUYÊN LIỆU - TUỔI VÀNG */}
                   <th className="px-3 py-3 text-center w-36">NGUYÊN LIỆU - TUỔI VÀNG</th>
+
+                  {/* CỘT 8: NGÀY NHẬP KHO */}
                   <th className="px-3 py-3 text-center w-32">NGÀY NHẬP KHO</th>
-                  <th className="px-4 py-3 text-center w-52 bg-emerald-50/20 text-[#005a46] font-black">
+
+                  {/* CỘT 9: SL PICK CHỌN */}
+                  <th className="px-4 py-3 text-center w-52 bg-emerald-50/30 text-[#005a46] font-black">
                     SL PICK CHỌN (TỪNG LÔ)
                   </th>
                 </tr>
               </thead>
 
-              {/* TBODY DUY NHẤT: SỬ DỤNG ROWSPAN CHO CỘT ITEM VÀ SL ĐẶT */}
+              {/* TBODY DUY NHẤT: HỖ TRỢ THU GỌN - MỞ RỘNG VÀ HIỂN THỊ TỔNG SỐ LƯỢNG CHỌN */}
               <tbody className="divide-y divide-slate-100 bg-white">
                 {groupedItems.map((group, groupIdx) => {
+                  const isExpanded = expandedGroups.has(group.itemCode?.toLowerCase());
                   const itemPickedTotal = getItemPickedQty(group);
                   const selectedLotsInGroup = group.lots.filter((l) => selectedIds.has(l.id)).length;
-                  const itemRemainingNewProd = Math.max(0, group.orderQty - itemPickedTotal);
+                  const isAllLotsSelected = selectedLotsInGroup === group.lots.length;
                   const isLastGroup = groupIdx === groupedItems.length - 1;
 
+                  // -------------------------------------------------------------
+                  // TRƯỜNG HỢP 1: ITEM ĐANG THU GỌN (COLLAPSED) -> HIỂN THỊ 1 HÀNG DUY NHẤT
+                  // -------------------------------------------------------------
+                  if (!isExpanded) {
+                    return (
+                      <tr 
+                        key={group.itemCode}
+                        className={`transition-colors hover:bg-slate-50/80 ${
+                          !isLastGroup ? "border-b-2 border-slate-300" : ""
+                        }`}
+                      >
+                        {/* 1. Checkbox chọn cả Item */}
+                        <td className="px-3 py-3.5 text-center align-middle border-r border-slate-100">
+                          <input
+                            type="checkbox"
+                            checked={isAllLotsSelected}
+                            onChange={() => {
+                              if (isAllLotsSelected) {
+                                handleDeselectAllLotsOfGroup(group);
+                              } else {
+                                handleSelectAllLotsOfGroup(group);
+                              }
+                            }}
+                            className="w-4 h-4 rounded text-[#005a46] focus:ring-[#005a46] border-slate-300 cursor-pointer"
+                            title="Chọn / Bỏ chọn toàn bộ lô của item này"
+                          />
+                        </td>
+
+                        {/* 2. Cột Mã Item: Có nút mở rộng và hiển thị gọn gàng */}
+                        <td className="px-4 py-3.5 align-middle border-r border-slate-200">
+                          <div className="space-y-1">
+                            <button
+                              type="button"
+                              onClick={() => toggleGroup(group.itemCode)}
+                              className="inline-flex items-center space-x-1.5 text-slate-700 hover:text-[#005a46] font-bold text-xs bg-slate-100 hover:bg-emerald-50 px-2 py-1 rounded-md border border-slate-300 transition-colors cursor-pointer"
+                            >
+                              <ChevronRight className="h-3.5 w-3.5 text-slate-500" />
+                              <span>Mở rộng ({group.lots.length} lô)</span>
+                            </button>
+                            <div className="font-mono font-black text-xs text-slate-900 tracking-tight leading-tight pt-0.5">
+                              {group.itemCode30?.replace(/\//g, "")}
+                            </div>
+                            <div className="text-xs font-bold text-slate-800">
+                              {group.itemName}
+                            </div>
+                            <div className="text-[11px] text-slate-500">
+                              Ni: {group.size || "---"} • Đá: {group.stoneColor || "Trắng"}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* 3. Mã Lô (Tóm tắt số lượng lô) */}
+                        <td className="px-3 py-3.5 text-center bg-emerald-50/20 border-x border-emerald-100 align-middle">
+                          <span className="font-mono text-xs font-semibold text-emerald-800 bg-white border border-emerald-200 px-2 py-0.5 rounded">
+                            {group.lots.length} lô kho
+                          </span>
+                        </td>
+
+                        {/* 4. SL Đặt */}
+                        <td className="px-3 py-3.5 text-center align-middle bg-emerald-50/10 border-r border-slate-200 font-mono font-black text-sm text-emerald-950">
+                          {group.orderQty}
+                        </td>
+
+                        {/* 5. Mã Đơn Cũ (ĐÃ ĐỔI VỊ TRÍ) */}
+                        <td className="px-3 py-3.5 text-center align-middle text-slate-400 font-mono text-xs">
+                          {group.lots.length} đơn cũ
+                        </td>
+
+                        {/* 6. SL TỒN CỦA LÔ (ĐÃ ĐỔI VỊ TRÍ): Hiển thị Tổng tồn của Item */}
+                        <td className="px-3 py-3.5 text-center align-middle bg-emerald-50/15">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs">
+                            Tổng {group.totalStockQty} món
+                          </span>
+                        </td>
+
+                        {/* 7. Nguyên Liệu - Tuổi Vàng */}
+                        <td className="px-3 py-3.5 text-center align-middle">
+                          <span className="font-bold text-xs text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 inline-block font-mono">
+                            Vàng - {group.goldType}
+                          </span>
+                        </td>
+
+                        {/* 8. Ngày Nhập Kho */}
+                        <td className="px-3 py-3.5 text-center align-middle text-slate-400 text-xs">
+                          -
+                        </td>
+
+                        {/* 9. SL PICK CHỌN: Hiển thị TỔNG SỐ LƯỢNG CHỌN của Item */}
+                        <td className="px-4 py-3.5 text-center bg-emerald-50/20 align-middle">
+                          <div className="flex items-center justify-center space-x-2">
+                            <span className="font-mono font-black text-xs text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-1.5 rounded-lg shadow-2xs">
+                              {itemPickedTotal} / {group.orderQty} món
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectAllLotsOfGroup(group)}
+                              className="px-2 py-1 text-[10px] font-bold text-[#005a46] hover:text-[#004737] bg-emerald-100/60 hover:bg-emerald-200 border border-emerald-300 rounded-md transition-colors cursor-pointer"
+                              title="Pick tối đa tồn cho item này"
+                            >
+                              Hết tồn
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  // -------------------------------------------------------------
+                  // TRƯỜNG HỢP 2: ITEM ĐANG MỞ RỘNG (EXPANDED) -> HIỂN THỊ CÁC LÔ CON (ROWSPAN)
+                  // -------------------------------------------------------------
                   return group.lots.map((lot, lotIdx) => {
                     const isFirstLotOfItem = lotIdx === 0;
                     const isLastLotOfItem = lotIdx === group.lots.length - 1;
@@ -381,6 +548,16 @@ export default function WarehouseSyncPopup({
                             className="px-4 py-3.5 align-top bg-slate-50/60 border-r border-slate-200"
                           >
                             <div className="space-y-1.5 sticky top-2">
+                              {/* NÚT THU GỌN LÔ (THEO ĐÚNG CHỈ ĐẠO CỦA CHỊ ĐẸP) */}
+                              <button
+                                type="button"
+                                onClick={() => toggleGroup(group.itemCode)}
+                                className="inline-flex items-center space-x-1.5 text-[#005a46] hover:text-[#004737] font-bold text-xs bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-md border border-emerald-200 transition-colors cursor-pointer mb-1 shadow-2xs"
+                              >
+                                <ChevronDown className="h-3.5 w-3.5 text-emerald-700" />
+                                <span>Thu gọn ({group.lots.length} lô)</span>
+                              </button>
+
                               <div className="font-mono font-black text-xs text-slate-900 tracking-tight leading-tight">
                                 {group.itemCode30?.replace(/\//g, "")}
                               </div>
@@ -391,37 +568,17 @@ export default function WarehouseSyncPopup({
                                 Ni: <strong className="text-slate-800">{group.size || "---"}</strong> • Đá: <strong className="text-slate-800">{group.stoneColor || "Trắng"}</strong>
                               </div>
 
-                              {/* Tóm tắt tồn & thao tác nhanh của Item */}
-                              <div className="pt-2 border-t border-slate-200/80 space-y-1">
-                                <div className="text-[11px] text-slate-700">
-                                  📦 <strong>{group.lots.length} lô tồn</strong> (Tổng: <strong className="text-emerald-800 font-mono">{group.totalStockQty} món</strong>)
-                                </div>
-                                <div className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-200 inline-block">
-                                  Đã pick: {itemPickedTotal} / {group.orderQty} món ({selectedLotsInGroup}/{group.lots.length} lô)
-                                </div>
-                                <div className="flex items-center space-x-1.5 pt-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSelectAllLotsOfGroup(group)}
-                                    className="text-[10px] font-bold text-[#005a46] hover:text-[#004737] hover:underline cursor-pointer"
-                                  >
-                                    ⚡ Pick hết lô
-                                  </button>
-                                  <span className="text-slate-300">•</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeselectAllLotsOfGroup(group)}
-                                    className="text-[10px] text-slate-500 hover:text-slate-800 hover:underline cursor-pointer"
-                                  >
-                                    Bỏ chọn
-                                  </button>
+                              {/* HIỂN THỊ TỔNG SỐ LƯỢNG CHỌN TINH GỌN (LOẠI BỎ TOÀN BỘ BADGE RƯỜM RÀ) */}
+                              <div className="pt-2 border-t border-slate-200/80">
+                                <div className="text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-200 inline-block">
+                                  Tổng chọn: <strong>{itemPickedTotal} / {group.orderQty} món</strong>
                                 </div>
                               </div>
                             </div>
                           </td>
                         )}
 
-                        {/* 3. CỘT ĐỎ: MÃ LÔ HÀNG (LOT CODE) */}
+                        {/* 3. CỘT: MÃ LÔ (GỌN GÀNG, ĐÚNG VỊ TRÍ SAU MÃ ITEM) */}
                         <td className="px-3 py-3.5 text-center bg-emerald-50/30 border-x border-emerald-100 align-middle">
                           <div className="inline-flex flex-col items-center">
                             <span className="font-mono font-black text-xs text-[#005a46] bg-white border border-emerald-300 px-2.5 py-1 rounded-md shadow-2xs">
@@ -445,17 +602,10 @@ export default function WarehouseSyncPopup({
                           </td>
                         )}
 
-                        {/* 5. SL TỒN CỦA LÔ NÀY (LUÔN <= 10 MÓN THEO CHUẨN THỰC TẾ) */}
-                        <td className="px-3 py-3.5 text-center align-middle">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs">
-                            {lot.availableQty} món
-                          </span>
-                        </td>
-
-                        {/* 6. Mã Đơn Hàng Cũ kèm Tooltip */}
+                        {/* 5. CỘT: MÃ ĐƠN CŨ (ĐÃ ĐỔI VỊ TRÍ SANG TRƯỚC SL TỒN THEO CHỈ ĐẠO CỦA CHỊ ĐẸP) */}
                         <td className="px-3 py-3.5 text-center align-middle">
                           <div className="relative inline-block group">
-                            <span className="font-mono font-bold text-xs text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 hover:bg-amber-100 hover:border-amber-300 cursor-help transition-colors inline-flex items-center space-x-1">
+                            <span className="font-mono font-bold text-xs text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200 hover:bg-amber-100 hover:border-amber-300 cursor-help transition-colors inline-flex items-center space-x-1">
                               <span>{lot.oldOrderCode || "-"}</span>
                               <Info className="h-3 w-3 text-amber-600" />
                             </span>
@@ -476,6 +626,13 @@ export default function WarehouseSyncPopup({
                           </div>
                         </td>
 
+                        {/* 6. CỘT: SL TỒN CỦA LÔ (ĐÃ ĐỔI VỊ TRÍ SANG SAU MÃ ĐƠN CŨ, LUÔN <= 10 MÓN) */}
+                        <td className="px-3 py-3.5 text-center align-middle bg-emerald-50/15">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs">
+                            {lot.availableQty} món
+                          </span>
+                        </td>
+
                         {/* 7. Nguyên Liệu - Tuổi Vàng */}
                         <td className="px-3 py-3.5 text-center align-middle">
                           <span className="font-bold text-xs text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 inline-block font-mono">
@@ -491,7 +648,7 @@ export default function WarehouseSyncPopup({
                           </span>
                         </td>
 
-                        {/* 9. SL PICK CHỌN TỪNG LÔ: RỘNG RÃI, THOÁNG ĐÃNG, KHÔNG BỊ CẮT XÉN */}
+                        {/* 9. SL PICK CHỌN TỪNG LÔ: RỘNG RÃI, THOÁNG ĐÃNG */}
                         <td className="px-4 py-3.5 text-center bg-emerald-50/20 align-middle">
                           <div className="flex items-center justify-center space-x-1.5">
                             <input

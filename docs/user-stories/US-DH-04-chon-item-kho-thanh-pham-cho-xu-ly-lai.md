@@ -99,19 +99,19 @@ Kích thước: `w-[96vw] max-w-[1550px]`. Cấu trúc phân cấp Master-Detail
     *   Tóm tắt phân bổ: `Đã chọn pick: A / B món` | `Còn lại SX mới: C món`.
     *   Nút thao tác nhanh: `[⚡ Pick hết lô]` và `[Bỏ chọn]`.
 
-*   **Bảng Các Dòng Lô Con (Lot Rows - hiển thị dưới Item):**
+*   **Bảng Chi Tiết Mặt Hàng & Cấp Lô (Table Specification - Đã Chuẩn Hóa Theo First Principles):**
 
 | STT | Tên cột trên Giao diện | Vị trí / Căn lề | Mô tả hiển thị & Tương tác |
 | :---: | :--- | :---: | :--- |
-| 1 | **Checkbox** | Căn giữa | Chọn/Bỏ chọn riêng lô này. |
-| 2 | **MÃ ITEM & THỨ TỰ LÔ** | Căn trái | Ký hiệu nhánh `↳ Lô 1/6:`, Tên sản phẩm. |
-| 3 | **LÔ HÀNG (LOT)** | **Căn giữa (Cột đỏ)** | **Nằm ngay giữa MÃ ITEM và SL ĐẶT**. Badge Mã Lô (`LOT-TP-2607-06`), Vị trí két kho bên dưới (`Két K1 - Ngăn A03`). |
-| 4 | **SL ĐẶT** | Căn giữa | Số lượng khách đặt của dòng hàng (VD: `100`). |
-| 5 | **SL TỒN CỦA LÔ** | Căn giữa | **Badge số lượng tồn khả dụng của lô ($\le 10$ món, VD: `5 món`, `8 món`, `6 món`).** |
-| 6 | **MÃ ĐƠN HÀNG CŨ** | Căn giữa | Mã SO cũ kèm icon `ⓘ` (Tooltip: Túi hàng `bagCode`, Lý do tồn kho & Tên khách hàng cũ). |
+| 1 | **Checkbox** | Căn giữa | Chọn/Bỏ chọn riêng lô này (hoặc chọn cả item khi thu gọn). Có checkbox tổng tại header. |
+| 2 | **MÃ ITEM & THUỘC TÍNH** | Căn trái | **Có nút Thu gọn / Mở rộng** (`▼ Thu gọn` / `▶ Mở rộng`). Hiển thị Mã Item 30 ký tự, Tên sản phẩm, Ni tay, Đá và **Tổng số lượng chọn của Item** (`Tổng chọn: X / Y món`). Đã loại bỏ triệt để các badge rườm rà. |
+| 3 | **MÃ LÔ** | Căn giữa | **Nằm ngay sau Mã Item**. Badge Mã Lô (`LOT-TP-2607-06`), Mã túi (`BAG-TP-9915`) và Vị trí két kho bên dưới (`Két K1 - Ngăn A03`). |
+| 4 | **SL ĐẶT** | Căn giữa | Số lượng khách đặt của dòng hàng (VD: `100`). Gộp `rowSpan` khi mở rộng. |
+| 5 | **MÃ ĐƠN CŨ** | Căn giữa | **(ĐÃ ĐỔI VỊ TRÍ SANG TRƯỚC SL TỒN)**: Mã SO cũ kèm icon `ⓘ` (Tooltip: Lý do tồn kho & Tên khách hàng cũ). |
+| 6 | **SL TỒN CỦA LÔ** | Căn giữa | **(ĐÃ ĐỔI VỊ TRÍ SANG SAU MÃ ĐƠN CŨ)**: Badge số lượng tồn khả dụng của lô ($\le 10$ món, VD: `5 món`, `8 món`, `6 món`). Khi thu gọn: hiển thị Tổng tồn của Item. |
 | 7 | **NGUYÊN LIỆU - TUỔI VÀNG** | Căn giữa | Nhãn tuổi vàng (VD: `Vàng - 61Y`). |
 | 8 | **NGÀY NHẬP KHO** | Căn giữa | Ngày sản phẩm vào kho kèm icon Lịch. |
-| 9 | **SL PICK CHỌN (TỪNG LÔ)** | **Căn giữa (Rộng rãi w-56)** | **Ô nhập số lượng pick lẻ + Nút chọn nhanh `[Hết lô]` + Nhãn `/ max X`. Thoải mái, không bị cắt xén.** |
+| 9 | **SL PICK CHỌN (TỪNG LÔ)** | Căn giữa | **Khi mở rộng:** Ô nhập số lượng pick lẻ + Nút chọn nhanh `[Hết lô]` + Nhãn `/ X món`.<br>**Khi thu gọn:** Hiển thị **TỔNG SỐ LƯỢNG CHỌN** của Item (`A / B món`) kèm nút chọn nhanh `Hết tồn`. |
 
 *   **Footer Popup:**
     *   Tổng quan 2 luồng: `Tổng SL cần giao` | `Luồng 1: Kho TP (Routing FG - 2 CĐ)` | `Luồng 2: Sản xuất mới (Full Routing)`.
