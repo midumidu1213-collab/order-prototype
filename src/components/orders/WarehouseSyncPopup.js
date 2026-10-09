@@ -148,14 +148,7 @@ export default function WarehouseSyncPopup({
     });
   };
 
-  // Nút "Hết lô" (Max) cho một Lô cụ thể
-  const handlePickMaxLot = (stock) => {
-    const stockId = stock.id;
-    setSelectedIds((prev) => new Set([...prev, stockId]));
-    setPickQuantities((q) => ({ ...q, [stockId]: stock.availableQty }));
-  };
-
-  // Thay đổi số lượng gõ tay cho từng Lô
+  // Thay đổi số lượng cho từng Lô
   const handleQtyChange = (stock, value) => {
     const stockId = stock.id;
     let num = parseInt(value, 10);
@@ -176,6 +169,45 @@ export default function WarehouseSyncPopup({
       ...prev,
       [stockId]: num
     }));
+  };
+
+  // Nút tăng/giảm stepper cho từng Lô (+/-)
+  const handleStepLotQty = (stock, delta) => {
+    const current = Number(pickQuantities[stock.id]) || 0;
+    const target = Math.max(0, Math.min(stock.availableQty, current + delta));
+    handleQtyChange(stock, target);
+  };
+
+  // Nhập số lượng trực tiếp cho cấp Item (Tự động phân bổ FIFO vào các lô)
+  const handleGroupQtyChange = (group, value) => {
+    let num = parseInt(value, 10);
+    if (isNaN(num) || num < 0) num = 0;
+    const maxPossible = Math.min(group.orderQty, group.totalStockQty);
+    if (num > maxPossible) num = maxPossible;
+
+    const nextSelected = new Set(selectedIds);
+    const nextQty = { ...pickQuantities };
+    let remainingToAssign = num;
+
+    group.lots.forEach((lot) => {
+      const take = Math.min(lot.availableQty, remainingToAssign);
+      nextQty[lot.id] = take;
+      if (take > 0) {
+        nextSelected.add(lot.id);
+      } else {
+        nextSelected.delete(lot.id);
+      }
+      remainingToAssign -= take;
+    });
+
+    setSelectedIds(nextSelected);
+    setPickQuantities(nextQty);
+  };
+
+  // Nút tăng/giảm stepper cho cấp Item (+/-)
+  const handleStepGroupQty = (group, delta) => {
+    const current = getItemPickedQty(group);
+    handleGroupQtyChange(group, current + delta);
   };
 
   // Chọn toàn bộ các lô của một Item cụ thể (Hết tồn của Item)
@@ -467,10 +499,10 @@ export default function WarehouseSyncPopup({
                         -
                       </td>
 
-                      {/* Tổng SL Tồn Kho của Item */}
-                      <td className="px-3 py-3 text-center align-middle bg-emerald-50/20">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs">
-                          Tổng {group.totalStockQty} món
+                      {/* Tổng SL Tồn Kho của Item: ĐƠN GIẢN HƠN (TEXT PHẲNG, KHÔNG VIÊN THUỐC) */}
+                      <td className="px-3 py-3 text-center align-middle">
+                        <span className="font-mono font-bold text-xs text-slate-800">
+                          {group.totalStockQty}
                         </span>
                       </td>
 
@@ -486,19 +518,35 @@ export default function WarehouseSyncPopup({
                         -
                       </td>
 
-                      {/* HIỂN THỊ TỔNG SỐ LƯỢNG CHỌN CỦA ITEM */}
-                      <td className="px-4 py-3 text-center bg-emerald-50/30 align-middle">
-                        <div className="flex items-center justify-center space-x-2">
-                          <span className="font-mono font-black text-xs text-emerald-950 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg shadow-2xs">
-                            {itemPickedTotal} / {group.orderQty} món
-                          </span>
+                      {/* Ô ĐỂ NHẬP SỐ LƯỢNG / TĂNG GIẢM CHO CẤP ITEM (BỎ HẾT TỒN, PHÂN BỔ FIFO) */}
+                      <td className="px-4 py-3 text-center align-middle">
+                        <div className="inline-flex items-center border border-slate-300 rounded-lg bg-white overflow-hidden shadow-2xs hover:border-[#005a46] transition-colors">
                           <button
                             type="button"
-                            onClick={() => handleSelectAllLotsOfGroup(group)}
-                            className="px-2 py-1 text-[10px] font-bold text-[#005a46] hover:text-white hover:bg-[#005a46] bg-white border border-[#005a46] rounded-md transition-colors cursor-pointer shadow-2xs"
-                            title="Chọn tối đa tồn kho cho item này"
+                            onClick={() => handleStepGroupQty(group, -1)}
+                            disabled={itemPickedTotal <= 0}
+                            className="w-7 h-7 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition-colors cursor-pointer border-r border-slate-200"
+                            title="Giảm 1 món"
                           >
-                            Hết tồn
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            min="0"
+                            max={Math.min(group.orderQty, group.totalStockQty)}
+                            value={itemPickedTotal}
+                            onChange={(e) => handleGroupQtyChange(group, e.target.value)}
+                            className="w-12 h-7 px-1 text-center font-mono font-bold text-xs text-emerald-950 focus:outline-none"
+                            title={`Nhập số lượng pick (Tối đa ${Math.min(group.orderQty, group.totalStockQty)} món)`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleStepGroupQty(group, 1)}
+                            disabled={itemPickedTotal >= Math.min(group.orderQty, group.totalStockQty)}
+                            className="w-7 h-7 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition-colors cursor-pointer border-l border-slate-200"
+                            title="Tăng 1 món"
+                          >
+                            +
                           </button>
                         </div>
                       </td>
@@ -575,10 +623,10 @@ export default function WarehouseSyncPopup({
                               </div>
                             </td>
 
-                            {/* SL TỒN CỦA LÔ (ĐỨNG SAU MÃ ĐƠN CŨ, <= 10 MÓN) */}
-                            <td className="px-3 py-3 text-center align-middle bg-emerald-50/15">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
-                                {lot.availableQty} món
+                            {/* SL TỒN CỦA LÔ: ĐƠN GIẢN HƠN (TEXT PHẲNG, KHÔNG VIÊN THUỐC) */}
+                            <td className="px-3 py-3 text-center align-middle">
+                              <span className="font-mono text-xs text-slate-700">
+                                {lot.availableQty}
                               </span>
                             </td>
 
@@ -597,31 +645,37 @@ export default function WarehouseSyncPopup({
                               </span>
                             </td>
 
-                            {/* SL PICK CHỌN TỪNG LÔ: THOÁNG ĐÃNG, BỎ CHỮ '/ 8' THỪA THÃI */}
-                            <td className="px-4 py-3 text-center bg-emerald-50/20 align-middle">
-                              <div className="flex items-center justify-center space-x-2">
+                            {/* Ô ĐỂ NHẬP SỐ LƯỢNG / TĂNG GIẢM CHO TỪNG LÔ (BỎ NÚT HẾT LÔ) */}
+                            <td className="px-4 py-3 text-center align-middle">
+                              <div className="inline-flex items-center border border-slate-300 rounded-lg bg-white overflow-hidden shadow-2xs hover:border-[#005a46] transition-colors">
+                                <button
+                                  type="button"
+                                  onClick={() => handleStepLotQty(lot, -1)}
+                                  disabled={currentPick <= 0}
+                                  className="w-7 h-7 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition-colors cursor-pointer border-r border-slate-200"
+                                  title="Giảm 1 món"
+                                >
+                                  -
+                                </button>
                                 <input
                                   type="number"
                                   min="0"
                                   max={lot.availableQty}
-                                  disabled={!isSelected}
                                   value={currentPick}
                                   onChange={(e) => handleQtyChange(lot, e.target.value)}
-                                  className={`w-14 px-2 py-1.5 text-center font-mono font-black text-xs rounded-lg border focus:outline-none transition-all ${
-                                    isSelected
-                                      ? "bg-white border-[#005a46] text-[#005a46] ring-1 ring-[#005a46] shadow-2xs"
-                                      : "bg-slate-100 border-slate-300 text-slate-400 cursor-not-allowed"
+                                  className={`w-12 h-7 px-1 text-center font-mono font-bold text-xs focus:outline-none ${
+                                    isSelected ? "text-emerald-900" : "text-slate-400"
                                   }`}
+                                  title={`Nhập số lượng pick cho lô ${lot.lotCode} (Tối đa ${lot.availableQty} món)`}
                                 />
-
-                                {/* Nút Chọn Hết Lô */}
                                 <button
                                   type="button"
-                                  onClick={() => handlePickMaxLot(lot)}
-                                  className="px-2.5 py-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-lg transition-colors cursor-pointer shrink-0 shadow-2xs"
-                                  title={`Pick toàn bộ ${lot.availableQty} món của lô này`}
+                                  onClick={() => handleStepLotQty(lot, 1)}
+                                  disabled={currentPick >= lot.availableQty}
+                                  className="w-7 h-7 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition-colors cursor-pointer border-l border-slate-200"
+                                  title="Tăng 1 món"
                                 >
-                                  Hết lô
+                                  +
                                 </button>
                               </div>
                             </td>
@@ -652,13 +706,11 @@ export default function WarehouseSyncPopup({
 
         </div>
 
-        {/* FOOTER POPUP */}
-        <div className="bg-slate-100/90 px-6 py-3.5 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-xs text-slate-600">
-            Đã chọn <strong className="text-emerald-800 font-mono">{selectedIds.size}</strong> lô • Tổng số lượng pick kho: <strong className="text-emerald-800 font-mono text-sm">{totalPickedCount}</strong> món
-          </div>
+        {/* FOOTER POPUP - BỎ TEXT RƯỜM RÀ GÓC TRÁI, ĐỔI NÚT THÀNH XÁC NHẬN (...MÓN) */}
+        <div className="bg-slate-100/90 px-6 py-3.5 border-t border-slate-200 flex items-center justify-between">
+          <div />
 
-          <div className="flex items-center space-x-3 w-full sm:w-auto justify-end">
+          <div className="flex items-center space-x-3">
             <button
               type="button"
               onClick={onClose}
@@ -673,7 +725,7 @@ export default function WarehouseSyncPopup({
               className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-[#005a46] hover:bg-[#004737] shadow-xs flex items-center space-x-2 transition-all cursor-pointer"
             >
               <Sparkles className="h-4 w-4" />
-              <span>Xác nhận pick chọn ({totalPickedCount} món Kho TP + {totalNewProductionCount} món SX mới)</span>
+              <span>Xác nhận ({totalPickedCount} món)</span>
             </button>
           </div>
         </div>
