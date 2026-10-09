@@ -19,10 +19,18 @@ import {
   Download,
   ShieldAlert,
   ImageIcon,
-  Trash2
+  Trash2,
+  ExternalLink,
+  Eye,
+  Layers,
+  PackageCheck,
+  Zap,
+  Boxes,
+  Split,
+  X
 } from "lucide-react";
 import { getOrderById, ALLOWED_SYNC_STATUSES, INITIAL_ORDERS } from "@/data/ordersData";
-import { findMatchingWarehouseItems } from "@/data/warehouseStockData";
+import { findMatchingWarehouseItems, ROUTING_FG_FIXED } from "@/data/warehouseStockData";
 import WarehouseSyncPopup from "@/components/orders/WarehouseSyncPopup";
 
 export default function OrderDetailPage({ params }) {
@@ -59,6 +67,9 @@ export default function OrderDetailPage({ params }) {
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [syncToastMessage, setSyncToastMessage] = useState("");
+  // State quản lý Modal xem Kế hoạch sản xuất 2 luồng (SX Mới & Kho TP)
+  const [isProductionPlanModalOpen, setIsProductionPlanModalOpen] = useState(false);
+  const [selectedPlanItem, setSelectedPlanItem] = useState(null);
 
   // Thao tác bấm nút Đồng bộ
   const handleTriggerSync = () => {
@@ -72,33 +83,28 @@ export default function OrderDetailPage({ params }) {
     }
   };
 
-  // Xác nhận pick chọn từ Popup
-  const handleConfirmPick = (pickQuantities) => {
+  // Xác nhận pick chọn từ Popup kèm thông tin chi tiết Cấp Lô
+  const handleConfirmPick = (pickQuantities, pickedLotsSummary = []) => {
     setOrder((prevOrder) => {
       const updatedItems = prevOrder.items.map((item) => {
-        let pickedForThisItem = 0;
-        let matchedStockItem = null;
+        // Lấy tất cả các lô đã pick cho item này
+        const lotsForItem = pickedLotsSummary.filter(
+          (l) => l.itemCode?.toLowerCase() === item.itemCode?.toLowerCase()
+        );
+        const totalPicked = lotsForItem.reduce((sum, l) => sum + (Number(l.pickedQty) || 0), 0);
 
-        matchedStockList.forEach((stock) => {
-          if (stock.itemCode?.toLowerCase() === item.itemCode?.toLowerCase()) {
-            const picked = pickQuantities[stock.id] || 0;
-            if (picked > 0) {
-              pickedForThisItem += picked;
-              matchedStockItem = stock;
-            }
-          }
-        });
-
-        if (pickedForThisItem > 0 && matchedStockItem) {
-          const newProd = Math.max(0, item.qty - pickedForThisItem);
+        if (totalPicked > 0) {
+          const newProd = Math.max(0, item.qty - totalPicked);
           return {
             ...item,
             sourceType: newProd === 0 ? "WAREHOUSE_REWORK" : "SPLIT_ALLOCATION",
-            qtyFromStock: pickedForThisItem,
+            qtyFromStock: totalPicked,
             qtyNewProduction: newProd,
-            assignedStock: matchedStockItem,
+            pickedLots: lotsForItem,
+            fgRouting: ROUTING_FG_FIXED,
+            fgRoutingType: "FG",
+            routingStatus: newProd === 0 ? "Routing Cố định (FG - 2 CĐ)" : "2 Luồng: SX Mới + Kho TP (FG)",
             stoneHoldStatus: "PARTIALLY_RELEASED",
-            // Giữ nguyên ghi chú riêng của sản phẩm, không chèn text pick kho theo chỉ đạo của Chị đẹp
             note: item.note && !item.note.startsWith("Đã pick") ? item.note : "---"
           };
         }
@@ -112,7 +118,7 @@ export default function OrderDetailPage({ params }) {
     });
 
     setIsPopupOpen(false);
-    setSyncToastMessage("Đã đồng bộ và pick chọn thành công sản phẩm từ Kho Thành Phẩm vào đơn hàng!");
+    setSyncToastMessage("Đã pick lô kho thành phẩm và gán Routing FG cố định (2 công đoạn: Serve FG → Packing Out) thành công!");
     setTimeout(() => setSyncToastMessage(""), 5000);
   };
 
@@ -128,6 +134,9 @@ export default function OrderDetailPage({ params }) {
             qtyFromStock: 0,
             qtyNewProduction: it.qty,
             assignedStock: null,
+            pickedLots: [],
+            fgRouting: null,
+            routingStatus: "Đủ BOM/Routing",
             stoneHoldStatus: "HELD_FOR_PRODUCTION",
             note: "---"
           };
@@ -504,25 +513,48 @@ export default function OrderDetailPage({ params }) {
                       {item.note || "---"}
                     </td>
 
-                    {/* Trạng thái BOM/Routing (Thêm mới theo chỉ đạo của Chị đẹp) */}
+                    {/* Trạng thái BOM/Routing (Tách 2 luồng SX Mới & Kho TP Type: FG) */}
                     <td className="px-3 py-3.5 text-center whitespace-nowrap">
-                      {item.routingStatus === "Chờ Routing mới" ? (
+                      {item.qtyFromStock > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPlanItem(item);
+                            setIsProductionPlanModalOpen(true);
+                          }}
+                          className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 hover:bg-emerald-200 text-[#005a46] border border-emerald-300 inline-flex items-center space-x-1 cursor-pointer transition-all shadow-2xs hover:scale-105"
+                          title="Bấm để xem chi tiết Kế hoạch sản xuất 2 Luồng (SX Mới & Kho TP)"
+                        >
+                          <Boxes className="h-3 w-3 shrink-0 text-[#005a46]" />
+                          <span>{item.routingStatus || "2 Luồng: SX Mới + Kho TP (FG)"}</span>
+                          <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-70" />
+                        </button>
+                      ) : item.routingStatus === "Chờ Routing mới" ? (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 inline-block">
                           Chờ Routing mới
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 inline-block">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-300 inline-block">
                           {item.routingStatus || "Đủ BOM/Routing"}
                         </span>
                       )}
                     </td>
 
-                    {/* SL Pick Kho TP: Hiển thị tinh gọn số lượng đã pick chọn từ kho, loại bỏ các nút thừa lộn xộn */}
+                    {/* SL Pick Kho TP: Hiển thị tinh gọn số lượng đã pick chọn từ kho */}
                     <td className="px-3 py-3.5 text-center whitespace-nowrap">
                       {item.qtyFromStock > 0 ? (
-                        <span className="font-mono font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md text-xs inline-block">
-                          {item.qtyFromStock} / {item.qty}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPlanItem(item);
+                            setIsProductionPlanModalOpen(true);
+                          }}
+                          className="font-mono font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-md text-xs inline-flex items-center space-x-1 cursor-pointer transition-colors shadow-2xs"
+                          title="Bấm xem phân bổ các lô & kế hoạch sản xuất"
+                        >
+                          <span>{item.qtyFromStock} / {item.qty}</span>
+                          <Eye className="h-3 w-3 text-emerald-600" />
+                        </button>
                       ) : (
                         <span className="text-slate-300 font-mono text-xs">0</span>
                       )}
@@ -536,7 +568,7 @@ export default function OrderDetailPage({ params }) {
                             type="button"
                             onClick={() => handleRevertItem(item.stt)}
                             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                            title="Hủy pick kho dòng này"
+                            title="Hủy pick kho dòng này (chuyển về SX mới 100%)"
                           >
                             <RotateCcw className="h-4 w-4" />
                           </button>
@@ -559,7 +591,7 @@ export default function OrderDetailPage({ params }) {
         </div>
       </div>
 
-      {/* POPUP CHI TIẾT MẶT HÀNG TRONG KHO & PICK CHỌN (CHUẨN 5 CỘT CỦA CHỊ ĐẸP) */}
+      {/* POPUP CHI TIẾT MẶT HÀNG TRONG KHO & PICK CHỌN THEO CẤP LÔ */}
       <WarehouseSyncPopup
         isOpen={isPopupOpen}
         onClose={() => setIsPopupOpen(false)}
@@ -567,6 +599,200 @@ export default function OrderDetailPage({ params }) {
         matchedStockList={matchedStockList}
         onConfirmPick={handleConfirmPick}
       />
+
+      {/* MODAL CHI TIẾT KẾ HOẠCH SẢN XUẤT 2 LUỒNG (SX MỚI & KHO TP - TYPE: FG) */}
+      {isProductionPlanModalOpen && selectedPlanItem && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            
+            {/* Header Modal */}
+            <div className="bg-gradient-to-r from-[#005a46] via-[#004737] to-[#013328] text-white px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-emerald-500/20 rounded-lg border border-emerald-400/30">
+                  <Split className="h-5 w-5 text-emerald-300" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                    <span>Kế Hoạch Sản Xuất & Phân Bổ 2 Luồng</span>
+                    <span className="text-[11px] bg-emerald-400/20 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-400/30 font-medium">
+                      Routing Type: New vs FG
+                    </span>
+                  </h3>
+                  <p className="text-xs text-emerald-100/80 mt-0.5">
+                    Đơn hàng: <strong className="text-white font-mono">{order.code}</strong> • Item: <strong className="text-white font-mono">{selectedPlanItem.itemCode}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsProductionPlanModalOpen(false)}
+                className="text-emerald-200 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Nội dung Modal */}
+            <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+              
+              {/* Thẻ tóm tắt thông số sản phẩm */}
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-wrap items-center justify-between gap-4 text-xs">
+                <div>
+                  <span className="text-slate-400 block text-[11px]">Tên sản phẩm</span>
+                  <span className="font-bold text-slate-900 text-sm">{selectedPlanItem.itemName || "Nhẫn Nữ"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[11px]">Chất liệu & Tuổi vàng</span>
+                  <span className="font-bold text-slate-800">Vàng - {order.gold}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[11px]">Ni tay / Size</span>
+                  <span className="font-bold text-slate-800">{selectedPlanItem.size || "---"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[11px]">Tổng số lượng đặt</span>
+                  <span className="font-black text-slate-900 text-sm font-mono">{selectedPlanItem.qty} món</span>
+                </div>
+              </div>
+
+              {/* 2 LUỒNG SẢN XUẤT */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* LUỒNG 1: SẢN XUẤT MỚI (NEW PRODUCTION) */}
+                <div className="border border-sky-200 bg-sky-50/30 rounded-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-sky-200">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 rounded-lg bg-sky-500 text-white flex items-center justify-center font-bold text-xs">
+                        1
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sky-950 text-sm">Luồng Sản Xuất Mới</h4>
+                        <span className="text-[10px] text-sky-700 font-mono">Routing Type: NEW_PROD</span>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-black bg-sky-100 text-sky-800 border border-sky-300 font-mono">
+                      {selectedPlanItem.qtyNewProduction || 0} món
+                    </span>
+                  </div>
+
+                  {selectedPlanItem.qtyNewProduction > 0 ? (
+                    <div className="space-y-3 text-xs">
+                      <div>
+                        <span className="text-slate-500 text-[11px] block">Quy trình Routing áp dụng:</span>
+                        <div className="mt-1 p-2.5 bg-white rounded-lg border border-sky-200 font-medium text-slate-800 leading-relaxed">
+                          <strong>Full Routing Sản Xuất Tiêu Chuẩn:</strong>
+                          <div className="text-[11px] text-slate-600 mt-1 flex flex-wrap gap-1">
+                            <span className="bg-slate-100 px-1.5 py-0.5 rounded">1. Đúc</span> → 
+                            <span className="bg-slate-100 px-1.5 py-0.5 rounded">2. Nguội</span> → 
+                            <span className="bg-slate-100 px-1.5 py-0.5 rounded">3. Gắn đá</span> → 
+                            <span className="bg-slate-100 px-1.5 py-0.5 rounded">4. Đánh bóng</span> → 
+                            <span className="bg-slate-100 px-1.5 py-0.5 rounded">5. Xi mạ</span> → 
+                            <span className="bg-slate-100 px-1.5 py-0.5 rounded">6. KCS Out</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-white rounded-lg border border-sky-200 space-y-1">
+                        <span className="text-[11px] font-bold text-sky-900 block">Kế hoạch vật tư & Cấp phát:</span>
+                        <p className="text-[11px] text-slate-600">
+                          • Cấp mới vàng định mức: <strong>{((parseFloat(selectedPlanItem.weight) || 0.5) * selectedPlanItem.qtyNewProduction).toFixed(4)} L</strong>
+                        </p>
+                        <p className="text-[11px] text-slate-600">
+                          • Cấp mới đá theo BOM: <strong>{selectedPlanItem.qtyNewProduction} bộ đá</strong>
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-white/70 rounded-lg border border-sky-200 text-xs text-sky-800 text-center italic">
+                      Toàn bộ số lượng đơn hàng (100%) được lấy từ Kho Thành Phẩm. Không phát sinh lệnh đúc & sản xuất mới.
+                    </div>
+                  )}
+                </div>
+
+                {/* LUỒNG 2: KHO THÀNH PHẨM (ROUTING CỐ ĐỊNH - TYPE: FG) */}
+                <div className="border border-emerald-300 bg-emerald-50/40 rounded-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-emerald-200">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 rounded-lg bg-[#005a46] text-white flex items-center justify-center font-bold text-xs">
+                        2
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-emerald-950 text-sm">Luồng Kho Thành Phẩm</h4>
+                        <span className="text-[10px] text-emerald-700 font-mono font-bold">Routing Cố Định (Type: FG)</span>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300 font-mono">
+                      {selectedPlanItem.qtyFromStock || 0} món
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <span className="text-slate-500 text-[11px] block">Routing cố định (Hard 2 công đoạn):</span>
+                      <div className="mt-1 p-2.5 bg-white rounded-lg border border-emerald-200 space-y-2">
+                        <div className="flex items-start space-x-2">
+                          <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#005a46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                          <div>
+                            <strong className="text-slate-900 text-xs">STG-SERVE-FG: Serve FG (Phục vụ kho TP)</strong>
+                            <p className="text-[11px] text-slate-500">Điều chuyển hàng từ két kho TP, kiểm tra ngoại quan & ni tay (Thời gian: 0.5 ngày)</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start space-x-2">
+                          <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#005a46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                          <div>
+                            <strong className="text-slate-900 text-xs">STG-PACKING-OUT: Packing Out (Đóng gói xuất kho)</strong>
+                            <p className="text-[11px] text-slate-500">Hoàn thiện đóng gói, dán tem vỉ theo quy cách đơn mới (Thời gian: 0.5 ngày)</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chi tiết các Lô hàng đã pick */}
+                    {selectedPlanItem.pickedLots && selectedPlanItem.pickedLots.length > 0 && (
+                      <div className="p-3 bg-white rounded-lg border border-emerald-200 space-y-1.5">
+                        <span className="text-[11px] font-bold text-[#005a46] block">
+                          Chi tiết các Lô hàng đã gán ({selectedPlanItem.pickedLots.length} lô):
+                        </span>
+                        <div className="space-y-1">
+                          {selectedPlanItem.pickedLots.map((lot, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-slate-50 p-1.5 rounded border border-slate-200 text-[11px]">
+                              <div>
+                                <span className="font-mono font-bold text-slate-900">{lot.lotCode}</span>
+                                <span className="text-slate-500 ml-1.5">(SO cũ: {lot.oldOrderCode})</span>
+                              </div>
+                              <div className="font-mono font-bold text-emerald-800">
+                                {lot.pickedQty} món
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="p-2.5 bg-emerald-100/60 rounded-lg text-[11px] text-emerald-950 flex items-center space-x-1.5">
+                      <PackageCheck className="h-4 w-4 text-emerald-700 shrink-0" />
+                      <span>Không cấp mới vàng & đá. Tự động giải phóng đá giữ chỗ về kho phụ liệu.</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Footer Modal */}
+            <div className="bg-slate-50 px-6 py-3 border-t border-slate-200 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setIsProductionPlanModalOpen(false)}
+                className="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,66 +1,68 @@
-# US-DH-04: Chọn Item Trong Kho Thành Phẩm (Chờ Xử Lý Lại) Vào Đơn Hàng
+# US-DH-04: Chọn Item Trong Kho Thành Phẩm (Chờ Xử Lý Lại) Vào Đơn Hàng & Phân Luồng KHSX
 
 > **Mã Story:** `US-DH-04`  
-> **Module:** Quản lý đơn hàng (Sales Order Management)  
-> **Feature:** Chọn Item Kho TP Chờ Xử Lý Lại (Finished Goods Rework Stock Allocation)  
-> **Phiên bản:** `1.0` | **Trạng thái:** `Sẵn sàng thẩm định (Ready for Review)`  
+> **Module:** Quản lý đơn hàng (Sales Order Management) & Kế hoạch sản xuất (Production Planning)  
+> **Feature:** Quản lý Cấp Lô Tồn Kho TP Chờ Xử Lý Lại & Gán Routing Cố Định (FG) Tách 2 Luồng KHSX  
+> **Phiên bản:** `2.0` | **Trạng thái:** `Sẵn sàng thẩm định (Ready for Review)`  
 
 ---
 
 ## 1. Tóm tắt User Story (User Story Statement)
 
-*   **AS A:** Nhân viên Kinh doanh / Kỹ thuật viên Đơn hàng / Quản lý Sản xuất (QLSP)
-*   **I WANT TO:** Quét và chọn các mặt hàng tồn trong Kho Thành Phẩm (trạng thái Chờ xử lý lại) có thuộc tính khớp 100% với dòng sản phẩm trong đơn hàng để gán trực tiếp số lượng vào đơn
-*   **SO THAT:** Tận dụng tối đa sản phẩm có sẵn trong kho, rút ngắn thời gian giao hàng cho khách, giảm chi phí sản xuất mới, và tự động điều tiết giải phóng giữ chỗ đá về kho phụ liệu.
+*   **AS A:** Nhân viên Kinh doanh (Sales) / Kỹ thuật viên Đơn hàng / Cán bộ Kế hoạch Sản xuất (QLSP)
+*   **I WANT TO:** 
+    1. Quét và pick chọn hàng từ các **Lô (Lot/Batch)** trong Kho Thành Phẩm (trạng thái Chờ xử lý lại) có thuộc tính khớp 100% (cùng Mã item, cùng Tuổi vàng, Ni tay, Đá) vào đơn hàng mới; hỗ trợ chọn từ nhiều lô khác nhau (nhập số lượng lẻ hoặc chọn hết lô).
+    2. Tự động gán **Routing Cố Định (Type: FG)** gồm 2 công đoạn hardcoded: `STG-SERVE-FG: Serve FG` và `STG-PACKING-OUT: Packing Out` cho số lượng lấy từ kho.
+    3. Tách Kế hoạch sản xuất (KHSX) thành **2 luồng độc lập**: Luồng Sản Xuất Mới (cho phần số lượng còn lại) và Luồng Kho Thành Phẩm (cho phần số lượng đã pick kho).
+*   **SO THAT:** Tối ưu hóa tồn kho thành phẩm có sẵn, rút ngắn chu kỳ giao hàng cho khách, tinh gọn quy trình sản xuất (không phải đúc/nguội/gắn đá lại đối với hàng kho), và minh bạch phân bổ lệnh điều độ tại xưởng.
 
 ---
 
-## 2. Bối cảnh & Mục tiêu Nghiệp vụ (Business Context & Objectives)
+## 2. Bối cảnh & Nguyên tắc Cốt lõi (First Principles)
 
-1.  **Kho Thành Phẩm Chờ Xử Lý Lại:** Là kho lưu trữ các sản phẩm trang sức hoàn chỉnh từ các đơn hàng trước đó bị khách hủy, giảm số lượng đặt, hoặc hàng mẫu sau chào hàng triển lãm. Các sản phẩm này đạt tiêu chuẩn chất lượng xuất kho nhưng cần được phân bổ và xử lý gắn vào đơn hàng mới.
-2.  **Nguyên tắc Khớp 100% Thuộc Tính:** Do tính chất đặc thù của ngành vàng bạc trang sức, sản phẩm tồn chỉ được phép gán vào đơn hàng khi thỏa mãn đồng thời:
-    *   Trùng khớp **Mã Item (30 ký tự)** & **Mã Drawing (11 ký tự)**.
-    *   Trùng khớp **Chất liệu & Tuổi vàng** (VD: `61Y`, `41.7W`, `75W`...).
-    *   Trùng khớp **Ni tay / Kích cỡ (Size)** (VD: `NNU - 015`, `VT - 048`...).
-    *   Trùng khớp **Màu đá & Loại đá** (VD: `Trắng`, `Xanh`, `CZ Trắng`...).
-3.  **Tự Động Điều Tiết Đá (Stone Allocation):** Khi tận dụng sản phẩm có sẵn trong kho, hệ thống tự động giải phóng lượng đá tấm/đá chủ tương ứng đang tạm giữ chỗ (`Partially Released`) để chuyển lại về kho phụ liệu, tránh chiếm dụng vốn và hao hụt đá.
+1.  **Kho Thành Phẩm Chờ Xử Lý Lại (FG Rework Warehouse):** 
+    Là kho lưu trữ các sản phẩm hoàn chỉnh từ đơn hàng cũ bị hủy/giảm số lượng hoặc hàng triển lãm. Hàng đạt chuẩn chất lượng xuất xưởng, được quản lý nghiêm ngặt theo **Cấp Lô (Lot Code / Bag Code)** kèm vị trí két lưu trữ.
+2.  **3 Bước Luồng Xử Lý Chuẩn Nghiệp Vụ:**
+    *   **Bước 1 - Pick Lô:** Kinh doanh chọn lô trong kho thành phẩm cùng item, cùng tuổi vàng. Cho phép pick từ nhiều lô khác nhau (chọn hết lô hoặc gõ số lượng lẻ cho từng lô). Số lượng còn lại sau khi trừ đi phần pick kho sẽ tự động chuyển sang luồng **Sản xuất mới**.
+    *   **Bước 2 - Gán Routing Cố Định (Type: FG):** Đối với số lượng pick từ kho, hệ thống tự động gán Routing cố định chỉ gồm 2 công đoạn:
+        *   `STG-SERVE-FG: Serve FG (Phục vụ kho TP)`: Điều chuyển hàng từ két kho TP, kiểm tra ngoại quan & ni tay (Thời gian: 0.5 ngày).
+        *   `STG-PACKING-OUT: Packing Out (Đóng gói xuất kho)`: Hoàn thiện đóng gói, dán tem vỉ theo SO mới và sẵn sàng xuất giao (Thời gian: 0.5 ngày).
+    *   **Bước 3 - Phân Luồng KHSX (2 Workflows):** Khi chuyển sang Kế hoạch Sản xuất, dòng hàng được bóc tách làm 2 luồng công việc rõ ràng:
+        *   *Luồng 1 (Sản xuất mới):* Áp dụng Full Routing tiêu chuẩn (Đúc → Nguội → Gắn đá → Đánh bóng → Xi mạ → KCS) kèm cấp mới vàng & đá theo BOM.
+        *   *Luồng 2 (Kho TP):* Áp dụng Routing Cố Định (Type: FG, 2 công đoạn), không cấp mới vàng/đá và tự động giải phóng lượng đá giữ chỗ tương ứng về kho phụ liệu.
 
 ---
 
-## 3. Luồng Nghiệp vụ (Business Flow)
+## 3. Sơ đồ Luồng Nghiệp vụ (Mermaid Business Flow)
 
 ```mermaid
 flowchart TD
-    Start([1. Mở màn hình Chi tiết Đơn hàng: /orders/:id]) --> CheckStatus{2. Kiểm tra trạng thái đơn hợp lệ?<br>Chờ KT / Đủ TT KT / Chờ xác nhận}
+    Start([1. Mở Chi tiết Đơn hàng: /orders/:id]) --> CheckStatus{2. Trạng thái đơn hợp lệ?<br>Chờ KT / Đủ TT KT / Chờ xác nhận}
     
-    CheckStatus -->|Không hợp lệ| HideBanner[Ẩn Banner & Khóa chức năng pick kho]
+    CheckStatus -->|Không hợp lệ| HideBanner[Ẩn Banner & Khóa thao tác pick kho]
+    CheckStatus -->|Hợp lệ| ScanStock[3. Hệ thống quét tồn kho khớp 100%:<br>Mã Item, Tuổi vàng, Ni tay, Màu đá]
     
-    CheckStatus -->|Hợp lệ| ScanStock[3. Hệ thống quét Kho TP Chờ xử lý lại<br>khớp 100% Mã item, Tuổi vàng, Ni, Đá]
+    ScanStock --> HasMatch{Có lô tồn kho khớp &<br>SL khả dụng > 0?}
+    HasMatch -->|Không có| TableNormal[Bảng đơn hàng hiển thị bình thường]
+    HasMatch -->|Có tồn kho| ShowBanner[4. Hiển thị Banner gợi ý tồn kho theo cấp Lô]
     
-    ScanStock --> HasMatch{Có sản phẩm khớp &<br>SL tồn kho > 0?}
+    ShowBanner --> ClickOpen[5. Bấm 'Nhấn mở popup xem chi tiết & pick chọn']
+    ClickOpen --> OpenPopup[6. Hiển thị Popup 'Danh Sách Mặt Hàng Trong Kho TP'<br>Giao diện bổ sung CỘT LÔ HÀNG giữa Mã Item & SL Đặt]
     
-    HasMatch -->|Không có| TableNormal[Hiển thị bảng đơn hàng bình thường<br>Cột SL Pick Kho TP = 0]
+    OpenPopup --> PickAction{7. Kinh doanh thao tác chọn Lô}
+    PickAction -->|Bấm nút 'Hết lô'| PickMax[Gán SL pick = SL khả dụng của lô đó]
+    PickAction -->|Gõ SL lẻ cho từng lô| InputQty[Nhập số lượng: 0 <= SL <= Tồn lô]
+    PickAction -->|Chọn nhiều lô cho 1 Item| MultiLots[Cộng dồn SL Pick từ các lô]
     
-    HasMatch -->|Có tồn kho| ShowBanner[4. Hiển thị Banner thông minh:<br>'Phát hiện tồn kho khớp 100%...']
+    PickAction --> ClickConfirm[8. Bấm nút: 'Xác nhận (X món)']
     
-    ShowBanner --> ClickOpen[5. Bấm nút: 'Nhấn mở popup xem chi tiết & pick chọn']
-    ClickOpen --> OpenModal[6. Hiển thị Modal/Popup 'Danh Sách Mặt Hàng Trong Kho TP']
+    ClickConfirm --> Step1[Bước 1: Tính toán phân bổ số lượng:<br>• SL Kho TP = Tổng pick các lô<br>• SL Còn lại = SL Đặt - SL Kho TP -> Chuyển SX Mới]
     
-    OpenModal --> UserAction{7. Thao tác trên Modal}
+    Step1 --> Step2[Bước 2: Gán Routing Cố Định Type: FG:<br>• CĐ 1: STG-SERVE-FG: Serve FG<br>• CĐ 2: STG-PACKING-OUT: Packing Out]
     
-    UserAction -->|Tick chọn / Bỏ chọn lô| ToggleCheckbox[Cập nhật Checkbox & gán mặc định SL pick]
-    UserAction -->|Nhập số lượng pick| InputQty[Validate: 0 <= SL Pick <= Min Tồn kho, SL Đặt]
+    Step2 --> Step3[Bước 3: Tách KHSX thành 2 luồng độc lập:<br>• Luồng SX Mới: Full Routing + Cấp mới vàng/đá<br>• Luồng Kho TP: Routing FG + Nhả đá giữ chỗ]
     
-    UserAction -->|Bấm nút 'Đóng'| CloseCancel[Đóng popup, giữ nguyên trạng thái cũ]
-    
-    UserAction -->|Bấm 'Xác nhận X món'| ConfirmPick[8. Hệ thống ghi nhận số lượng pick]
-    
-    ConfirmPick --> UpdateOrder[9. Cập nhật Đơn hàng:<br>• Cột 'SL Pick Kho TP' = Số lượng đã gán<br>• Cột 'Ghi chú' = Lưu vết Bag Code & SO cũ<br>• Tự động nhả đá giữ chỗ về kho phụ liệu]
-    
-    UpdateOrder --> ToastSuccess[10. Đóng popup & Hiện Toast thông báo thành công]
-    
-    ToastSuccess --> RevertAction{11. Người dùng muốn hoàn tác?}
-    RevertAction -->|Bấm icon Hoàn tác ⟲ tại dòng| ExecRevert[Hủy gán kho dòng đó<br>Chuyển về Sản xuất mới 100%]
+    Step3 --> UpdateUI[9. Cập nhật Bảng Dòng Sản Phẩm:<br>• Badge BOM/Routing: '2 Luồng: SX Mới + Kho TP (FG)'<br>• Cột SL Pick Kho TP: 'X / Tổng Đặt'<br>• Click xem Modal Kế Hoạch 2 Luồng]
 ```
 
 ---
@@ -69,140 +71,110 @@ flowchart TD
 
 | Mã BR | Tên quy tắc | Nội dung quy tắc chi tiết |
 | :---: | :--- | :--- |
-| **BR-01** | **Điều kiện trạng thái đơn hàng** | Chức năng chỉ kích hoạt khi đơn hàng ở 1 trong 3 trạng thái: `Chờ Kỹ thuật`, `Đủ thông tin KT`, hoặc `Chờ xác nhận (Chờ duyệt)`. Khi đơn đã chuyển `Đã chuyển KHSX` hoặc `Đang sản xuất`, chức năng bị khóa. |
-| **BR-02** | **So khớp 100% thuộc tính** | Điều kiện khớp bắt buộc: `ItemCode` == `Stock.ItemCode` VÀ `GoldType` == `Stock.GoldType` VÀ `Size` == `Stock.Size` VÀ `StoneColor` == `Stock.StoneColor`. Nếu lệch bất kỳ 1 thuộc tính nào, tuyệt đối không gợi ý. |
-| **BR-03** | **Ràng buộc số lượng pick** | $0 \le \text{SL Pick} \le \min(\text{SL Tồn khả dụng của lô}, \text{SL Đặt của dòng đơn})$. Người dùng không được phép nhập số âm hoặc vượt quá số lượng tồn hiện có. |
-| **BR-04** | **Phân loại nguồn hàng (Source Type)** | • Nếu $\text{SL Pick} = \text{SL Đặt}$: Nguồn hàng là `WAREHOUSE_REWORK` (Tận dụng kho 100%, không cần đúc mới).<br>• Nếu $0 < \text{SL Pick} < \text{SL Đặt}$: Nguồn hàng là `SPLIT_ALLOCATION` (Tách nguồn: Đã pick kho X món, sản xuất mới phần còn lại). |
-| **BR-05** | **Áp dụng tiền công khách hàng mới** | Sản phẩm pick từ kho cũ vẫn áp dụng theo bảng đơn giá tiền công của khách hàng hiện tại trên SO mới (không phụ thuộc vào tiền công của SO cũ). |
-| **BR-06** | **Tự động điều tiết đá (Stone Release)** | Ngay khi xác nhận pick $N$ món từ kho, trạng thái giữ chỗ đá của dòng chuyển sang `PARTIALLY_RELEASED`. Hệ thống tự động giải phóng $N$ phần đá giữ chỗ trả về tồn kho phụ liệu. |
-| **BR-07** | **Phân biệt Ghi chú sản phẩm & Dữ liệu kho** | Cột **Ghi chú** trên bảng dòng đơn hàng là thông tin kỹ thuật/gia công riêng của sản phẩm, tuyệt đối không tự ý chèn text pick kho vào cột này. Thông tin gán kho được thể hiện tập trung và trực quan qua cột **SL PICK KHO TP** và trường dữ liệu `assignedStock` phục vụ xuất kho. |
+| **BR-01** | **Điều kiện trạng thái đơn hàng** | Chỉ kích hoạt khi đơn ở trạng thái tiền sản xuất: `Chờ Kỹ thuật`, `Đủ thông tin KT`, hoặc `Chờ xác nhận (Chờ duyệt)`. |
+| **BR-02** | **So khớp 100% thuộc tính** | Bắt buộc khớp đồng thời 4 yếu tố: `Mã Item (30 ký tự)`, `Chất liệu & Tuổi vàng`, `Ni tay/Size`, và `Màu đá/Loại đá`. |
+| **BR-03** | **Quản lý theo Cấp Lô (Lot/Batch)** | Mỗi bản ghi trong kho thành phẩm được định danh bằng `Mã Lô (LotCode)` và `Túi hàng (BagCode)`. Cho phép 1 Item có nhiều lô tồn với ngày nhập kho, vị trí két và số lượng khác nhau. |
+| **BR-04** | **Cơ chế Pick Lô linh hoạt** | Kinh doanh có quyền: (1) Nhập số lượng lẻ cho từng lô; (2) Click nút **"Hết lô"** để pick toàn bộ tồn của lô đó; (3) Chọn kết hợp nhiều lô cho cùng 1 item. Tổng số lượng pick không vượt quá số lượng đặt của dòng đơn hàng. |
+| **BR-05** | **Tự động chuyển SL còn lại sang SX Mới** | $\text{SL SX Mới} = \max(0, \text{SL Đặt} - \text{SL Pick Kho})$. Nếu $\text{SL SX Mới} > 0$: Nguồn hàng là `SPLIT_ALLOCATION` (2 luồng). Nếu $\text{SL SX Mới} = 0$: Nguồn hàng là `WAREHOUSE_REWORK` (100% Kho TP). |
+| **BR-06** | **Gán Routing Cố Định (Hard 2 Công đoạn - Type: FG)** | Hàng pick từ kho thành phẩm bắt buộc áp dụng mã Routing `RT-FG-FIXED` (Loại: `FG`), gồm đúng 2 công đoạn: `STG-SERVE-FG (Serve FG)` và `STG-PACKING-OUT (Packing Out)`. Tuyệt đối không sinh các công đoạn đúc, làm nguội, gắn đá, xi mạ cho phần hàng kho. |
+| **BR-07** | **Phân luồng KHSX (Production Plan Split)** | Khi đơn hàng chuyển sang phân hệ KHSX/Điều độ, hệ thống tự động sinh 2 nhánh lệnh sản xuất con: Nhánh A (SX Mới - Type: NEW_PROD) và Nhánh B (Kho TP - Type: FG) với định mức nguyên vật liệu và tiến độ độc lập. |
+| **BR-08** | **Giải phóng giữ chỗ đá (Stone Release)** | Tự động giải phóng đá giữ chỗ tương ứng với số lượng pick từ kho (`PARTIALLY_RELEASED`), tránh chiếm dụng đá tại kho phụ liệu. |
+| **BR-09** | **Áp dụng bảng giá tiền công SO mới** | Hàng pick từ kho cũ vẫn áp dụng đơn giá tiền công thỏa thuận theo khách hàng của đơn hàng mới. |
+| **BR-10** | **Bảo toàn Ghi chú kỹ thuật** | Cột Ghi chú trên bảng đơn hàng chỉ chứa yêu cầu kỹ thuật riêng, không chèn văn bản pick kho rườm rà. Thông tin pick kho được quản lý tập trung qua cột `SL PICK KHO TP` và danh sách `pickedLots`. |
 
 ---
 
-## 5. Đặc tả Giao diện & Trường Dữ liệu (Field Specifications)
+## 5. Đặc tả Giao diện & Trường Dữ liệu (UI / Layout Specifications)
 
-### 5.1. Banner Thông minh Phát hiện Tồn kho (Top Banner)
-*   **Vị trí:** Ngay phía trên bảng danh sách sản phẩm của đơn hàng.
-*   **Điều kiện hiển thị:** Đơn hàng đủ điều kiện (BR-01) VÀ tổng tồn kho khớp $> 0$.
-*   **Nội dung:** 
-    *   Tiêu đề: `Phát Hiện Tồn Kho Thành Phẩm Chờ Xử Lý Khớp 100% Thuộc Tính!`
-    *   Mô tả: `Có sẵn {Tổng SL tồn} sản phẩm trong kho có thể tận dụng để giao ngay cho khách hàng.`
-    *   Nút bấm: `[Nhấn mở popup xem chi tiết & pick chọn →]` (Màu xanh thương hiệu `#005a46`, click mở Modal).
+### 5.1. Popup Danh Sách Mặt Hàng Trong Kho TP Chờ Xử Lý (WarehouseSyncPopup)
+Vị trí cột được chuẩn hóa chính xác theo yêu cầu thực tế của Chị đẹp:
 
-### 5.2. Modal / Popup Xem Chi Tiết & Pick Chọn Tồn Kho
-Bảng dữ liệu trong Popup gồm các cột chuẩn nghiệp vụ:
+| STT | Tên cột trên Giao diện | Vị trí / Căn lề | Mô tả hiển thị & Tương tác |
+| :---: | :--- | :---: | :--- |
+| 1 | **Checkbox** | Căn giữa | Chọn/Bỏ chọn Lô hàng. Có checkbox tổng tại header. |
+| 2 | **MÃ ITEM** | Căn trái | Mã Item 30 ký tự (in đậm), Tên sản phẩm, Ni tay và Màu đá. |
+| 3 | **LÔ HÀNG (LOT)** | **Căn giữa (Cột thêm mới)** | **Nằm ngay giữa MÃ ITEM và SL ĐẶT** (Khung đỏ). Hiển thị Badge Mã Lô (VD: `LOT-TP-2607-02`), Vị trí két kho bên dưới (VD: `Két K1 - Ngăn A03`). |
+| 4 | **SL ĐẶT** | Căn giữa | Số lượng khách đặt tại dòng đơn hàng (VD: `100 món`). |
+| 5 | **SỐ LƯỢNG TỒN KHO** | Căn giữa | Badge số lượng tồn khả dụng của lô (VD: `15 món`, `25 món`). |
+| 6 | **MÃ ĐƠN HÀNG CŨ** | Căn giữa | Mã SO cũ kèm icon `ⓘ` (Tooltip: Lý do tồn kho & Tên khách hàng cũ). |
+| 7 | **NGUYÊN LIỆU - TUỔI VÀNG** | Căn giữa | Nhãn tuổi vàng (VD: `Vàng - 61Y`). |
+| 8 | **NGÀY NHẬP KHO** | Căn giữa | Ngày sản phẩm vào kho kèm icon Lịch. |
+| 9 | **SL PICK CHỌN** | Căn giữa | Ô nhập số lượng pick lẻ + Nút chọn nhanh **`[Hết lô]`** (tự điền tối đa khả dụng). |
 
-| STT | Tên cột | Kiểu dữ liệu | Bắt buộc | Mô tả & Quy tắc hiển thị / Tương tác |
-| :---: | :--- | :--- | :---: | :--- |
-| 1 | **Checkbox** | Lựa chọn (Boolean) | Có | Tick chọn/bỏ chọn lô hàng. Có ô chọn tất cả ở Header. |
-| 2 | **Mã Item** | Chuỗi (30 ký tự) | Có | Mã item 30 ký tự, hiển thị kèm Tên sản phẩm, Ni tay và Màu đá. |
-| 3 | **SL Đặt** | Số nguyên | Có | Số lượng khách đặt tại dòng đơn hàng tương ứng (Read-only). |
-| 4 | **Số Lượng Tồn Kho** | Số nguyên | Có | Số lượng khả dụng của túi tồn kho (VD: `15 món`, `25 món`). Badge xanh. |
-| 5 | **Mã Đơn Hàng Cũ** | Chuỗi (SO Code) | Có | Mã SO trước đây đã bị hủy/giảm (VD: `SO2607089`). Rê chuột hiển thị **Tooltip lý do tồn kho** & **Tên khách hàng cũ**. |
-| 6 | **Nguyên Liệu - Tuổi Vàng** | Chuỗi | Có | Hiển thị dạng: `Vàng - 61Y`, `Vàng - 41.7W`... |
-| 7 | **Ngày Nhập Kho** | Ngày (`DD/MM/YYYY`) | Có | Ngày sản phẩm được chuyển vào kho chờ xử lý lại kèm icon Lịch. |
-| 8 | **SL PICK CHỌN** | Ô nhập số (Number Input) | Có | Cho phép nhập số lượng pick. Mặc định bằng $\min(\text{SL Đặt}, \text{SL Tồn})$. Chỉ cho nhập khi dòng được tick chọn. Bị khóa (`disabled`) khi bỏ tick. |
-
-*   **Footer Modal:**
-    *   Nút **`[Đóng]`**: Nằm bên trái nút xác nhận, đóng modal và hủy các thay đổi chưa lưu.
-    *   Nút **`[Xác nhận (X món)]`**: Hiển thị tổng số lượng món đã chọn pick trên toàn bộ các dòng được tick, click để thực thi gán kho.
-
-### 5.3. Hiển thị Trên Bảng Chi Tiết Sản Phẩm Đơn Hàng (/orders/:id)
-*   **Cột `SL PICK KHO TP`:**
-    *   Khi chưa pick: Hiển thị số `0` màu xám nhạt tinh gọn (loại bỏ hoàn toàn các nút bấm thừa).
-    *   Khi đã pick: Hiển thị badge tỷ lệ số lượng thanh lịch (VD: `40 / 100`, `60 / 100`).
-*   **Cột `THAO TÁC`:**
-    *   Nếu dòng đã pick kho: Hiển thị icon **Hoàn tác `⟲`** (tooltip: "Hủy pick kho dòng này"). Bấm vào sẽ reset dòng về sản xuất mới 100%.
-    *   Icon **Xóa dòng `🗑️`**: Thao tác xóa sản phẩm khỏi đơn hàng.
+*   **Footer Popup:**
+    *   Tóm tắt tổng quan thời gian thực: `Tổng pick kho TP: X món` | `SL còn lại SX mới: Y món`.
+    *   Nút **`[Đóng]`** (Hủy thao tác).
+    *   Nút **`[Xác nhận (X món)]`** (Thực thi gán kho, áp dụng Routing FG và phân luồng KHSX).
 
 ---
 
-## 6. Ma trận Phân quyền Người dùng (RBAC Matrix)
+### 5.2. Hiển thị Trên Bảng Dòng Sản Phẩm Đơn Hàng (/orders/:id)
 
-| Chức năng / Tác vụ | Nhân viên Kinh doanh (Sale) | Kỹ thuật viên (KT) | Quản lý Sản xuất (QLSP) | Quản trị viên (Admin) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Xem Banner gợi ý tồn kho** | ✅ Xem | ✅ Xem | ✅ Xem | ✅ Xem |
-| **Mở Popup xem chi tiết kho** | ✅ Mở & Xem | ✅ Mở & Xem | ✅ Mở & Xem | ✅ Mở & Xem |
-| **Thực hiện Pick chọn số lượng** | ✅ Thao tác | ✅ Thao tác | ✅ Thao tác | ✅ Thao tác |
-| **Xác nhận gán kho vào đơn hàng** | ✅ Xác nhận | ✅ Xác nhận | ✅ Xác nhận | ✅ Xác nhận |
-| **Hủy gán kho (Hoàn tác dòng)** | ✅ Hoàn tác | ✅ Hoàn tác | ✅ Hoàn tác | ✅ Hoàn tác |
-
----
-
-## 7. Tiêu chí Chấp nhận (Acceptance Criteria - Gherkin)
-
-### AC 1: Hiển thị Banner gợi ý tồn kho khi đơn hàng có sản phẩm khớp 100%
-*   **Given:** Đơn hàng `SO2608011` ở trạng thái `Chờ Kỹ thuật`.
-*   **And:** Trong Kho TP Chờ xử lý lại có 3 lô hàng khớp 100% thuộc tính với tổng số lượng là 160 món.
-*   **When:** Người dùng truy cập vào trang chi tiết đơn hàng `/orders/11`.
-*   **Then:** Hệ thống hiển thị Banner màu xanh thông báo: *"Phát Hiện Tồn Kho Thành Phẩm Chờ Xử Lý Khớp 100% Thuộc Tính! Có sẵn 160 sản phẩm..."*.
-*   **And:** Banner có nút bấm *"Nhấn mở popup xem chi tiết & pick chọn →"*.
-
-### AC 2: Mở Popup và tải dữ liệu tồn kho chuẩn xác
-*   **Given:** Banner gợi ý tồn kho đang hiển thị.
-*   **When:** Người dùng click vào nút *"Nhấn mở popup xem chi tiết & pick chọn →"*.
-*   **Then:** Modal bật lên trong thời gian $\le 200\text{ms}$ với tiêu đề *"Danh Sách Mặt Hàng Trong Kho Thành Phẩm Chờ Xử Lý"*.
-*   **And:** Bảng hiển thị đầy đủ các cột: Checkbox, Mã Item, SL Đặt, SL Tồn kho, Mã đơn cũ, Tuổi vàng, Ngày nhập kho, SL Pick chọn.
-*   **And:** Các dòng mặc định được tick chọn và ô `SL PICK CHỌN` tự điền số lượng mặc định bằng $\min(\text{SL Đặt}, \text{SL Tồn})$.
-
-### AC 3: Validation số lượng nhập trong ô SL Pick Chọn
-*   **Given:** Người dùng đang thao tác tại ô `SL PICK CHỌN` của lô tồn có tồn khả dụng là 20 món và số lượng dòng đặt là 100 món.
-*   **When:** Người dùng nhập số lượng `25` (vượt quá tồn kho).
-*   **Then:** Hệ thống tự động giới hạn và đưa giá trị về giá trị tối đa cho phép là `20`.
-*   **When:** Người dùng nhập số `0` hoặc xóa trắng.
-*   **Then:** Dòng đó tự động bị bỏ tick Checkbox và tổng số lượng trên nút xác nhận được trừ đi tương ứng.
-
-### AC 4: Thao tác Checkbox chọn / bỏ chọn và Chọn tất cả
-*   **Given:** Modal đang hiển thị danh sách các lô hàng tồn.
-*   **When:** Người dùng bỏ tick Checkbox tại một dòng bất kỳ.
-*   **Then:** Ô `SL PICK CHỌN` của dòng đó chuyển sang trạng thái disabled và giá trị về `0`.
-*   **When:** Người dùng tick chọn lại dòng đó.
-*   **Then:** Ô `SL PICK CHỌN` được mở khóa và tự động điền lại số lượng khả dụng mặc định.
-*   **When:** Người dùng click Checkbox tổng trên tiêu đề bảng.
-*   **Then:** Hệ thống tự động chọn tất cả hoặc bỏ chọn tất cả toàn bộ các dòng.
-
-### AC 5: Xác nhận Pick kho và cập nhật đơn hàng thành công
-*   **Given:** Người dùng đã chọn pick tổng cộng 130 sản phẩm từ kho.
-*   **When:** Người dùng click vào nút *"Xác nhận (130 món)"*.
-*   **Then:** Modal tự động đóng lại.
-*   **And:** Hệ thống hiển thị Toast thông báo: *"Đã đồng bộ và pick chọn thành công sản phẩm từ Kho Thành Phẩm vào đơn hàng!"*.
-*   **And:** Tại bảng chi tiết sản phẩm của đơn hàng:
-    *   Cột `SL PICK KHO TP` hiển thị tỷ lệ đã gán (VD: `40/100`, `60/100`, `30/100`).
-    *   Cột `Ghi chú` giữ nguyên thông tin ghi chú kỹ thuật riêng của sản phẩm (hoặc `---`), không chèn văn bản pick kho.
-    *   Cột `Thao tác` xuất hiện thêm icon Hoàn tác `⟲`.
-
-### AC 6: Hoàn tác / Hủy gán kho cho từng dòng sản phẩm
-*   **Given:** Dòng sản phẩm STT 1 đang có `SL PICK KHO TP` là `40/100`.
-*   **When:** Người dùng click vào icon Hoàn tác (`⟲`) tại cột Thao tác của dòng STT 1.
-*   **Then:** Dòng STT 1 được reset về trạng thái sản xuất mới 100%:
-    *   `SL PICK KHO TP` trở về `0`.
-    *   Ghi chú trở về `---`.
-    *   Nguồn hàng chuyển thành `NEW_PRODUCTION`.
-    *   Lượng đá giữ chỗ được kích hoạt giữ lại cho sản xuất mới.
-
-### AC 7: Khóa chức năng khi đơn hàng không ở trạng thái hợp lệ
-*   **Given:** Đơn hàng ở trạng thái `Đã chuyển KHSX` hoặc `Đang sản xuất`.
-*   **When:** Người dùng mở xem chi tiết đơn hàng.
-*   **Then:** Banner gợi ý tồn kho không hiển thị.
-*   **And:** Cột `SL PICK KHO TP` chỉ hiển thị số lượng ở chế độ Read-only, không cho phép can thiệp chỉnh sửa.
+1.  **Cột `Trạng thái BOM/Routing`:**
+    *   Nếu có pick kho: Hiển thị badge tương tác `2 Luồng: SX Mới + Kho TP (FG)` hoặc `Routing Cố định (FG - 2 CĐ)`. Bấm vào mở ngay **Modal Kế Hoạch Sản Xuất 2 Luồng**.
+2.  **Cột `SL Pick Kho TP`:**
+    *   Hiển thị tỷ lệ số lượng đã pick dạng `{SL Pick} / {SL Đặt}` kèm icon con mắt `👁️` bấm xem phân bổ các lô.
+3.  **Cột `Thao tác`:**
+    *   Icon **Hoàn tác `⟲`**: Hủy gán kho cho dòng, đưa số lượng về 100% Sản xuất mới.
+    *   Icon **Xóa `🗑️`**: Xóa dòng sản phẩm khỏi đơn hàng.
 
 ---
 
-## 8. Ma trận Trường hợp Biên (Edge Cases Matrix)
-
-| Trường hợp biên (Edge Case) | Mức độ | Hành vi hệ thống mong đợi |
-| :--- | :---: | :--- |
-| **Nhiều lô hàng cùng khớp 1 dòng đặt** | Trung bình | Liệt kê từng lô theo mã túi (`BagCode`) riêng biệt để người dùng chủ động chọn lô có ngày nhập kho cũ nhất (nguyên tắc FIFO). |
-| **Tồn kho khả dụng nhỏ hơn SL đặt** | Thấp | Tự động tách nguồn hàng thành `SPLIT_ALLOCATION`: phần thiếu chuyển sang lệnh đúc mới tự động. |
-| **Tranh chấp tồn kho đồng thời (Concurrency)** | Cao | Khi người dùng bấm Xác nhận, hệ thống kiểm tra lại tồn kho tức thời. Nếu lô hàng đã bị đơn khác pick trước, hiển thị cảnh báo: *"Lô hàng [BagCode] đã được phân bổ cho đơn khác, vui lòng chọn lại"* và tải lại số liệu mới. |
-| **Khách hàng thay đổi yêu cầu sau khi đã pick** | Trung bình | Người dùng có thể bấm icon `⟲` để nhả hàng tồn về kho bất kỳ lúc nào trước khi đơn chuyển sang KHSX. |
+### 5.3. Modal Kế Hoạch Sản Xuất & Phân Bổ 2 Luồng (Production Plan Modal)
+Bật lên khi click vào badge Routing hoặc cột SL Pick Kho TP:
+*   **Header:** Tiêu đề, Mã SO, Mã Item, Tuổi vàng, Ni tay, Tổng số lượng đặt.
+*   **Card Luồng 1 (Sản Xuất Mới - Sky Theme):**
+    *   Số lượng sản xuất mới: `qtyNewProduction` món.
+    *   Loại Routing: `Routing Tiêu Chuẩn (Full Stages: Đúc → Nguội → Gắn đá → Đánh bóng → Xi mạ → KCS)`.
+    *   Kế hoạch vật tư: Cấp mới 100% vàng định mức & đá theo BOM.
+*   **Card Luồng 2 (Kho Thành Phẩm - Emerald Theme):**
+    *   Số lượng kho thành phẩm: `qtyFromStock` món.
+    *   Loại Routing: **Routing Cố Định (Type: FG - Hard 2 Công đoạn)**.
+        *   `STG-SERVE-FG`: Serve FG (Phục vụ kho TP) - 0.5 ngày.
+        *   `STG-PACKING-OUT`: Packing Out (Đóng gói xuất kho) - 0.5 ngày.
+    *   Bảng chi tiết các Lô hàng thực tế đã gán (`lotCode`, `oldOrderCode`, `pickedQty`, `location`).
+    *   Vật tư: Không cấp mới vàng/đá; giải phóng đá giữ chỗ về kho phụ liệu.
 
 ---
 
-## 9. Definition of Done (DoD)
+## 6. Tiêu chí Chấp nhận (Acceptance Criteria - Gherkin)
 
-- [x] Đã chuẩn hóa tài liệu đặc tả User Story theo chuẩn BA-Kit và cấu trúc quy định của dự án.
-- [x] Đã hiện thực hóa giao diện Banner, Popup 8 cột và Bảng đơn hàng trên Prototype ([`/orders/11`](file:///d:/BA/H%E1%BB%8Dc%20AI/order-prototype/src/app/orders/%5Bid%5D/page.js)).
-- [x] Đã kiểm thử đầy đủ các kịch bản AC (Pick thành công, Validation giới hạn Max, Hoàn tác dòng).
-- [x] Giao diện tuân thủ nguyên tắc tinh gọn (Strict Minimalism), loại bỏ hoàn toàn các nút thừa và badge rườm rà.
-- [x] Lưu trữ tài liệu vào kho mã nguồn: [`docs/user-stories/US-DH-04-chon-item-kho-thanh-pham-cho-xu-ly-lai.md`](file:///d:/BA/H%E1%BB%8Dc%20AI/order-prototype/docs/user-stories/US-DH-04-chon-item-kho-thanh-pham-cho-xu-ly-lai.md).
+### AC 1: Hiển thị Cột Lô Hàng (Lot) đúng vị trí trong Popup
+*   **Given:** Người dùng mở Popup "Danh Sách Mặt Hàng Trong Kho Thành Phẩm Chờ Xử Lý".
+*   **Then:** Cột **LÔ HÀNG (LOT)** hiển thị ngay giữa cột **MÃ ITEM** và cột **SL ĐẶT**.
+*   **And:** Mỗi dòng lô hiển thị rõ Mã Lô (`LOT-TP-2607-02`), Túi hàng (`BAG-TP-9915`) và Vị trí két lưu trữ.
+
+### AC 2: Chọn từ nhiều lô và nút "Hết lô"
+*   **Given:** Một Item có 3 lô tồn kho: Lô A (15 món), Lô B (25 món), Lô C (20 món).
+*   **When:** Người dùng bấm nút "Hết lô" tại Lô A.
+*   **Then:** Ô SL pick của Lô A tự động điền `15`.
+*   **When:** Người dùng nhập `10` tại Lô B và `0` tại Lô C.
+*   **Then:** Tổng số lượng pick kho là $15 + 10 = 25$ món.
+*   **And:** Số lượng còn lại chuyển sang Sản xuất mới là $100 - 25 = 75$ món.
+
+### AC 3: Gán Routing Cố Định (Type: FG) và Phân 2 Luồng KHSX khi Xác nhận
+*   **Given:** Người dùng xác nhận pick 60 món từ kho cho dòng sản phẩm có SL đặt là 100 món.
+*   **When:** Bấm nút "Xác nhận (60 món)".
+*   **Then:** Dòng sản phẩm cập nhật:
+    *   `SL Pick Kho TP` = `60 / 100`.
+    *   `Trạng thái BOM/Routing` = `2 Luồng: SX Mới + Kho TP (FG)`.
+    *   Routing cho phần 60 món được cố định mã `RT-FG-FIXED` (Type: `FG`) gồm đúng 2 công đoạn `STG-SERVE-FG` và `STG-PACKING-OUT`.
+    *   KHSX được tách thành 2 luồng: 40 món SX Mới (Full Routing) và 60 món Kho TP (Routing FG).
+
+### AC 4: Mở Modal xem chi tiết KHSX 2 Luồng từ dòng sản phẩm
+*   **Given:** Dòng sản phẩm đã được gán kho thành công.
+*   **When:** Người dùng click vào badge Routing `2 Luồng: SX Mới + Kho TP (FG)` hoặc click ô `SL Pick Kho TP`.
+*   **Then:** Modal "Kế Hoạch Sản Xuất & Phân Bổ 2 Luồng" bật lên hiển thị rõ ràng 2 Card: Luồng 1 (SX Mới: 40 món, Full Routing, cấp vàng/đá) và Luồng 2 (Kho TP: 60 món, Routing FG 2 công đoạn, danh sách các Lô đã gán).
+
+---
+
+## 7. Definition of Done (DoD)
+
+- [x] Đã đánh giá nghiệp vụ và bổ sung cấp Lô (Lot/Batch Code) theo First Principles.
+- [x] Đã hoàn thiện giao diện Popup với cột **LÔ HÀNG (LOT)** giữa Mã Item và SL Đặt.
+- [x] Đã hỗ trợ chọn từ nhiều lô (nhập lẻ hoặc chọn hết lô).
+- [x] Đã thiết lập Routing cố định (Type: FG, 2 công đoạn: Serve FG & Packing Out).
+- [x] Đã phân tách KHSX thành 2 luồng độc lập (SX Mới & Kho TP).
+- [x] Đã xây dựng Modal tương tác trực quan xem KHSX 2 luồng trên Prototype.
+- [x] Đã kiểm thử đầy đủ luồng end-to-end trên môi trường local và build production.
+- [x] Đã đồng bộ tài liệu đặc tả chuẩn BA-Kit vào kho mã nguồn: [`docs/user-stories/US-DH-04-chon-item-kho-thanh-pham-cho-xu-ly-lai.md`](file:///d:/BA/H%E1%BB%8Dc%20AI/order-prototype/docs/user-stories/US-DH-04-chon-item-kho-thanh-pham-cho-xu-ly-lai.md).
