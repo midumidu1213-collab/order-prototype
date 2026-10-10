@@ -122,8 +122,9 @@ export const JEWELRY_PRODUCTS = [
   {
     id: "set-1",
     isSet: true,
-    productCode: "SET-EM04-18K-001",
-    productName: "Bộ Trang Sức Hoàng Gia Sen Vàng (4 Món)",
+    productCode: "GY0ST000001A00A00CZRO1CZGG1000",
+    drawingCode: "ST000001A00",
+    productName: "Bộ (4 món)",
     categoryId: "bo",
     categoryName: "Bộ",
     weight: 0.055,
@@ -141,31 +142,31 @@ export const JEWELRY_PRODUCTS = [
       goldColor: "Vàng",
       goldAge: "18K (75Y)",
       mainStoneColor: "Xanh Emerald",
-      changeRequest: "Không thay đổi",
       note: "Hộp nhung VIP"
     },
     availableGoldColors: ["Vàng", "Trắng", "Hồng", "Vàng 2 màu"],
     availableGoldAges: ["18K (75Y)", "14K (58.5Y)", "10K (41.6Y)", "24K (99.9Y)"],
     availableStoneColors: ["Trắng / Đỏ", "Xanh Emerald", "Kim Cương Trắng", "Đỏ Ruby", "Tím Sapphire"],
-    availableChangeRequests: [
-      "Chọn loại thay đổi",
-      "Không thay đổi",
-      "Đổi toàn bộ đá tấm sang CZ loại 1",
-      "Khắc tên thương hiệu riêng lên từng món"
-    ],
     // 4 MÓN THÀNH PHẦN CHI TIẾT
     components: [
       {
         id: "comp-1",
         itemType: "ring",
         name: "Nhẫn nữ",
-        sku: "RN-EM04-18K-001",
+        sku: "GY0RG000001A00A00CZRO1CZGG1012",
+        drawingCode: "RG000001A00",
         weight: 0.012,
         wagePrice: 1250000,
         priceDisplay: "1,250,000đ",
-        defaultOption: "52",
-        optionType: "Size Ni",
-        options: ["48", "50", "52", "54", "56", "58"],
+        defaultOption: "12",
+        optionType: "Size",
+        options: ["10", "11", "12", "13", "14", "15", "16"],
+        availableChangeRequests: [
+          "Không thay đổi",
+          "Khắc laser tên riêng",
+          "Hạ chấu đá 0.5mm",
+          "Thay kiểu bào ball"
+        ],
         imageType: "ring-emerald",
         icon: "💍"
       },
@@ -173,27 +174,41 @@ export const JEWELRY_PRODUCTS = [
         id: "comp-2",
         itemType: "necklace",
         name: "Dây chuyền",
-        sku: "NK-EM04-18K-001",
+        sku: "GY0NL000001A00A00CZRO1CZGG1048",
+        drawingCode: "NL000001A00",
         weight: 0.022,
         wagePrice: 2100000,
         priceDisplay: "2,100,000đ",
-        defaultOption: "45cm",
-        optionType: "Chiều dài",
-        options: ["40cm", "42cm", "45cm", "50cm"],
+        defaultOption: "48",
+        optionType: "Size",
+        options: ["40", "42", "45", "48", "50"],
+        availableChangeRequests: [
+          "Không thay đổi",
+          "Thêm khoen phụ",
+          "Đổi khoen giọt nước",
+          "Đổi khóa hộp"
+        ],
         imageType: "necklace-emerald",
-        icon: "📿"
+        icon: "💎"
       },
       {
         id: "comp-3",
         itemType: "earrings",
         name: "Bông tai",
-        sku: "ER-EM04-18K-001",
+        sku: "GY0EG000001A00A00CZRO1CZGG1000",
+        drawingCode: "EG000001A00",
         weight: 0.006,
         wagePrice: 850000,
         priceDisplay: "850,000đ",
         defaultOption: "0",
-        optionType: "Size Ni",
-        options: null,
+        optionType: "Size",
+        options: ["0"],
+        availableChangeRequests: [
+          "Không thay đổi",
+          "Đổi chốt vặn ren",
+          "Đổi chốt đẩy cao cấp",
+          "Đổi kiểu móc"
+        ],
         imageType: "earrings-heart",
         icon: "✨"
       },
@@ -201,15 +216,22 @@ export const JEWELRY_PRODUCTS = [
         id: "comp-4",
         itemType: "bracelet",
         name: "Lắc tay",
-        sku: "BR-EM04-18K-001",
+        sku: "GY0BE000001A00A00CZRO1CZGG1016",
+        drawingCode: "BE000001A00",
         weight: 0.015,
         wagePrice: 1400000,
         priceDisplay: "1,400,000đ",
-        defaultOption: "54",
-        optionType: "Size Ni",
-        options: ["50", "52", "54", "56", "58"],
+        defaultOption: "16",
+        optionType: "Size",
+        options: ["15", "16", "17", "18", "19"],
+        availableChangeRequests: [
+          "Không thay đổi",
+          "Thêm xích an toàn",
+          "Đổi khóa tim",
+          "Thay chấu đá"
+        ],
         imageType: "bracelet-gold",
-        icon: "💫"
+        icon: "📿"
       }
     ]
   },

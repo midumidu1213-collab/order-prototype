@@ -318,8 +318,8 @@ export default function CatalogueCartPage() {
                                   </span>
                                 ) : "—"}
                               </td>
-                              <td className="py-2.5 px-3 text-xs font-bold text-[#00594c]">
-                                {comp.optionType && comp.selectedOption ? `${comp.optionType}: ${comp.selectedOption}` : "—"}
+                              <td className="py-2.5 px-3 text-xs font-bold text-[#00594c] text-center font-mono">
+                                {comp.selectedOption || "—"}
                               </td>
                               <td className="py-2.5 px-3 text-center text-xs font-mono text-gray-700 font-bold">
                                 {setQty}

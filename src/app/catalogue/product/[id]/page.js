@@ -120,9 +120,14 @@ export default function ProductDetailPage({ params }) {
   // Set-specific state: Nhóm kích thước và số lượng từng Bộ (Bộ 1, Bộ 2, +Thêm kích thước cho Bộ 3...)
   const getDefaultCompSizes = () => {
     return (product.components || []).reduce((acc, comp) => {
-      if (comp.options && comp.options.length > 0) {
-        acc[comp.id] = comp.defaultOption || comp.options[0];
-      }
+      acc[comp.id] = comp.defaultOption || (comp.options && comp.options[0]) || "0";
+      return acc;
+    }, {});
+  };
+
+  const getDefaultCompChangeRequests = () => {
+    return (product.components || []).reduce((acc, comp) => {
+      acc[comp.id] = (comp.availableChangeRequests && comp.availableChangeRequests[0]) || "Không thay đổi";
       return acc;
     }, {});
   };
@@ -133,9 +138,11 @@ export default function ProductDetailPage({ params }) {
       nameLabel: "Bộ 1",
       quantity: 1,
       sizes: (product.components || []).reduce((acc, comp) => {
-        if (comp.options && comp.options.length > 0) {
-          acc[comp.id] = comp.defaultOption || comp.options[0];
-        }
+        acc[comp.id] = comp.defaultOption || (comp.options && comp.options[0]) || "0";
+        return acc;
+      }, {}),
+      changeRequests: (product.components || []).reduce((acc, comp) => {
+        acc[comp.id] = (comp.availableChangeRequests && comp.availableChangeRequests[0]) || "Không thay đổi";
         return acc;
       }, {})
     },
@@ -144,9 +151,11 @@ export default function ProductDetailPage({ params }) {
       nameLabel: "Bộ 2",
       quantity: 1,
       sizes: (product.components || []).reduce((acc, comp) => {
-        if (comp.options && comp.options.length > 0) {
-          acc[comp.id] = comp.defaultOption || comp.options[0];
-        }
+        acc[comp.id] = comp.defaultOption || (comp.options && comp.options[0]) || "0";
+        return acc;
+      }, {}),
+      changeRequests: (product.components || []).reduce((acc, comp) => {
+        acc[comp.id] = (comp.availableChangeRequests && comp.availableChangeRequests[0]) || "Không thay đổi";
         return acc;
       }, {})
     }
@@ -160,7 +169,8 @@ export default function ProductDetailPage({ params }) {
         id: `set-group-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         nameLabel: `Bộ ${nextNum}`,
         quantity: 1,
-        sizes: getDefaultCompSizes()
+        sizes: getDefaultCompSizes(),
+        changeRequests: getDefaultCompChangeRequests()
       }
     ]);
   };
@@ -189,6 +199,19 @@ export default function ProductDetailPage({ params }) {
         sizes: {
           ...g.sizes,
           [compId]: sizeVal
+        }
+      };
+    }));
+  };
+
+  const handleUpdateGroupChangeRequest = (groupId, compId, crVal) => {
+    setSetSizeGroups(prev => prev.map(g => {
+      if (g.id !== groupId) return g;
+      return {
+        ...g,
+        changeRequests: {
+          ...g.changeRequests,
+          [compId]: crVal
         }
       };
     }));
@@ -364,10 +387,6 @@ export default function ProductDetailPage({ params }) {
             category: product.categoryName,
             goldColor,
             mainStoneColor,
-            changeRequest: (changeRequest && changeRequest !== "Không thay đổi" && changeRequestDetail) 
-              ? `${changeRequest} (${changeRequestDetail})` 
-              : changeRequest,
-            changeRequestDetail,
             quantity: groupQty,
             weight: groupWeight,
             wagePrice: groupWage,
@@ -376,11 +395,18 @@ export default function ProductDetailPage({ params }) {
             setNameLabel: group.nameLabel,
             components: allComps.map(c => {
               const isEarring = c.itemType === "earrings" || c.name?.toLowerCase().includes("bông tai");
+              const compSize = isEarring ? "0" : (group.sizes?.[c.id] || c.defaultOption || c.options?.[0] || "0");
+              const compCR = group.changeRequests?.[c.id] || "Không thay đổi";
               return {
+                id: c.id,
                 name: c.name,
                 sku: c.sku,
-                selectedOption: isEarring ? "0" : (group.sizes[c.id] || c.defaultOption || c.options?.[0] || "—"),
-                optionType: isEarring ? "Size Ni" : c.optionType
+                selectedOption: compSize,
+                optionType: "Size",
+                changeRequest: compCR,
+                weight: c.weight,
+                wagePrice: c.wagePrice,
+                icon: c.icon
               };
             })
           });
@@ -436,63 +462,65 @@ export default function ProductDetailPage({ params }) {
       </div>
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-200/90 overflow-hidden p-6 sm:p-8 lg:p-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-200/90 overflow-hidden p-4 sm:p-6 lg:p-8">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-10 items-start">
             
             {/* ================================================================= */}
-            <div className="lg:col-span-6 flex flex-col items-center">
+            {/* CỘT TRÁI: HÌNH ẢNH SẢN PHẨM & GALLERY (Sticky trên iPad / Desktop) */}
+            {/* ================================================================= */}
+            <div className="md:col-span-5 lg:col-span-6 flex flex-col items-center md:sticky md:top-6 self-start">
               <div 
                 onClick={() => setIsZoomOpen(true)}
-                className="w-full aspect-square bg-white rounded-3xl border border-gray-200/80 p-4 sm:p-6 flex items-center justify-center relative shadow-sm group overflow-hidden cursor-zoom-in"
+                className="w-full aspect-square bg-white rounded-2xl sm:rounded-3xl border border-gray-200/80 p-4 sm:p-6 flex items-center justify-center relative shadow-sm group overflow-hidden cursor-zoom-in"
                 title="Bấm vào để xem ảnh kích thước đầy đủ"
               >
                 <JewelryVisual type={activePreviewType} className="w-full h-full transform group-hover:scale-105 transition-transform duration-500 pointer-events-none" />
                 
                 {/* Floating Category Tag */}
                 {product.isSet ? (
-                  <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center space-x-1.5 pointer-events-none">
+                  <div className="absolute top-3.5 left-3.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center space-x-1.5 pointer-events-none">
                     <Crown className="h-3.5 w-3.5 text-amber-200" />
                     <span>BỘ TRANG SỨC ({product.components?.length || 4} MÓN)</span>
                   </div>
                 ) : (
-                  <div className="absolute top-4 left-4 bg-[#00594c] text-white text-xs font-bold px-3 py-1 rounded-full shadow-md pointer-events-none">
+                  <div className="absolute top-3.5 left-3.5 bg-[#00594c] text-white text-[11px] sm:text-xs font-bold px-3 py-1 rounded-full shadow-md pointer-events-none">
                     {product.categoryName}
                   </div>
                 )}
 
                 {/* Hint Xem ảnh kích thước đầy đủ */}
-                <div className="absolute bottom-4 right-4 bg-black/60 hover:bg-black/75 backdrop-blur-xs text-white text-[11px] font-medium px-3 py-1.5 rounded-xl flex items-center space-x-1.5 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <div className="absolute bottom-3.5 right-3.5 bg-black/60 hover:bg-black/75 backdrop-blur-xs text-white text-[11px] font-medium px-2.5 py-1.5 rounded-xl flex items-center space-x-1.5 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <Maximize2 className="h-3.5 w-3.5" />
-                  <span>Xem ảnh lớn</span>
+                  <span className="hidden sm:inline">Xem ảnh lớn</span>
                 </div>
               </div>
 
               {/* Component Gallery for Sets (Chỉ hiển thị khi là sản phẩm bộ) */}
               {product.isSet && product.components && product.components.length > 0 && (
-                <div className="w-full mt-4 space-y-2">
-                  <div className="text-xs font-semibold text-gray-600 text-center">
+                <div className="w-full mt-3.5 space-y-2">
+                  <div className="text-xs font-semibold text-gray-500 text-center">
                     Xem chi tiết từng món trong bộ:
                   </div>
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                     <button
                       onClick={() => setActivePreviewType(product.imageType)}
-                      className={`p-1.5 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center ${
-                        activePreviewType === product.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm" : "border-gray-200 opacity-60 hover:opacity-100"
+                      className={`p-1.5 sm:p-2 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center cursor-pointer ${
+                        activePreviewType === product.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm bg-emerald-50/20" : "border-gray-200 opacity-70 hover:opacity-100"
                       }`}
                     >
-                      <div className="text-base">👑</div>
+                      <div className="text-sm sm:text-base">👑</div>
                       <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">Toàn bộ</span>
                     </button>
                     {product.components.map((comp) => (
                       <button
                         key={comp.id}
                         onClick={() => setActivePreviewType(comp.imageType)}
-                        className={`p-1.5 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center ${
-                          activePreviewType === comp.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm" : "border-gray-200 opacity-60 hover:opacity-100"
+                        className={`p-1.5 sm:p-2 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center cursor-pointer ${
+                          activePreviewType === comp.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm bg-emerald-50/20" : "border-gray-200 opacity-70 hover:opacity-100"
                         }`}
                       >
-                        <div className="text-base">{comp.icon}</div>
+                        <div className="text-sm sm:text-base">{comp.icon}</div>
                         <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">{comp.name}</span>
                       </button>
                     ))}
@@ -504,23 +532,34 @@ export default function ProductDetailPage({ params }) {
             {/* ================================================================= */}
             {/* RIGHT COLUMN: CONFIGURATOR (SET vs SINGLE PRODUCT)                */}
             {/* ================================================================= */}
-            <div className="lg:col-span-6 space-y-5">
+            <div className="md:col-span-7 lg:col-span-6 space-y-5">
               
               {/* Product Code Header */}
               <div className="pb-1">
                 <div className="flex items-center justify-between">
-                  <h1 className="font-mono text-lg sm:text-xl lg:text-2xl font-black text-gray-900 tracking-tight">
-                    {product.productCode}
-                  </h1>
+                  <div className="space-y-1">
+                    <h1 className="font-mono text-base sm:text-lg lg:text-xl font-black text-gray-900 tracking-tight select-all">
+                      {product.productCode}
+                    </h1>
+                    <div className="flex items-center flex-wrap gap-2">
+                      {product.drawingCode && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                          Bản vẽ: {product.drawingCode}
+                        </span>
+                      )}
+                      <span className="text-xs font-semibold text-gray-700">
+                        {product.isSet ? `Bộ (${product.components?.length || 4} món)` : product.productName}
+                      </span>
+                    </div>
+                  </div>
                   <button
                     onClick={handleCopyCode}
-                    className="p-2 rounded-xl text-gray-400 hover:text-[#00594c] hover:bg-emerald-50 transition-colors"
+                    className="p-2 rounded-xl text-gray-400 hover:text-[#00594c] hover:bg-emerald-50 transition-colors shrink-0 cursor-pointer"
                     title="Sao chép mã sản phẩm"
                   >
                     {copied ? <Check className="h-5 w-5 text-emerald-600" /> : <Copy className="h-5 w-5" />}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-0.5 font-medium">{product.categoryName}</p>
               </div>
 
               {/* =============================================================== */}
@@ -529,7 +568,7 @@ export default function ProductDetailPage({ params }) {
               {product.isSet ? (
                 <div className="space-y-5">
                   {/* Specs Bar cho Bộ (2 cột: Trọng lượng & Giá công 1 bộ) */}
-                  <div className="grid grid-cols-2 gap-3 py-3 px-6 bg-[#f4f9f7] rounded-2xl border border-emerald-100 text-center items-center">
+                  <div className="grid grid-cols-2 gap-3 py-3 px-4 sm:px-6 bg-[#f4f9f7] rounded-2xl border border-emerald-100 text-center items-center">
                     <div>
                       <div className="text-[11px] text-gray-500 font-medium">Trọng lượng (1 bộ)</div>
                       <div className="text-base font-bold text-gray-900 mt-0.5 font-mono">
@@ -544,21 +583,21 @@ export default function ProductDetailPage({ params }) {
                     </div>
                   </div>
 
-                  {/* TẦNG 1: THUỘC TÍNH CHUNG */}
-                  <div className="bg-[#f2f8f6] p-4 rounded-2xl border border-emerald-200/80 space-y-2.5">
+                  {/* TẦNG 1: THUỘC TÍNH CHUNG (Chỉ 2 cột Màu xi & Màu đá chính) */}
+                  <div className="bg-[#f2f8f6] p-3.5 sm:p-4 rounded-2xl border border-emerald-200/80 space-y-2.5">
                     <div className="text-xs font-bold text-[#00594c] uppercase tracking-wider flex items-center">
                       <Settings2 className="h-4 w-4 mr-1.5" />
                       Thuộc tính chung
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {/* Màu xi */}
                       <div>
                         <label className="block text-[11px] font-semibold text-gray-600 mb-1">Màu xi</label>
                         <select
                           value={goldColor}
                           onChange={(e) => setGoldColor(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer min-h-[38px]"
                         >
                           {product.availableGoldColors?.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -570,62 +609,20 @@ export default function ProductDetailPage({ params }) {
                         <select
                           value={mainStoneColor}
                           onChange={(e) => setMainStoneColor(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer min-h-[38px]"
                         >
                           {product.availableStoneColors?.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                       </div>
-
-                      {/* Yêu cầu thay đổi */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-gray-600 mb-1">Yêu cầu thay đổi</label>
-                        <select
-                          value={changeRequest}
-                          onChange={(e) => handleSelectChangeRequest(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
-                        >
-                          {(product.availableChangeRequests || [
-                            "Không thay đổi",
-                            "Thay kiểu bào ball",
-                            "Đổi sang đá tấm CZ loại 1",
-                            "Đổi tuổi vàng 10K lên 18K",
-                            "Khắc laser chữ/ký hiệu riêng"
-                          ]).map(req => (
-                            <option key={req} value={req}>
-                              {req !== "Không thay đổi" ? `💎 ${req}` : req}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
                     </div>
-
-                    {/* Chi tiết thay đổi tương ứng cho Bộ */}
-                    {CHANGE_REQUEST_CONFIGS[changeRequest] && (
-                      <div className="p-3 bg-white/80 rounded-xl border border-emerald-300/80 mt-2 animate-in fade-in duration-200">
-                        <label className="block text-[11px] font-semibold text-[#00594c] mb-1.5">
-                          {CHANGE_REQUEST_CONFIGS[changeRequest].subLabel}
-                        </label>
-                        <select
-                          value={changeRequestDetail}
-                          onChange={(e) => setChangeRequestDetail(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-xs cursor-pointer"
-                        >
-                          {CHANGE_REQUEST_CONFIGS[changeRequest].options.map((opt) => (
-                            <option key={opt} value={opt}>
-                              💎 {opt}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
                   </div>
 
-                  {/* PHÂN BỔ THEO KÍCH THƯỚC BỘ (Auto là cả bộ, chỉ cần chọn kích thước cho từng chủng loại) */}
+                  {/* CHỌN KÍCH THƯỚC BỘ (Wording lại chuẩn UX E-Catalogue) */}
                   <div className="space-y-3 pt-1">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
                         <Layers className="h-4 w-4 mr-1.5 text-[#00594c]" />
-                        Phân bổ theo kích thước bộ
+                        Chọn kích thước bộ
                         <span className="ml-2 bg-emerald-100 text-[#00594c] text-[10px] font-bold px-2 py-0.5 rounded-full">
                           {setSizeGroups.length} nhóm kích thước
                         </span>
@@ -635,7 +632,7 @@ export default function ProductDetailPage({ params }) {
                       <button
                         type="button"
                         onClick={handleAddSetSizeGroup}
-                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-[#00594c] border border-emerald-300 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-95"
+                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-[#00594c] border border-emerald-300 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-95 cursor-pointer"
                       >
                         <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
                         <span>+ Thêm kích thước</span>
@@ -647,10 +644,10 @@ export default function ProductDetailPage({ params }) {
                       {setSizeGroups.map((group, groupIdx) => (
                         <div
                           key={group.id}
-                          className="bg-white rounded-2xl border border-gray-200/90 hover:border-emerald-300/80 p-3.5 space-y-2.5 shadow-2xs transition-all"
+                          className="bg-white rounded-2xl border border-gray-200/90 hover:border-emerald-300/80 p-3 sm:p-3.5 space-y-3 shadow-2xs transition-all"
                         >
                           {/* Header nhóm: Badge Bộ + Nhập SL Bộ + Nút xóa */}
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between pb-2.5 border-b border-gray-100">
                             <div className="flex items-center space-x-3">
                               <span className="bg-[#00594c] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-2xs">
                                 {group.nameLabel || `Bộ ${groupIdx + 1}`}
@@ -662,7 +659,7 @@ export default function ProductDetailPage({ params }) {
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateGroupQty(group.id, Math.max(1, (parseInt(group.quantity) || 1) - 1))}
-                                    className="px-2.5 py-1 text-gray-600 hover:bg-gray-200 text-xs font-bold transition-colors"
+                                    className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 text-xs font-bold transition-colors cursor-pointer"
                                   >
                                     -
                                   </button>
@@ -676,7 +673,7 @@ export default function ProductDetailPage({ params }) {
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateGroupQty(group.id, (parseInt(group.quantity) || 1) + 1)}
-                                    className="px-2.5 py-1 text-gray-600 hover:bg-gray-200 text-xs font-bold transition-colors"
+                                    className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 text-xs font-bold transition-colors cursor-pointer"
                                   >
                                     +
                                   </button>
@@ -690,7 +687,7 @@ export default function ProductDetailPage({ params }) {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveSetSizeGroup(group.id)}
-                                className="text-gray-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                className="text-gray-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
                                 title="Xóa nhóm kích thước này"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -698,32 +695,84 @@ export default function ProductDetailPage({ params }) {
                             )}
                           </div>
 
-                          {/* Chọn kích thước cho từng chủng loại có size (Bông tai mặc định ni = 0 nên không cần chọn) */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-gray-100">
-                            {(product.components || []).filter(c => c.options && c.options.length > 0 && c.itemType !== "earrings" && !c.name?.toLowerCase().includes("bông tai")).map(comp => (
-                              <div key={comp.id} className="space-y-1">
-                                <label className="block text-[11px] font-bold text-gray-700 truncate flex items-center space-x-1">
-                                  <span>{comp.icon}</span>
-                                  <span className="truncate">{comp.name}</span>
-                                </label>
-                                <select
-                                  value={group.sizes[comp.id] || comp.defaultOption || comp.options[0]}
-                                  onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
-                                  className="w-full bg-white px-2.5 py-2 border border-gray-300 rounded-xl text-xs font-bold text-[#00594c] focus:ring-2 focus:ring-[#00594c] focus:border-[#00594c] outline-none shadow-2xs cursor-pointer truncate"
-                                >
-                                  {comp.options.map(opt => {
-                                    const label = (comp.optionType === "Size Ni" && !opt.toLowerCase().includes("ni"))
-                                      ? `Ni ${opt}`
-                                      : opt;
-                                    return (
-                                      <option key={opt} value={opt}>
-                                        {label}
-                                      </option>
-                                    );
-                                  })}
-                                </select>
-                              </div>
-                            ))}
+                          {/* Bảng phân bổ 4 món con: Món | Kích thước (ko đơn vị tính) | Yêu cầu thay đổi */}
+                          <div className="space-y-2">
+                            {/* Table Header (desktop & ipad) */}
+                            <div className="hidden sm:grid grid-cols-12 gap-2.5 px-2 py-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/70 rounded-lg">
+                              <div className="col-span-4">Món thành phần</div>
+                              <div className="col-span-3 text-center">Kích thước</div>
+                              <div className="col-span-5">Yêu cầu thay đổi</div>
+                            </div>
+
+                            {/* Danh sách 4 món */}
+                            <div className="divide-y divide-gray-100">
+                              {(product.components || []).map((comp) => {
+                                const isEarring = comp.itemType === "earrings" || comp.name?.toLowerCase().includes("bông tai");
+                                const currentSize = isEarring 
+                                  ? "0" 
+                                  : (group.sizes?.[comp.id] || comp.defaultOption || (comp.options && comp.options[0]) || "0");
+                                const currentCR = group.changeRequests?.[comp.id] || "Không thay đổi";
+                                const hasMultipleSizes = comp.options && comp.options.length > 1 && !isEarring;
+
+                                return (
+                                  <div key={comp.id} className="py-2.5 first:pt-1 last:pb-0 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-2.5 items-center">
+                                    {/* Cột 1: Thông tin món */}
+                                    <div className="sm:col-span-4 flex items-center space-x-2">
+                                      <span className="text-base select-none shrink-0">{comp.icon}</span>
+                                      <div className="min-w-0">
+                                        <div className="text-xs font-bold text-gray-800 truncate">{comp.name}</div>
+                                        <div className="text-[10px] font-mono text-gray-400 truncate">
+                                          {comp.drawingCode || comp.sku}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Cột 2: Kích thước (Số thuần túy, TUYỆT ĐỐI KHÔNG CÓ ĐƠN VỊ TÍNH) */}
+                                    <div className="sm:col-span-3">
+                                      <span className="text-[10px] font-semibold text-gray-500 mb-0.5 block sm:hidden">Kích thước:</span>
+                                      {hasMultipleSizes ? (
+                                        <select
+                                          value={currentSize}
+                                          onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
+                                          className="w-full bg-white px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-[#00594c] outline-none cursor-pointer min-h-[36px]"
+                                        >
+                                          {comp.options.map(opt => (
+                                            <option key={opt} value={opt}>
+                                              {opt}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      ) : (
+                                        <div className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-500 text-center min-h-[36px] flex items-center justify-center">
+                                          {currentSize}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Cột 3: Yêu cầu thay đổi riêng cho từng món */}
+                                    <div className="sm:col-span-5">
+                                      <span className="text-[10px] font-semibold text-gray-500 mb-0.5 block sm:hidden">Yêu cầu thay đổi:</span>
+                                      <select
+                                        value={currentCR}
+                                        onChange={(e) => handleUpdateGroupChangeRequest(group.id, comp.id, e.target.value)}
+                                        className="w-full bg-white px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none cursor-pointer truncate min-h-[36px]"
+                                      >
+                                        {(comp.availableChangeRequests || [
+                                          "Không thay đổi",
+                                          "Khắc laser tên riêng",
+                                          "Thay kiểu chấu",
+                                          "Đổi loại khóa"
+                                        ]).map(cr => (
+                                          <option key={cr} value={cr}>
+                                            {cr}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -1148,6 +1197,58 @@ export default function ProductDetailPage({ params }) {
             </div>
 
           </div>
+        </div>
+      </div>
+
+      {/* ================================================================= */}
+      {/* STICKY QUICK-ORDER BAR (TỐI ƯU TRẢI NGHIỆM IPAD & MOBILE)        */}
+      {/* ================================================================= */}
+      <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] py-3 px-4 sm:px-6 lg:hidden">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center space-x-2 text-xs">
+              <span className="font-bold text-gray-900 truncate">
+                {product.isSet 
+                  ? `${totalSetOrderQty} Bộ (${totalSetItemCount} món)` 
+                  : `${totalWholesaleQty} Sản phẩm`}
+              </span>
+              <span className="text-gray-300">|</span>
+              <span className="font-mono text-gray-600 font-semibold truncate">
+                {product.isSet 
+                  ? `${totalSetWeight.toFixed(4)} lượng` 
+                  : `${totalWholesaleWeight.toFixed(4)} lượng`}
+              </span>
+            </div>
+            <div className="text-sm font-black text-[#00594c] font-mono leading-tight mt-0.5">
+              {product.isSet 
+                ? `${roundUp5k(totalSetWage).toLocaleString()}đ` 
+                : `${roundUp5k(totalWholesaleWage).toLocaleString()}đ`}
+            </div>
+          </div>
+
+          <button
+            onClick={handleAddToCart}
+            disabled={product.isSet ? totalSetOrderQty === 0 : totalWholesaleQty === 0}
+            className={`px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center space-x-2 shrink-0 transition-all shadow-md active:scale-95 cursor-pointer ${
+              addedSuccess
+                ? "bg-emerald-600 text-white"
+                : (product.isSet ? totalSetOrderQty === 0 : totalWholesaleQty === 0)
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-[#00594c] hover:bg-[#004737] text-white"
+            }`}
+          >
+            {addedSuccess ? (
+              <>
+                <Check className="h-4 w-4" />
+                <span>Đã thêm!</span>
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="h-4 w-4" />
+                <span>Thêm vào giỏ</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 

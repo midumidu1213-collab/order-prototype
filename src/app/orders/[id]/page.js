@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useMemo } from "react";
+import React, { useState, use, useMemo, Fragment } from "react";
 import Link from "next/link";
 import { 
   ChevronLeft, 
@@ -27,11 +27,17 @@ import {
   Zap,
   Boxes,
   Split,
-  X
+  X,
+  Crown,
+  CornerDownRight,
+  Tag,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { getOrderById, ALLOWED_SYNC_STATUSES, INITIAL_ORDERS } from "@/data/ordersData";
 import { findMatchingWarehouseItems, ROUTING_FG_FIXED } from "@/data/warehouseStockData";
 import WarehouseSyncPopup from "@/components/orders/WarehouseSyncPopup";
+import SetProductionBagModal from "@/components/orders/SetProductionBagModal";
 
 export default function OrderDetailPage({ params }) {
   // Unwrap params trong Next.js 15/16
@@ -45,6 +51,20 @@ export default function OrderDetailPage({ params }) {
 
   // State quản lý đơn hàng
   const [order, setOrder] = useState(initialOrder);
+
+  // State quản lý Modal Thẻ Bag KHSX cho Sản phẩm Bộ (1 Bag = 1 Bộ)
+  const [isBagModalOpen, setIsBagModalOpen] = useState(false);
+  const [selectedSetItem, setSelectedSetItem] = useState(null);
+
+  // State quản lý Thu gọn / Mở rộng nhóm Bộ (Mặc định mở ra 4 món)
+  const [expandedSets, setExpandedSets] = useState({ 1: true });
+
+  const toggleSetExpand = (stt) => {
+    setExpandedSets((prev) => ({
+      ...prev,
+      [stt]: prev[stt] === undefined ? false : !prev[stt]
+    }));
+  };
 
   // Kiểm tra 3 trạng thái hợp lệ để đồng bộ tồn kho: Chờ Kỹ thuật, Đủ thông tin KT, Chờ xác nhận (Chờ duyệt)
   const isSyncAllowed = ALLOWED_SYNC_STATUSES.includes(order.status);
@@ -158,6 +178,36 @@ export default function OrderDetailPage({ params }) {
 
   const totalStockAvailable = matchedStockList.reduce((acc, s) => acc + s.availableQty, 0);
 
+  // Helper render thumbnail ảnh sản phẩm thật 3D
+  const renderThumb = (imgSrc, altText = "") => {
+    if (imgSrc && imgSrc.startsWith("/")) {
+      return (
+        <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-white p-0.5 shadow-2xs mx-auto flex items-center justify-center">
+          <img src={imgSrc} alt={altText} className="w-full h-full object-cover rounded-md" />
+        </div>
+      );
+    }
+    if (imgSrc === "earrings") {
+      return (
+        <div className="w-10 h-10 rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 to-emerald-50 flex items-center justify-center mx-auto text-base shadow-2xs">
+          <span>✨</span>
+        </div>
+      );
+    }
+    if (imgSrc === "ring") {
+      return (
+        <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-white p-0.5 shadow-2xs mx-auto flex items-center justify-center">
+          <img src="/images/products/ring-solitaire.jpg" alt={altText} className="w-full h-full object-cover rounded-md" />
+        </div>
+      );
+    }
+    return (
+      <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
+        <ImageIcon className="h-5 w-5 text-slate-400" />
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-5 pb-24 max-w-[1440px] mx-auto px-4 sm:px-6 text-slate-800">
       
@@ -171,14 +221,41 @@ export default function OrderDetailPage({ params }) {
 
       {/* TOP HEADER: Breadcrumbs & Nhóm Nút Tác Vụ Chuẩn ERP */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
-        {/* Breadcrumb */}
-        <div className="flex items-center space-x-1.5 text-xs text-slate-500">
-          <Link href="/" className="hover:text-emerald-800 flex items-center">
-            <ChevronLeft className="h-3.5 w-3.5 mr-0.5" />
-            Danh sách đơn hàng
-          </Link>
-          <span>/</span>
-          <span className="font-bold text-slate-900">Chi tiết đơn hàng {order.code}</span>
+        {/* Breadcrumb & Bộ Chuyển Nhanh Đơn Hàng Mẫu */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center space-x-1.5 text-xs text-slate-500">
+            <Link href="/" className="hover:text-emerald-800 flex items-center">
+              <ChevronLeft className="h-3.5 w-3.5 mr-0.5" />
+              Danh sách đơn hàng
+            </Link>
+            <span>/</span>
+            <span className="font-bold text-slate-900">Chi tiết đơn hàng {order.code}</span>
+          </div>
+
+          <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <span className="text-[10px] font-bold text-slate-500 px-1.5 uppercase">Đơn mẫu:</span>
+            <Link
+              href="/orders/11"
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                String(orderId) === "11"
+                  ? "bg-[#005a46] text-white shadow-2xs"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+              }`}
+            >
+              SO2608011
+            </Link>
+            <Link
+              href="/orders/12"
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                String(orderId) === "12"
+                  ? "bg-[#005a46] text-white shadow-2xs"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+              }`}
+            >
+              <Crown className="h-3.5 w-3.5 text-amber-500" />
+              <span>SO2608012</span>
+            </Link>
+          </div>
         </div>
 
         {/* Hàng nút chức năng góc trên bên phải */}
@@ -366,12 +443,7 @@ export default function OrderDetailPage({ params }) {
             </div>
             <div>
               <span className="text-slate-400 text-[11px] block">Ghi chú đơn hàng:</span>
-              <span className="text-slate-700 italic block">{order.note || "Đơn thoả thuận 2/10 (item x 100pcs = 500pcs)"}</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Phân hệ xử lý</span>
-              <span className="text-xs font-bold text-[#005a46] block">Quản lý Sản phẩm (QLSP)</span>
-              <span className="text-[11px] text-slate-500 block leading-tight">Đang kiểm tra & cập nhật Routing làm mới</span>
+              <span className="text-slate-700 italic block">{order.note && order.note !== "--" ? order.note : "--"}</span>
             </div>
           </div>
 
@@ -442,27 +514,268 @@ export default function OrderDetailPage({ params }) {
             <tbody className="divide-y divide-slate-100 bg-white">
               {order.items?.map((item) => {
                 const isSynced = item.sourceType === "WAREHOUSE_REWORK" || item.sourceType === "SPLIT_ALLOCATION";
-                const isItemInStock = matchedStockList.some(
-                  (s) => s.itemCode?.toLowerCase() === item.itemCode?.toLowerCase()
-                );
 
+                // TRƯỜNG HỢP 1: SẢN PHẨM BỘ 4 MÓN (RULE: 1 BAG = 1 BỘ, ĐÓNG CHUNG HỘP)
+                if (item.isSet) {
+                  return (
+                    <React.Fragment key={`set-${item.stt}`}>
+                      {/* DÒNG CHA: SẢN PHẨM BỘ */}
+                      <tr className="bg-emerald-50/70 border-t-2 border-emerald-400 font-bold hover:bg-emerald-50 transition-colors">
+                        {/* STT kèm nút Thu gọn / Mở rộng Bộ */}
+                        <td className="px-3 py-3.5 text-center">
+                          <div className="flex items-center justify-center space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => toggleSetExpand(item.stt)}
+                              className="p-1 rounded-md text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer"
+                              title={expandedSets[item.stt] !== false ? "Thu gọn 4 món trong bộ" : "Mở rộng 4 món trong bộ"}
+                            >
+                              {expandedSets[item.stt] !== false ? (
+                                <ChevronDown className="h-4 w-4 stroke-[2.5]" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 stroke-[2.5]" />
+                              )}
+                            </button>
+                            <span className="bg-amber-400 text-slate-950 px-1.5 py-0.5 rounded text-[10px] font-black uppercase shadow-2xs">
+                              {item.stt}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Hình ảnh Bộ (Ảnh Render thật 3D) */}
+                        <td className="px-3 py-3.5 text-center">
+                          {renderThumb(item.image, item.setName)}
+                        </td>
+
+                        {/* Mã Item & Tên Bộ */}
+                        <td className="px-4 py-3.5">
+                          <div className="space-y-0.5">
+                            <div className="font-mono font-bold text-slate-900 text-xs select-all">
+                              {item.itemCode}
+                            </div>
+                            <div className="text-xs text-slate-600 font-sans">
+                              {item.setName || item.name}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Mã Drawing */}
+                        <td className="px-3 py-3.5 font-mono text-slate-800 font-bold">
+                          {item.drawingCode}
+                        </td>
+
+                        {/* Màu xi */}
+                        <td className="px-3 py-3.5 text-center font-mono font-bold text-slate-700">
+                          {item.platingColor || "Y0"}
+                        </td>
+
+                        {/* Màu đá */}
+                        <td className="px-3 py-3.5 text-center text-slate-600 font-semibold">
+                          {item.stoneColor || "Trắng CZ"}
+                        </td>
+
+                        {/* Ni/Size */}
+                        <td className="px-3 py-3.5 text-center font-bold text-slate-400">
+                          {item.size || "--"}
+                        </td>
+
+                        {/* Số lượng Bộ */}
+                        <td className="px-3 py-3.5 text-center">
+                          <div className="font-mono font-black text-slate-950 text-sm">
+                            {item.qty}
+                          </div>
+                          <span className="text-[10px] font-medium text-slate-500 block">
+                            Bộ (= {item.qty} Bag)
+                          </span>
+                        </td>
+
+                        {/* Yêu cầu thay đổi */}
+                        <td className="px-3 py-3.5 text-center text-slate-600 font-medium">
+                          {item.changeReq || "A00"}
+                        </td>
+
+                        {/* Trọng lượng */}
+                        <td className="px-3 py-3.5 text-right font-mono text-slate-900 font-bold">
+                          {item.weight}
+                        </td>
+
+                        {/* Đơn giá bộ */}
+                        <td className="px-4 py-3.5 text-right">
+                          <span className="font-mono font-black text-fuchsia-900 bg-pink-50 px-2 py-1 rounded border border-pink-200 inline-block shadow-2xs">
+                            {(item.unitPrice || 0).toLocaleString("vi-VN")}
+                          </span>
+                        </td>
+
+                        {/* Ghi chú */}
+                        <td className="px-3 py-3.5 text-center text-slate-400 text-xs">
+                          {item.note || "--"}
+                        </td>
+
+                        {/* Trạng thái BOM/Routing & Nút Thẻ Bag */}
+                        <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedSetItem(item);
+                              setIsBagModalOpen(true);
+                            }}
+                            className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 hover:bg-emerald-200 text-[#005a46] border border-emerald-300 inline-flex items-center space-x-1 cursor-pointer transition-all shadow-2xs hover:scale-105"
+                            title="Bấm để xem Thẻ Bag KHSX (1 Bag = 1 Bộ)"
+                          >
+                            <Boxes className="h-3 w-3 shrink-0 text-[#005a46]" />
+                            <span>1 Bag = 1 Bộ ({item.bagCode})</span>
+                            <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-70" />
+                          </button>
+                        </td>
+
+                        {/* SL Pick Kho TP */}
+                        <td className="px-3 py-3.5 text-center">
+                          <span className="text-slate-300 font-mono text-xs">0</span>
+                        </td>
+
+                        {/* Thao tác */}
+                        <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                          <div className="flex items-center justify-center space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedSetItem(item);
+                                setIsBagModalOpen(true);
+                              }}
+                              className="p-1.5 text-[#005a46] hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer"
+                              title="Xem chi tiết Thẻ Bag KHSX"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteItem(item.stt)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                              title="Xóa bộ sản phẩm khỏi đơn"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* CÁC DÒNG MÓN CON TRONG BỘ (4 MÓN: VÒNG TAY, DÂY CHUYỀN, NHẪN, BÔNG TAI) - HỖ TRỢ THU GỌN */}
+                      {expandedSets[item.stt] !== false && item.components?.map((comp) => (
+                        <tr 
+                          key={`comp-${comp.stt}`} 
+                          className="bg-white hover:bg-slate-50/80 transition-colors border-l-4 border-l-emerald-500"
+                        >
+                          {/* STT Món con */}
+                          <td className="px-3 py-3 text-center font-mono font-bold text-slate-400 text-xs pl-2">
+                            {comp.stt}
+                          </td>
+
+                          {/* Hình ảnh món con (Ảnh Render thật 3D) */}
+                          <td className="px-3 py-3 text-center">
+                            {renderThumb(comp.image || comp.componentType, comp.name)}
+                          </td>
+
+                          {/* Mã Item 30 ký tự (Thụt lề với mũi tên CornerDownRight) */}
+                          <td className="px-4 py-3">
+                            <div className="pl-2 space-y-0.5">
+                              <div className="flex items-center space-x-1.5 font-mono text-xs font-bold text-slate-900">
+                                <CornerDownRight className="h-3.5 w-3.5 text-emerald-600 shrink-0 inline" />
+                                <span>{comp.itemCode}</span>
+                              </div>
+                              <div className="text-xs text-slate-600 pl-5 font-sans">
+                                {comp.name}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Mã Drawing */}
+                          <td className="px-3 py-3 font-mono text-slate-700 font-semibold">
+                            {comp.drawingCode}
+                          </td>
+
+                          {/* Màu xi */}
+                          <td className="px-3 py-3 text-center font-mono font-bold text-slate-600">
+                            {comp.platingColor || item.platingColor || "Y0"}
+                          </td>
+
+                          {/* Màu đá */}
+                          <td className="px-3 py-3 text-center text-slate-500">
+                            {comp.stoneColor || item.stoneColor || "Trắng"}
+                          </td>
+
+                          {/* Ni/Size */}
+                          <td className="px-3 py-3 text-center font-bold text-[#005a46]">
+                            {comp.size}
+                          </td>
+
+                          {/* Số lượng */}
+                          <td className="px-3 py-3 text-center font-mono font-bold text-slate-900">
+                            {comp.qty}
+                          </td>
+
+                          {/* Yêu cầu thay đổi */}
+                          <td className="px-3 py-3 text-center text-slate-500">
+                            A00
+                          </td>
+
+                          {/* Trọng lượng */}
+                          <td className="px-3 py-3 text-right font-mono text-slate-700 font-medium">
+                            {comp.weight}
+                          </td>
+
+                          {/* Đơn giá */}
+                          <td className="px-4 py-3 text-right">
+                            <span className="font-mono text-slate-600 text-xs">
+                              {(comp.unitPrice || 0).toLocaleString("vi-VN")}
+                            </span>
+                          </td>
+
+                          {/* Ghi chú */}
+                          <td className="px-3 py-3 text-center text-slate-400 text-xs">
+                            {comp.packaging || "--"}
+                          </td>
+
+                          {/* Trạng thái BOM/Routing */}
+                          <td className="px-3 py-3 text-center whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 inline-block">
+                              Chung Bag: {item.bagCode}
+                            </span>
+                          </td>
+
+                          {/* SL Pick Kho TP */}
+                          <td className="px-3 py-3 text-center">
+                            <span className="text-slate-300 font-mono text-xs">0</span>
+                          </td>
+
+                          {/* Thao tác */}
+                          <td className="px-3 py-3 text-center text-slate-300 text-xs">
+                            —
+                          </td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  );
+                }
+
+                // TRƯỜNG HỢP 2: SẢN PHẨM MUA LẺ (HOẶC MUA LẺ THEO CHỦNG LOẠI TỪ MẪU BỘ)
                 return (
                   <tr key={item.stt} className={`hover:bg-slate-50 transition-colors ${isSynced ? "bg-emerald-50/25" : ""}`}>
                     
                     {/* STT */}
                     <td className="px-3 py-3.5 text-center font-bold text-slate-500">{item.stt}</td>
 
-                    {/* Hình ảnh */}
+                    {/* Hình ảnh (Ảnh Render thật 3D) */}
                     <td className="px-3 py-3.5 text-center">
-                      <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
-                        <ImageIcon className="h-5 w-5 text-slate-400" />
-                      </div>
+                      {renderThumb(item.image, item.name)}
                     </td>
 
                     {/* Mã Item */}
                     <td className="px-4 py-3.5">
-                      <div className="font-mono font-bold text-slate-900 text-xs">
+                      <div className="font-mono font-bold text-slate-900 text-xs select-all">
                         {item.itemCode?.replace(/\//g, "")}
+                      </div>
+                      <div className="text-xs text-slate-600 font-sans mt-0.5">
+                        {item.name}
                       </div>
                     </td>
 
@@ -483,7 +796,7 @@ export default function OrderDetailPage({ params }) {
 
                     {/* Ni/Size */}
                     <td className="px-3 py-3.5 text-center font-bold text-slate-800">
-                      {item.size || "---"}
+                      {item.size || "--"}
                     </td>
 
                     {/* Số lượng */}
@@ -496,12 +809,12 @@ export default function OrderDetailPage({ params }) {
                       {item.changeReq || "A00"}
                     </td>
 
-                    {/* Trọng lượng (Đơn vị tính là Lượng - L) */}
+                    {/* Trọng lượng */}
                     <td className="px-3 py-3.5 text-right font-mono text-slate-800 font-semibold">
-                      {item.weight || "0.5000L"}
+                      {item.weight || "0.4500"}
                     </td>
 
-                    {/* Đơn giá (Background hồng chữ tím chuẩn như ảnh của Chị đẹp) */}
+                    {/* Đơn giá */}
                     <td className="px-4 py-3.5 text-right">
                       <span className="font-mono font-black text-fuchsia-900 bg-pink-50 px-2 py-1 rounded border border-pink-200 inline-block">
                         {(item.unitPrice || 195000).toLocaleString("vi-VN")}
@@ -509,8 +822,8 @@ export default function OrderDetailPage({ params }) {
                     </td>
 
                     {/* Ghi chú */}
-                    <td className="px-3 py-3.5 text-center text-slate-400">
-                      {item.note || "---"}
+                    <td className="px-3 py-3.5 text-center text-slate-400 text-xs">
+                      {item.note || "--"}
                     </td>
 
                     {/* Trạng thái BOM/Routing (Tách 2 luồng SX Mới & Kho TP Type: FG) */}
@@ -529,6 +842,10 @@ export default function OrderDetailPage({ params }) {
                           <span>{item.routingStatus || "2 Luồng: SX Mới + Kho TP (FG)"}</span>
                           <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-70" />
                         </button>
+                      ) : item.isRetailFromSet ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-300 inline-block">
+                          1 Bag/Món lẻ riêng
+                        </span>
                       ) : item.routingStatus === "Chờ Routing mới" ? (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 inline-block">
                           Chờ Routing mới
@@ -799,6 +1116,13 @@ export default function OrderDetailPage({ params }) {
           </div>
         </div>
       )}
+
+      {/* MODAL THẺ BAG KHSX & ĐÓNG GÓI BỘ (1 BAG = 1 BỘ) */}
+      <SetProductionBagModal
+        isOpen={isBagModalOpen}
+        onClose={() => setIsBagModalOpen(false)}
+        setItem={selectedSetItem}
+      />
     </div>
   );
 }

@@ -43,8 +43,8 @@ const initialCartItems = [
         sku: "GY0NE000004B00B00000000000000420",
         weight: 0.018,
         wagePrice: 2200000,
-        selectedOption: "42cm",
-        optionType: "Chiều dài",
+        selectedOption: "42",
+        optionType: "Size",
         changeRequest: "—",
         selected: true,
         icon: "📿"
@@ -57,8 +57,8 @@ const initialCartItems = [
         sku: "GY0EG000095A00A000000000000000",
         weight: 0.006,
         wagePrice: 900000,
-        selectedOption: null,
-        optionType: null,
+        selectedOption: "0",
+        optionType: "Size",
         changeRequest: "—",
         selected: true,
         icon: "✨"
