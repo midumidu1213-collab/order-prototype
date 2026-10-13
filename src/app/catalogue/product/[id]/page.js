@@ -353,6 +353,35 @@ export default function ProductDetailPage({ params }) {
     }
   };
 
+  // Chọn nhanh cặp Ni phổ biến (1-Click) áp dụng tức thì cho Cặp đầu tiên
+  const handleApplyQuickNiToFirstPair = (mNi, fNi) => {
+    setSetSizeGroups(prev => {
+      if (prev.length === 0) {
+        return [{
+          id: `set-group-${Date.now()}`,
+          nameLabel: "Cặp 1",
+          quantity: 1,
+          laserText: "",
+          models: { "ring-1": "male", "ring-2": "female" },
+          sizes: { "ring-1": mNi, "ring-2": fNi },
+          changeRequests: getDefaultCompChangeRequests()
+        }];
+      }
+      const updated = [...prev];
+      updated[0] = {
+        ...updated[0],
+        sizes: {
+          ...updated[0].sizes,
+          "ring-1": mNi,
+          "ring-2": fNi
+        }
+      };
+      return updated;
+    });
+    setQuickAddedToast(`Đã áp dụng: Nam Ni ${mNi} & Nữ Ni ${fNi}`);
+    setTimeout(() => setQuickAddedToast(""), 2000);
+  };
+
 
 
   // Wholesale Stone Rows allocation
@@ -815,44 +844,65 @@ export default function ProductDetailPage({ params }) {
                   {/* PHÂN HỆ CHỌN KÍCH THƯỚC: CẶP NHẪN CƯỚI vs BỘ 4 MÓN              */}
                   {/* =============================================================== */}
                   {product.isPair ? (
-                    /* CASE 1: CẶP NHẪN CƯỚI - SMART MULTI-NI SELECTOR TABLE */
+                    /* CASE 1: CẶP NHẪN CƯỚI - FAST-ORDER LUXURY UX (ZERO HORIZONTAL SCROLL) */
                     <div className="space-y-3.5 pt-1">
-                      {/* Tiêu đề & Cụm thao tác tinh gọn: 1 dropdown đổi kiểu cặp + Nút thêm cặp */}
-                      <div className="flex items-center justify-between flex-wrap gap-2">
+                      
+                      {/* 1. THANH TIÊU ĐỀ & ĐỔI KIỂU CẶP TINH GỌN */}
+                      <div className="flex items-center justify-between flex-wrap gap-2 pb-1 border-b border-gray-100">
                         <div className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center">
                           <Layers className="h-4 w-4 mr-1.5 text-[#00594c]" />
-                          Chọn kích thước cặp nhẫn
+                          Kích thước cặp nhẫn
                           <span className="ml-2 bg-emerald-100 text-[#00594c] text-[10px] font-bold px-2 py-0.5 rounded-full">
                             {setSizeGroups.length} cặp
                           </span>
                         </div>
 
-                        {/* Cụm thao tác: 1 dropdown nhỏ gọn đổi kiểu cặp khác + Nút thêm cặp kích thước */}
-                        <div className="flex items-center space-x-2">
+                        {/* Dropdown đổi kiểu cặp nếu cần khác truyền thống */}
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-[11px] text-gray-500 font-medium hidden sm:inline">Kiểu cặp:</span>
                           <select
                             value={pairPreset}
                             onChange={(e) => handleApplyPairPreset(e.target.value)}
-                            className="px-2.5 py-1.5 bg-white border border-gray-300 hover:border-[#00594c] rounded-xl text-xs font-semibold text-gray-700 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
-                            title="Chọn kiểu cặp khác nếu cần"
+                            className="px-2.5 py-1 bg-white border border-gray-300 hover:border-[#00594c] rounded-xl text-xs font-semibold text-gray-700 outline-none cursor-pointer shadow-2xs"
                           >
                             <option value="traditional">1 Nam + 1 Nữ (2.100.000đ)</option>
                             <option value="two_female">2 Nhẫn Nữ (1.900.000đ)</option>
                             <option value="two_male">2 Nhẫn Nam (2.300.000đ)</option>
                             <option value="custom">Tùy chọn từng chiếc</option>
                           </select>
-
-                          <button
-                            type="button"
-                            onClick={handleAddSetSizeGroup}
-                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#00594c] hover:bg-[#004737] text-white rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-95 cursor-pointer shrink-0"
-                          >
-                            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-                            <span>+ Thêm cặp kích thước</span>
-                          </button>
                         </div>
                       </div>
 
-                      {/* TOAST MICRO-INTERACTION KHI THÊM NHANH */}
+                      {/* 2. CHỌN NHANH CẶP NI PHỔ BIẾN (1-CLICK FAST-PICK - ĐƯA LÊN ĐẦU TIẾT KIỆM 90% THỜI GIAN) */}
+                      <div className="bg-gradient-to-r from-emerald-50/80 via-teal-50/50 to-emerald-50/80 p-2.5 rounded-2xl border border-emerald-200/90 space-y-1.5 shadow-2xs">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-[#00594c]">
+                          <span className="flex items-center">
+                            <span className="mr-1">⚡</span>
+                            Chọn nhanh cặp Ni phổ biến (1-Click):
+                          </span>
+                          <span className="text-[10px] text-gray-500 font-normal">Áp dụng cho Cặp 1</span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                          {[
+                            { m: "58", f: "52", label: "Nam 58 • Nữ 52", desc: "Chuẩn nhất" },
+                            { m: "56", f: "50", label: "Nam 56 • Nữ 50", desc: "Tay nhỏ" },
+                            { m: "60", f: "54", label: "Nam 60 • Nữ 54", desc: "Tay lớn" },
+                            { m: "58", f: "50", label: "Nam 58 • Nữ 50", desc: "Phổ biến" }
+                          ].map((item, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleApplyQuickNiToFirstPair(item.m, item.f)}
+                              className="p-1.5 sm:p-2 bg-white hover:bg-emerald-100/70 border border-emerald-300 hover:border-[#00594c] rounded-xl text-left transition-all cursor-pointer shadow-2xs group flex flex-col justify-center active:scale-98"
+                            >
+                              <div className="text-xs font-bold text-gray-800 group-hover:text-[#00594c]">{item.label}</div>
+                              <div className="text-[10px] text-emerald-700 font-medium mt-0.5">{item.desc}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* TOAST MICRO-INTERACTION KHI THAO TÁC */}
                       {quickAddedToast && (
                         <div className="bg-emerald-50 border border-emerald-300 text-[#00594c] px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-2 animate-fadeIn shadow-2xs">
                           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
@@ -860,302 +910,137 @@ export default function ProductDetailPage({ params }) {
                         </div>
                       )}
 
-                      {/* BẢNG CHỌN NHIỀU NI 1 LÚC (MULTI-NI PAIR TABLE) TINH GỌN THEO NGHIỆP VỤ */}
-                      <div className="border border-gray-200/90 rounded-2xl overflow-hidden bg-white shadow-2xs">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse min-w-[700px]">
-                            <thead>
-                              <tr className="bg-gray-50/90 border-b border-gray-200 text-[11px] font-bold text-gray-700 uppercase tracking-wider">
-                                <th className="py-3 px-3 w-16 text-center">Cặp</th>
-                                <th className="py-3 px-3 min-w-[140px]">
-                                  <div className="font-bold text-gray-900">
-                                    {pairPreset === "two_female" 
-                                      ? "Nhẫn Nữ 1" 
-                                      : pairPreset === "two_male" 
-                                      ? "Nhẫn Nam 1" 
-                                      : "Nhẫn Nam"}
-                                  </div>
-                                  <div className="text-[10px] text-gray-500 font-mono font-normal normal-case mt-0.5">
-                                    {pairPreset === "two_female"
-                                      ? "RG000100A00 • 950k"
-                                      : "RM000100A00 • 1.150k"}
-                                  </div>
-                                </th>
-                                <th className="py-3 px-3 min-w-[140px]">
-                                  <div className="font-bold text-gray-900">
-                                    {pairPreset === "two_female" 
-                                      ? "Nhẫn Nữ 2" 
-                                      : pairPreset === "two_male" 
-                                      ? "Nhẫn Nam 2" 
-                                      : "Nhẫn Nữ"}
-                                  </div>
-                                  <div className="text-[10px] text-gray-500 font-mono font-normal normal-case mt-0.5">
-                                    {pairPreset === "two_male"
-                                      ? "RM000100A00 • 1.150k"
-                                      : "RG000100A00 • 950k"}
-                                  </div>
-                                </th>
-                                <th className="py-3 px-3 min-w-[200px]">
-                                  <div className="font-bold text-gray-900">Yêu cầu thay đổi</div>
-                                  <div className="text-[10px] text-gray-500 font-normal normal-case mt-0.5">
-                                    Khắc laser tên & ngày cưới
-                                  </div>
-                                </th>
-                                <th className="py-3 px-2.5 w-24 text-center">
-                                  <div className="font-bold text-gray-900">Số lượng</div>
-                                  <div className="text-[10px] text-gray-500 font-normal normal-case mt-0.5">Cặp</div>
-                                </th>
-                                <th className="py-3 px-3 w-32 text-right">
-                                  <div className="font-bold text-gray-900">Giá công cặp</div>
-                                  <div className="text-[10px] text-gray-500 font-normal normal-case mt-0.5">Thành tiền</div>
-                                </th>
-                                <th className="py-3 px-2 w-16 text-center">Thao tác</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 text-xs">
-                              {setSizeGroups.map((group, groupIdx) => {
-                                const comp1 = (product.components || [])[0];
-                                const comp2 = (product.components || [])[1];
-                                const activeModel1 = comp1 ? getCompActiveModel(comp1, group) : null;
-                                const activeModel2 = comp2 ? getCompActiveModel(comp2, group) : null;
-                                
-                                const size1 = group.sizes?.[comp1?.id] || activeModel1?.defaultOption || "58";
-                                const size2 = group.sizes?.[comp2?.id] || activeModel2?.defaultOption || "52";
-                                const cr1 = group.changeRequests?.[comp1?.id] || "Không thay đổi";
-                                
-                                const singlePairWage = (activeModel1?.wagePrice || 1150000) + (activeModel2?.wagePrice || 950000);
-                                const totalPairWage = singlePairWage * (parseInt(group.quantity) || 1);
+                      {/* 3. DANH SÁCH CÁC CẶP KÍCH THƯỚC (RESPONSIVE PAIR CARDS - ZERO HORIZONTAL SCROLL) */}
+                      <div className="space-y-2.5">
+                        {setSizeGroups.map((group, groupIdx) => {
+                          const comp1 = (product.components || [])[0];
+                          const comp2 = (product.components || [])[1];
+                          const activeModel1 = comp1 ? getCompActiveModel(comp1, group) : null;
+                          const activeModel2 = comp2 ? getCompActiveModel(comp2, group) : null;
+                          
+                          const size1 = group.sizes?.[comp1?.id] || activeModel1?.defaultOption || "58";
+                          const size2 = group.sizes?.[comp2?.id] || activeModel2?.defaultOption || "52";
+                          
+                          const singlePairWage = (activeModel1?.wagePrice || 1150000) + (activeModel2?.wagePrice || 950000);
+                          const totalPairWage = singlePairWage * (parseInt(group.quantity) || 1);
 
-                                return (
-                                  <tr key={group.id} className="hover:bg-emerald-50/20 transition-colors">
-                                    {/* Cột 1: Cặp # */}
-                                    <td className="py-3 px-3 text-center align-top pt-3.5">
-                                      <span className="font-bold text-[#00594c] bg-emerald-50 border border-emerald-200/60 px-2 py-1 rounded-md text-[11px] font-mono whitespace-nowrap">
-                                        {group.nameLabel || `Cặp ${groupIdx + 1}`}
-                                      </span>
-                                    </td>
+                          return (
+                            <div 
+                              key={group.id} 
+                              className="p-3.5 bg-white rounded-2xl border border-gray-200/90 shadow-2xs hover:border-emerald-300 transition-colors space-y-3"
+                            >
+                              {/* Hàng tiêu đề cặp & giá công */}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-bold text-xs text-[#00594c] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-mono">
+                                    {group.nameLabel || `Cặp ${groupIdx + 1}`}
+                                  </span>
+                                  <span className="text-[11px] text-gray-500 font-mono">
+                                    ({singlePairWage.toLocaleString()}đ/cặp)
+                                  </span>
+                                </div>
 
-                                    {/* Cột 2: Ni Chiếc 1 */}
-                                    <td className="py-3 px-3 align-top">
-                                      <div className="space-y-1">
-                                        {pairPreset === "custom" && comp1?.availableModels && (
-                                          <select
-                                            value={group.models?.[comp1.id] || comp1.defaultModel}
-                                            onChange={(e) => handleUpdateGroupModel(group.id, comp1.id, e.target.value)}
-                                            className="w-full bg-white px-2 py-1 border border-emerald-300 rounded-lg text-[11px] font-bold text-[#00594c] outline-none cursor-pointer"
-                                          >
-                                            {comp1.availableModels.map(m => (
-                                              <option key={m.type} value={m.type}>{m.label}</option>
-                                            ))}
-                                          </select>
-                                        )}
-                                        <select
-                                          value={size1}
-                                          onChange={(e) => comp1 && handleUpdateGroupSize(group.id, comp1.id, e.target.value)}
-                                          className="w-full bg-white px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-[#00594c] outline-none cursor-pointer min-h-[36px]"
-                                        >
-                                          {(activeModel1?.options || ["54", "56", "58", "60", "62", "64"]).map(opt => (
-                                            <option key={opt} value={opt}>Ni {opt}</option>
-                                          ))}
-                                        </select>
-                                      </div>
-                                    </td>
-
-                                    {/* Cột 3: Ni Chiếc 2 */}
-                                    <td className="py-3 px-3 align-top">
-                                      <div className="space-y-1">
-                                        {pairPreset === "custom" && comp2?.availableModels && (
-                                          <select
-                                            value={group.models?.[comp2.id] || comp2.defaultModel}
-                                            onChange={(e) => handleUpdateGroupModel(group.id, comp2.id, e.target.value)}
-                                            className="w-full bg-white px-2 py-1 border border-emerald-300 rounded-lg text-[11px] font-bold text-[#00594c] outline-none cursor-pointer"
-                                          >
-                                            {comp2.availableModels.map(m => (
-                                              <option key={m.type} value={m.type}>{m.label}</option>
-                                            ))}
-                                          </select>
-                                        )}
-                                        <select
-                                          value={size2}
-                                          onChange={(e) => comp2 && handleUpdateGroupSize(group.id, comp2.id, e.target.value)}
-                                          className="w-full bg-white px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-[#00594c] outline-none cursor-pointer min-h-[36px]"
-                                        >
-                                          {(activeModel2?.options || ["48", "50", "52", "54", "56"]).map(opt => (
-                                            <option key={opt} value={opt}>Ni {opt}</option>
-                                          ))}
-                                        </select>
-                                      </div>
-                                    </td>
-
-                                    {/* Cột 4: Yêu cầu thay đổi & Khắc laser */}
-                                    <td className="py-3 px-3 align-top">
-                                      <div className="space-y-1.5">
-                                        <select
-                                          value={cr1}
-                                          onChange={(e) => {
-                                            if (comp1) handleUpdateGroupChangeRequest(group.id, comp1.id, e.target.value);
-                                            if (comp2) handleUpdateGroupChangeRequest(group.id, comp2.id, e.target.value);
-                                          }}
-                                          className="w-full bg-white px-2 py-1.5 border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none cursor-pointer min-h-[36px]"
-                                        >
-                                          {(comp1?.availableChangeRequests || [
-                                            "Không thay đổi",
-                                            "Khắc laser Tên & Ngày cưới",
-                                            "Đổi sang kim cương tự nhiên",
-                                            "Đổi bề mặt nhám mờ (Matte)",
-                                            "Đổi bề mặt bóng gương (Glossy)"
-                                          ]).map(cr => (
-                                            <option key={cr} value={cr}>{cr}</option>
-                                          ))}
-                                        </select>
-
-                                        {/* Ô nhập nội dung khắc laser trực tiếp theo từng cặp */}
-                                        {cr1 === "Khắc laser Tên & Ngày cưới" && (
-                                          <div className="space-y-0.5">
-                                            <input
-                                              type="text"
-                                              value={group.laserText || ""}
-                                              onChange={(e) => handleUpdateGroupLaserText(group.id, e.target.value)}
-                                              placeholder="VD: Tuấn ♡ Lan 20.10.26"
-                                              className="w-full px-2.5 py-1 text-xs bg-amber-50/70 border border-amber-300 rounded-lg text-gray-800 placeholder-gray-400 focus:ring-1 focus:ring-amber-500 focus:bg-white outline-none font-medium transition-colors"
-                                            />
-                                            <div className="text-[10px] text-amber-700 font-medium">
-                                              ⚡ Chữ & ngày cưới khắc trong lòng nhẫn
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </td>
-
-                                    {/* Cột 5: Số lượng (cặp) */}
-                                    <td className="py-3 px-2.5 text-center align-top pt-3.5">
-                                      <div className="inline-flex items-center border border-gray-300 rounded-lg bg-gray-50/70 overflow-hidden shadow-2xs">
-                                        <button
-                                          type="button"
-                                          onClick={() => handleUpdateGroupQty(group.id, Math.max(1, (parseInt(group.quantity) || 1) - 1))}
-                                          className="w-6 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 text-xs font-bold transition-colors cursor-pointer"
-                                        >
-                                          -
-                                        </button>
-                                        <input
-                                          type="number"
-                                          min="1"
-                                          value={group.quantity}
-                                          onChange={(e) => handleUpdateGroupQty(group.id, e.target.value)}
-                                          className="w-10 text-center text-xs font-bold text-gray-900 bg-white py-1 outline-none"
-                                        />
-                                        <button
-                                          type="button"
-                                          onClick={() => handleUpdateGroupQty(group.id, (parseInt(group.quantity) || 1) + 1)}
-                                          className="w-6 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 text-xs font-bold transition-colors cursor-pointer"
-                                        >
-                                          +
-                                        </button>
-                                      </div>
-                                    </td>
-
-                                    {/* Cột 6: Giá công cặp */}
-                                    <td className="py-3 px-3 text-right align-top pt-3.5">
-                                      <div className="font-mono font-bold text-[#00594c]">
-                                        {roundUp5k(totalPairWage).toLocaleString()}đ
-                                      </div>
-                                      <div className="text-[10px] text-gray-400 font-mono">
-                                        ({roundUp5k(singlePairWage).toLocaleString()}đ/cặp)
-                                      </div>
-                                    </td>
-
-                                    {/* Cột 7: Thao tác (Nhân bản & Xóa) */}
-                                    <td className="py-3 px-2 text-center align-top pt-3.5">
-                                      <div className="flex items-center justify-center space-x-1">
-                                        <button
-                                          type="button"
-                                          onClick={() => handleDuplicateGroup(group.id)}
-                                          className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
-                                          title="Nhân bản cặp kích thước này"
-                                        >
-                                          <Copy className="h-3.5 w-3.5" />
-                                        </button>
-                                        {setSizeGroups.length > 1 && (
-                                          <button
-                                            type="button"
-                                            onClick={() => handleRemoveSetSizeGroup(group.id)}
-                                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                                            title="Xóa cặp kích thước này"
-                                          >
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                          </button>
-                                        )}
-                                      </div>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                            <tfoot className="bg-gray-50/90 border-t-2 border-gray-200 text-xs">
-                              <tr>
-                                <td colSpan={4} className="py-2.5 px-3 text-gray-700">
-                                  <span className="font-bold text-gray-900">Tổng cộng bảng:</span>{" "}
-                                  <span className="text-[#00594c] font-black">{totalSetOrderQty} Cặp</span>{" "}
-                                  <span className="text-gray-500 font-normal">({totalSetOrderQty * 2} chiếc)</span>
-                                </td>
-                                <td className="py-2.5 px-2.5 text-center font-mono font-bold text-gray-900">
-                                  {totalSetOrderQty}
-                                </td>
-                                <td className="py-2.5 px-3 text-right font-mono font-black text-[#00594c] text-sm">
-                                  {roundUp5k(totalSetWage).toLocaleString()}đ
-                                </td>
-                                <td className="py-2.5 px-2 text-center">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-xs font-bold font-mono text-[#00594c]">
+                                    {totalPairWage.toLocaleString()}đ
+                                  </span>
                                   <button
                                     type="button"
-                                    onClick={handleAddSetSizeGroup}
-                                    className="p-1 rounded-md text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
-                                    title="Thêm hàng mới"
+                                    onClick={() => handleDuplicateGroup(group.id)}
+                                    className="p-1 text-gray-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                                    title="Nhân bản cặp này"
                                   >
-                                    <Plus className="h-4 w-4" />
+                                    <Copy className="h-3.5 w-3.5" />
                                   </button>
-                                </td>
-                              </tr>
-                            </tfoot>
-                          </table>
-                        </div>
+                                  {setSizeGroups.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveSetSizeGroup(group.id)}
+                                      className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                      title="Xóa cặp này"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Bố cục chọn Ni Nam, Ni Nữ và Số Lượng: Vừa khít 100% không cuộn ngang */}
+                              <div className="grid grid-cols-12 gap-2 sm:gap-3 items-end">
+                                {/* Cột 1: Ni Chiếc 1 (Nam) */}
+                                <div className="col-span-5 sm:col-span-5">
+                                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                                    {pairPreset === "two_female" ? "Nhẫn Nữ 1 (RG)" : "Nhẫn Nam (RM)"}
+                                  </label>
+                                  <select
+                                    value={size1}
+                                    onChange={(e) => comp1 && handleUpdateGroupSize(group.id, comp1.id, e.target.value)}
+                                    className="w-full bg-gray-50 hover:bg-white focus:bg-white px-2.5 py-1.5 border border-gray-300 focus:border-[#00594c] rounded-xl text-xs font-bold text-[#00594c] focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer transition-all min-h-[38px]"
+                                  >
+                                    {(activeModel1?.options || ["54", "56", "58", "60", "62", "64"]).map(opt => (
+                                      <option key={opt} value={opt}>Ni {opt}</option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                {/* Cột 2: Ni Chiếc 2 (Nữ) */}
+                                <div className="col-span-5 sm:col-span-5">
+                                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                                    {pairPreset === "two_male" ? "Nhẫn Nam 2 (RM)" : "Nhẫn Nữ (RG)"}
+                                  </label>
+                                  <select
+                                    value={size2}
+                                    onChange={(e) => comp2 && handleUpdateGroupSize(group.id, comp2.id, e.target.value)}
+                                    className="w-full bg-gray-50 hover:bg-white focus:bg-white px-2.5 py-1.5 border border-gray-300 focus:border-[#00594c] rounded-xl text-xs font-bold text-[#00594c] focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer transition-all min-h-[38px]"
+                                  >
+                                    {(activeModel2?.options || ["48", "50", "52", "54", "56"]).map(opt => (
+                                      <option key={opt} value={opt}>Ni {opt}</option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                {/* Cột 3: Số lượng cặp */}
+                                <div className="col-span-2 sm:col-span-2">
+                                  <label className="block text-[11px] font-bold text-gray-700 mb-1 text-center">
+                                    SL
+                                  </label>
+                                  <div className="flex items-center justify-center border border-gray-300 rounded-xl bg-white overflow-hidden min-h-[38px]">
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={group.quantity}
+                                      onChange={(e) => handleUpdateGroupQty(group.id, e.target.value)}
+                                      className="w-full text-center text-xs font-black text-gray-900 bg-white py-1 outline-none"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Ô nhập nội dung khắc laser trực tiếp dưới mỗi cặp (nếu cần) */}
+                              <div className="pt-1">
+                                <input
+                                  type="text"
+                                  value={group.laserText || ""}
+                                  onChange={(e) => handleUpdateGroupLaserText(group.id, e.target.value)}
+                                  placeholder="✍ Khắc laser lòng nhẫn (VD: Tuấn ♡ Lan 20.10.2026)"
+                                  className="w-full px-2.5 py-1 text-xs bg-gray-50 hover:bg-white focus:bg-white border border-gray-200 focus:border-amber-400 rounded-lg text-gray-800 placeholder-gray-400 outline-none transition-colors"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
 
-                      {/* GỢI Ý THÊM NHANH CẶP NI PHỔ BIẾN (QUICK PRESETS) */}
-                      <div className="pt-1 flex items-center justify-between flex-wrap gap-2 text-xs">
-                        <span className="text-[11px] font-semibold text-gray-500">
-                          Thêm nhanh cặp Ni phổ biến (1 click):
-                        </span>
-                        <div className="flex items-center flex-wrap gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleAddPresetPair("58", "52", true)}
-                            className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-gray-700 hover:text-[#00594c] border border-gray-200 hover:border-emerald-300 rounded-lg text-[11px] font-medium transition-all cursor-pointer shadow-2xs"
-                          >
-                            + Nam 58 & Nữ 52
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleAddPresetPair("56", "50", true)}
-                            className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-gray-700 hover:text-[#00594c] border border-gray-200 hover:border-emerald-300 rounded-lg text-[11px] font-medium transition-all cursor-pointer shadow-2xs"
-                          >
-                            + Nam 56 & Nữ 50
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleAddPresetPair("60", "54", true)}
-                            className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-gray-700 hover:text-[#00594c] border border-gray-200 hover:border-emerald-300 rounded-lg text-[11px] font-medium transition-all cursor-pointer shadow-2xs"
-                          >
-                            + Nam 60 & Nữ 54
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleAddPresetPair("58", "50", true)}
-                            className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-gray-700 hover:text-[#00594c] border border-gray-200 hover:border-emerald-300 rounded-lg text-[11px] font-medium transition-all cursor-pointer shadow-2xs"
-                          >
-                            + Nam 58 & Nữ 50
-                          </button>
-                        </div>
-                      </div>
+                      {/* 4. NÚT THÊM CẶP KÍCH THƯỚC KHÁC */}
+                      <button
+                        type="button"
+                        onClick={handleAddSetSizeGroup}
+                        className="w-full py-2.5 bg-gray-50 hover:bg-emerald-50/60 text-gray-700 hover:text-[#00594c] border border-dashed border-gray-300 hover:border-emerald-400 rounded-2xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-2xs"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>+ Thêm cặp kích thước khác</span>
+                      </button>
+
                     </div>
                   ) : (
                     /* CASE 2: BỘ TRANG SỨC (4 MÓN) - CARDS SELECTOR */
