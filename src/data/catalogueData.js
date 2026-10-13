@@ -561,9 +561,12 @@ export const JEWELRY_PRODUCTS = [
   },
   {
     id: "prod-8",
-    isSet: false,
+    isSet: true,
+    isPair: true,
+    isWeddingRing: true,
     productCode: "WD0PR000100A00A00CZXX100000560",
-    productName: "Cặp nhẫn cưới vàng hồng Eternity",
+    drawingCode: "PR000100A00",
+    productName: "Nhẫn cưới (2 chiếc)",
     categoryId: "nhan-cuoi",
     categoryName: "Nhẫn cưới (1 cặp)",
     weight: 0.020,
@@ -574,20 +577,94 @@ export const JEWELRY_PRODUCTS = [
     imageType: "wedding-rings",
     specs: {
       weight: "0.020",
-      productType: "Nhẫn cưới (1 cặp)",
+      productType: "Cặp nhẫn cưới (2 chiếc)",
       wage: "2,100,000đ"
     },
     defaultOptions: {
       goldColor: "Hồng",
-      niSize: "Nam 58 - Nữ 52",
       mainStoneColor: "Kim Cương Trắng",
-      changeRequest: "Không thay đổi",
-      quantity: 1,
-      note: ""
+      note: "Khắc laser tên lồng ngày cưới"
     },
-    availableGoldColors: ["Hồng", "Vàng 18K", "Trắng Platin"],
-    availableNiSizes: ["Nam 56 - Nữ 50", "Nam 58 - Nữ 52", "Nam 60 - Nữ 54"],
-    availableStoneColors: ["Kim Cương Trắng", "Kim Cương Tự Nhiên GIA"],
-    availableChangeRequests: ["Chọn loại thay đổi", "Khắc tên lồng ngày cưới", "Không thay đổi"]
+    availableGoldColors: ["Hồng", "Vàng 18K", "Trắng Platin", "Vàng 2 màu"],
+    availableStoneColors: ["Kim Cương Trắng", "Kim Cương Tự Nhiên GIA", "CZ Trắng"],
+    // 2 chiếc trong cặp nhẫn cưới
+    components: [
+      {
+        id: "ring-1",
+        itemType: "ring",
+        name: "Chiếc 1 (Nhẫn Nam)",
+        roleLabel: "Chiếc 1",
+        defaultModel: "male",
+        availableModels: [
+          {
+            type: "male",
+            label: "Nhẫn Nam (RM)",
+            categoryCode: "RM",
+            drawingCode: "RM000100A00",
+            sku: "WD0RM000100A00A00CZXX10000058",
+            weight: 0.011,
+            wagePrice: 1150000,
+            options: ["54", "56", "58", "60", "62", "64"],
+            defaultOption: "58"
+          },
+          {
+            type: "female",
+            label: "Nhẫn Nữ (RG)",
+            categoryCode: "RG",
+            drawingCode: "RG000100A00",
+            sku: "WD0RG000100A00A00CZXX10000052",
+            weight: 0.009,
+            wagePrice: 950000,
+            options: ["48", "50", "52", "54", "56"],
+            defaultOption: "52"
+          }
+        ],
+        availableChangeRequests: [
+          "Không thay đổi",
+          "Khắc laser Tên & Ngày cưới",
+          "Đổi sang kim cương tự nhiên",
+          "Đổi bề mặt nhám mờ (Matte)"
+        ],
+        icon: "💍"
+      },
+      {
+        id: "ring-2",
+        itemType: "ring",
+        name: "Chiếc 2 (Nhẫn Nữ)",
+        roleLabel: "Chiếc 2",
+        defaultModel: "female",
+        availableModels: [
+          {
+            type: "female",
+            label: "Nhẫn Nữ (RG)",
+            categoryCode: "RG",
+            drawingCode: "RG000100A00",
+            sku: "WD0RG000100A00A00CZXX10000052",
+            weight: 0.009,
+            wagePrice: 950000,
+            options: ["48", "50", "52", "54", "56"],
+            defaultOption: "52"
+          },
+          {
+            type: "male",
+            label: "Nhẫn Nam (RM)",
+            categoryCode: "RM",
+            drawingCode: "RM000100A00",
+            sku: "WD0RM000100A00A00CZXX10000058",
+            weight: 0.011,
+            wagePrice: 1150000,
+            options: ["54", "56", "58", "60", "62", "64"],
+            defaultOption: "58"
+          }
+        ],
+        availableChangeRequests: [
+          "Không thay đổi",
+          "Khắc laser Tên & Ngày cưới",
+          "Đổi sang kim cương tự nhiên",
+          "Đổi bề mặt bóng gương (Glossy)"
+        ],
+        icon: "💍"
+      }
+    ]
   }
 ];

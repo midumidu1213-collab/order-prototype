@@ -346,8 +346,17 @@ function CatalogueContent() {
                     className="group bg-white rounded-2xl border border-gray-200/90 hover:border-emerald-500/70 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden relative"
                   >
                     {/* Jewelry Image with hover zoom */}
-                    <div className="w-full aspect-square p-6 bg-gradient-to-b from-gray-50/70 to-emerald-50/20 flex items-center justify-center group-hover:scale-102 transition-transform duration-300">
+                    <div className="w-full aspect-square p-6 bg-gradient-to-b from-gray-50/70 to-emerald-50/20 flex items-center justify-center group-hover:scale-102 transition-transform duration-300 relative">
                       <JewelryVisual type={prod.imageType} className="w-full h-full" />
+                      {prod.isPair ? (
+                        <div className="absolute top-2.5 left-2.5 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                          Cặp nhẫn cưới (2 chiếc)
+                        </div>
+                      ) : prod.isSet ? (
+                        <div className="absolute top-2.5 left-2.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                          Bộ ({prod.components?.length || 4} món)
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* Card Content info */}

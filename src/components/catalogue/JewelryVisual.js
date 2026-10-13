@@ -12,7 +12,7 @@ const RENDER_IMAGE_MAP = {
   "set-diamond-bridal": "/images/products/set-diamond-bridal.jpg",
   "ring-snake": "/images/products/ring-solitaire.jpg",
   "ring-solitaire": "/images/products/ring-solitaire.jpg",
-  "wedding-rings": "/images/products/ring-solitaire.jpg",
+  "wedding-rings": "/images/products/wedding-rings.jpg",
   "ring-men-black": "/images/products/ring-solitaire.jpg",
   "ring-kim-tien": "/images/products/ring-solitaire.jpg",
   "necklace-emerald": "/images/products/necklace-emerald.jpg",
