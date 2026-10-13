@@ -582,11 +582,11 @@ export const JEWELRY_PRODUCTS = [
     },
     defaultOptions: {
       goldColor: "Hồng",
-      mainStoneColor: "Kim Cương Trắng",
+      mainStoneColor: "Trắng",
       note: "Khắc laser tên lồng ngày cưới"
     },
     availableGoldColors: ["Hồng", "Vàng 18K", "Trắng Platin", "Vàng 2 màu"],
-    availableStoneColors: ["Kim Cương Trắng", "Kim Cương Tự Nhiên GIA", "CZ Trắng"],
+    availableStoneColors: ["Trắng", "Hồng", "Xanh Biển"],
     // 2 chiếc trong cặp nhẫn cưới
     components: [
       {

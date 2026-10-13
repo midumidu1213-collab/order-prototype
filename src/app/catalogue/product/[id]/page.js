@@ -738,7 +738,7 @@ export default function ProductDetailPage({ params }) {
                         <div className="text-sm sm:text-base">{comp.icon}</div>
                         <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">
                           {product.isPair 
-                            ? (comp.id === "ring-1" ? "Nhẫn Nam (RM)" : "Nhẫn Nữ (RG)") 
+                            ? (comp.id === "ring-1" ? "Nhẫn Nam" : "Nhẫn Nữ") 
                             : (comp.roleLabel || comp.name)}
                         </span>
                       </button>
@@ -893,23 +893,12 @@ export default function ProductDetailPage({ params }) {
                                   <span className="font-bold text-xs text-[#00594c] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-mono">
                                     {group.nameLabel || `Cặp ${groupIdx + 1}`}
                                   </span>
-                                  <span className="text-[11px] text-gray-500 font-mono">
-                                    ({singlePairWage.toLocaleString()}đ/cặp)
-                                  </span>
                                 </div>
 
                                 <div className="flex items-center space-x-2">
                                   <span className="text-xs font-bold font-mono text-[#00594c]">
                                     {totalPairWage.toLocaleString()}đ
                                   </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDuplicateGroup(group.id)}
-                                    className="p-1 text-gray-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
-                                    title="Nhân bản cặp này"
-                                  >
-                                    <Copy className="h-3.5 w-3.5" />
-                                  </button>
                                   {setSizeGroups.length > 1 && (
                                     <button
                                       type="button"
@@ -928,7 +917,7 @@ export default function ProductDetailPage({ params }) {
                                 {/* Cột 1: Ni Chiếc 1 (Nam) */}
                                 <div className="col-span-5 sm:col-span-5">
                                   <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                                    {pairPreset === "two_female" ? "Nhẫn Nữ 1 (RG)" : "Nhẫn Nam (RM)"}
+                                    {pairPreset === "two_female" ? "Nhẫn Nữ 1" : "Nhẫn Nam"}
                                   </label>
                                   <select
                                     value={size1}
@@ -944,7 +933,7 @@ export default function ProductDetailPage({ params }) {
                                 {/* Cột 2: Ni Chiếc 2 (Nữ) */}
                                 <div className="col-span-5 sm:col-span-5">
                                   <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                                    {pairPreset === "two_male" ? "Nhẫn Nam 2 (RM)" : "Nhẫn Nữ (RG)"}
+                                    {pairPreset === "two_male" ? "Nhẫn Nam 2" : "Nhẫn Nữ"}
                                   </label>
                                   <select
                                     value={size2}
@@ -985,7 +974,7 @@ export default function ProductDetailPage({ params }) {
                         className="w-full py-2.5 bg-gray-50 hover:bg-emerald-50/60 text-gray-700 hover:text-[#00594c] border border-dashed border-gray-300 hover:border-emerald-400 rounded-2xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-2xs"
                       >
                         <Plus className="h-4 w-4" />
-                        <span>+ Thêm cặp kích thước khác</span>
+                        <span>Thêm cặp kích thước khác</span>
                       </button>
 
                     </div>
