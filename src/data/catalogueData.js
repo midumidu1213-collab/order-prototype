@@ -31,7 +31,7 @@ export const JEWELRY_CATEGORIES = [
   },
   {
     id: "nhan-cuoi",
-    name: "Nhẫn cưới (1 cặp)",
+    name: "Nhẫn cưới",
     count: 24,
     image: "wedding-rings",
     desc: "Nhẫn cưới đôi vàng 18K/vàng hồng gắn đá quý"
@@ -564,11 +564,11 @@ export const JEWELRY_PRODUCTS = [
     isSet: true,
     isPair: true,
     isWeddingRing: true,
-    productCode: "WD0PR000100A00A00CZXX100000560",
-    drawingCode: "PR000100A00",
+    productCode: "GY0RW000100A00A00CZXX100000000",
+    drawingCode: "RW000100A00",
     productName: "Nhẫn cưới (2 chiếc)",
     categoryId: "nhan-cuoi",
-    categoryName: "Nhẫn cưới (1 cặp)",
+    categoryName: "Nhẫn cưới",
     weight: 0.020,
     wagePrice: 2100000,
     priceDisplay: "2,100,000đ",

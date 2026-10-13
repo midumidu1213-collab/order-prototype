@@ -761,11 +761,6 @@ export default function ProductDetailPage({ params }) {
                       {product.productCode}
                     </h1>
                     <div className="flex items-center flex-wrap gap-2">
-                      {product.drawingCode && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                          Bản vẽ cặp: {product.drawingCode}
-                        </span>
-                      )}
                       <span className="text-xs font-semibold text-gray-700">
                         {product.isPair 
                           ? (product.productName?.replace(/^Cặp\s+/i, "Nhẫn cưới ") || "Nhẫn cưới (2 chiếc)")
@@ -865,52 +860,15 @@ export default function ProductDetailPage({ params }) {
                             onChange={(e) => handleApplyPairPreset(e.target.value)}
                             className="px-2.5 py-1 bg-white border border-gray-300 hover:border-[#00594c] rounded-xl text-xs font-semibold text-gray-700 outline-none cursor-pointer shadow-2xs"
                           >
-                            <option value="traditional">1 Nam + 1 Nữ (2.100.000đ)</option>
-                            <option value="two_female">2 Nhẫn Nữ (1.900.000đ)</option>
-                            <option value="two_male">2 Nhẫn Nam (2.300.000đ)</option>
+                            <option value="traditional">1 Nam + 1 Nữ</option>
+                            <option value="two_female">2 Nhẫn Nữ</option>
+                            <option value="two_male">2 Nhẫn Nam</option>
                             <option value="custom">Tùy chọn từng chiếc</option>
                           </select>
                         </div>
                       </div>
 
-                      {/* 2. CHỌN NHANH CẶP NI PHỔ BIẾN (1-CLICK FAST-PICK - ĐƯA LÊN ĐẦU TIẾT KIỆM 90% THỜI GIAN) */}
-                      <div className="bg-gradient-to-r from-emerald-50/80 via-teal-50/50 to-emerald-50/80 p-2.5 rounded-2xl border border-emerald-200/90 space-y-1.5 shadow-2xs">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-[#00594c]">
-                          <span className="flex items-center">
-                            <span className="mr-1">⚡</span>
-                            Chọn nhanh cặp Ni phổ biến (1-Click):
-                          </span>
-                          <span className="text-[10px] text-gray-500 font-normal">Áp dụng cho Cặp 1</span>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                          {[
-                            { m: "58", f: "52", label: "Nam 58 • Nữ 52", desc: "Chuẩn nhất" },
-                            { m: "56", f: "50", label: "Nam 56 • Nữ 50", desc: "Tay nhỏ" },
-                            { m: "60", f: "54", label: "Nam 60 • Nữ 54", desc: "Tay lớn" },
-                            { m: "58", f: "50", label: "Nam 58 • Nữ 50", desc: "Phổ biến" }
-                          ].map((item, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => handleApplyQuickNiToFirstPair(item.m, item.f)}
-                              className="p-1.5 sm:p-2 bg-white hover:bg-emerald-100/70 border border-emerald-300 hover:border-[#00594c] rounded-xl text-left transition-all cursor-pointer shadow-2xs group flex flex-col justify-center active:scale-98"
-                            >
-                              <div className="text-xs font-bold text-gray-800 group-hover:text-[#00594c]">{item.label}</div>
-                              <div className="text-[10px] text-emerald-700 font-medium mt-0.5">{item.desc}</div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* TOAST MICRO-INTERACTION KHI THAO TÁC */}
-                      {quickAddedToast && (
-                        <div className="bg-emerald-50 border border-emerald-300 text-[#00594c] px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-2 animate-fadeIn shadow-2xs">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                          <span>{quickAddedToast}</span>
-                        </div>
-                      )}
-
-                      {/* 3. DANH SÁCH CÁC CẶP KÍCH THƯỚC (RESPONSIVE PAIR CARDS - ZERO HORIZONTAL SCROLL) */}
+                      {/* 2. DANH SÁCH CÁC CẶP KÍCH THƯỚC (RESPONSIVE PAIR CARDS - ZERO HORIZONTAL SCROLL) */}
                       <div className="space-y-2.5">
                         {setSizeGroups.map((group, groupIdx) => {
                           const comp1 = (product.components || [])[0];
@@ -1014,17 +972,6 @@ export default function ProductDetailPage({ params }) {
                                     />
                                   </div>
                                 </div>
-                              </div>
-
-                              {/* Ô nhập nội dung khắc laser trực tiếp dưới mỗi cặp (nếu cần) */}
-                              <div className="pt-1">
-                                <input
-                                  type="text"
-                                  value={group.laserText || ""}
-                                  onChange={(e) => handleUpdateGroupLaserText(group.id, e.target.value)}
-                                  placeholder="✍ Khắc laser lòng nhẫn (VD: Tuấn ♡ Lan 20.10.2026)"
-                                  className="w-full px-2.5 py-1 text-xs bg-gray-50 hover:bg-white focus:bg-white border border-gray-200 focus:border-amber-400 rounded-lg text-gray-800 placeholder-gray-400 outline-none transition-colors"
-                                />
                               </div>
                             </div>
                           );
@@ -1206,7 +1153,7 @@ export default function ProductDetailPage({ params }) {
                       type="text"
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
-                      placeholder="Ghi chú thêm về đơn hàng hoặc yêu cầu riêng (nếu có)..."
+                      placeholder="Khắc laser tên lồng ngày cưới / Ghi chú đơn hàng (nếu có)..."
                       className="w-full px-3.5 py-2 bg-white border border-gray-300 rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#00594c] shadow-2xs"
                     />
                   </div>
