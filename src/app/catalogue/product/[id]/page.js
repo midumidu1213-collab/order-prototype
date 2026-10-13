@@ -1206,8 +1206,8 @@ export default function ProductDetailPage({ params }) {
                       type="text"
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
-                      placeholder="VD: Đóng gói hộp cưới riêng, khắc laser..."
-                      className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#00594c] shadow-2xs"
+                      placeholder="Ghi chú thêm về đơn hàng hoặc yêu cầu riêng (nếu có)..."
+                      className="w-full px-3.5 py-2 bg-white border border-gray-300 rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#00594c] shadow-2xs"
                     />
                   </div>
 
