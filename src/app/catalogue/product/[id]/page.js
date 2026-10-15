@@ -231,18 +231,6 @@ export default function ProductDetailPage({ params }) {
           acc[comp.id] = (comp.availableChangeRequests && comp.availableChangeRequests[0]) || "Không thay đổi";
           return acc;
         }, {})
-      },
-      {
-        id: "set-group-2",
-        nameLabel: `${groupPrefix} 2`,
-        quantity: 1,
-        laserText: "",
-        models: initModels,
-        sizes: getDefaultCompSizes(initModels),
-        changeRequests: (product.components || []).reduce((acc, comp) => {
-          acc[comp.id] = (comp.availableChangeRequests && comp.availableChangeRequests[0]) || "Không thay đổi";
-          return acc;
-        }, {})
       }
     ];
   });
@@ -812,54 +800,80 @@ export default function ProductDetailPage({ params }) {
                       </div>
                     </>
                   ) : (
-                    /* BỘ TRANG SỨC: CÁC VERSION THAY ĐỔI ẢNH HƯỞNG ĐẾN DRAWING (THAY CAST, ĐẮP LACQUER...) */
+                    /* BỘ TRANG SỨC: CÁC VERSION THAY ĐỔI ẢNH HƯỞNG ĐẾN DRAWING (DẠNG HÌNH ẢNH & HOVER TOOLTIP) */
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs pb-0.5">
                         <span className="font-bold text-gray-800 flex items-center">
                           <Layers className="h-3.5 w-3.5 mr-1.5 text-[#00594c]" />
                           Phiên bản thiết kế (Drawing Version):
                         </span>
-                        <span className="text-[10px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          Thay đổi khuôn & bản vẽ
+                        <span className="text-[10px] text-gray-400 italic hidden sm:inline">
+                          Rê chuột để xem tên phiên bản
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2">
+                      {/* 4 Thumbnail hình ảnh của từng phiên bản */}
+                      <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
                         {drawingVersions.map((ver) => {
                           const isSelected = selectedVersionId === ver.id;
                           return (
-                            <button
-                              key={ver.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedVersionId(ver.id);
-                                if (ver.imageType) setActivePreviewType(ver.imageType);
-                              }}
-                              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                                isSelected
-                                  ? "bg-emerald-50/80 border-[#00594c] ring-2 ring-emerald-500/20 shadow-xs"
-                                  : "bg-white hover:bg-gray-50 border-gray-200/90 text-gray-700 hover:border-gray-300"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-1">
-                                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                                  isSelected ? "bg-[#00594c] text-white" : "bg-gray-100 text-gray-600"
+                            <div key={ver.id} className="relative group">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedVersionId(ver.id);
+                                  if (ver.imageType) setActivePreviewType(ver.imageType);
+                                }}
+                                className={`w-full aspect-square p-1 sm:p-1.5 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden bg-white flex flex-col items-center justify-center ${
+                                  isSelected
+                                    ? "border-[#00594c] ring-2 ring-emerald-500/25 shadow-md scale-[1.02]"
+                                    : "border-gray-200 hover:border-emerald-400 hover:shadow-xs opacity-85 hover:opacity-100"
+                                }`}
+                              >
+                                {/* Ảnh visual của phiên bản */}
+                                <div className="w-full h-full flex items-center justify-center pointer-events-none p-0.5">
+                                  <JewelryVisual type={ver.imageType || product.imageType} className="w-full h-full object-contain" />
+                                </div>
+
+                                {/* Badge mã Drawing Version ở góc */}
+                                <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold leading-none ${
+                                  isSelected ? "bg-[#00594c] text-white" : "bg-black/60 text-white backdrop-blur-xs"
                                 }`}>
                                   {ver.code}
-                                </span>
-                                <span className={`text-[10px] font-bold ${
-                                  isSelected ? "text-[#00594c]" : "text-gray-500"
+                                </div>
+
+                                {/* Checkmark khi được chọn */}
+                                {isSelected && (
+                                  <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#00594c] text-white flex items-center justify-center shadow-xs">
+                                    <Check className="h-2.5 w-2.5 stroke-[3]" />
+                                  </div>
+                                )}
+                              </button>
+
+                              {/* Tooltip khi rê chuột vào (Hover) */}
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center z-40 pointer-events-none whitespace-nowrap animate-fadeIn">
+                                <div className="bg-gray-900/95 backdrop-blur-xs text-white px-2.5 py-1.5 rounded-xl shadow-xl text-center space-y-0.5 border border-gray-700/50">
+                                  <div className="text-[11px] font-bold text-amber-300 flex items-center justify-center space-x-1">
+                                    <span className="font-mono">{ver.code}</span>
+                                    <span>•</span>
+                                    <span>{ver.name}</span>
+                                  </div>
+                                  <div className="text-[10px] text-gray-300 font-normal">
+                                    {ver.desc}
+                                  </div>
+                                </div>
+                                <div className="w-2 h-2 bg-gray-900/95 rotate-45 -mt-1" />
+                              </div>
+
+                              {/* Nhãn phiên bản bên dưới */}
+                              <div className="text-center mt-1">
+                                <div className={`text-[10px] sm:text-[11px] font-bold truncate ${
+                                  isSelected ? "text-[#00594c]" : "text-gray-700"
                                 }`}>
-                                  {ver.badge || ver.tag}
-                                </span>
+                                  {ver.tag}
+                                </div>
                               </div>
-                              <div className={`text-xs font-bold leading-tight ${isSelected ? "text-[#00594c]" : "text-gray-900"}`}>
-                                {ver.name}
-                              </div>
-                              <div className="text-[10px] text-gray-500 mt-1 line-clamp-1">
-                                {ver.desc}
-                              </div>
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -1185,11 +1199,12 @@ export default function ProductDetailPage({ params }) {
                               )}
                             </div>
 
-                            {/* Bảng phân bổ 4 món con: Món thành phần & Kích thước */}
+                            {/* Bảng phân bổ 4 món con: 3 cột cân xứng (Món thành phần | Trọng lượng & Giá công | Kích thước) */}
                             <div className="space-y-2">
-                              <div className="hidden sm:grid grid-cols-12 gap-3 px-3 py-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/70 rounded-lg">
-                                <div className="col-span-8">Món thành phần</div>
-                                <div className="col-span-4 text-center">Kích thước</div>
+                              <div className="hidden sm:grid grid-cols-12 gap-3 px-3 py-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 rounded-xl border border-gray-100">
+                                <div className="col-span-5">Món thành phần</div>
+                                <div className="col-span-4 text-center">Trọng lượng & Giá công</div>
+                                <div className="col-span-3 text-center">Kích thước</div>
                               </div>
 
                               <div className="divide-y divide-gray-100">
@@ -1202,8 +1217,11 @@ export default function ProductDetailPage({ params }) {
 
                                   return (
                                     <div key={comp.id} className="py-2.5 first:pt-1 last:pb-0 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-3 items-center">
-                                      <div className="sm:col-span-8 flex items-center space-x-2.5">
-                                        <span className="text-lg select-none shrink-0">{comp.icon}</span>
+                                      {/* Cột 1: Món thành phần (Icon + Tên + Mã Drawing) */}
+                                      <div className="sm:col-span-5 flex items-center space-x-2.5">
+                                        <span className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-base select-none shrink-0 shadow-2xs">
+                                          {comp.icon}
+                                        </span>
                                         <div className="min-w-0">
                                           <div className="text-xs font-bold text-gray-800 truncate">{comp.name}</div>
                                           <div className="text-[10px] font-mono text-gray-400 truncate">
@@ -1212,23 +1230,42 @@ export default function ProductDetailPage({ params }) {
                                         </div>
                                       </div>
 
-                                      <div className="sm:col-span-4">
-                                        <span className="text-[10px] font-semibold text-gray-500 mb-0.5 block sm:hidden">Kích thước:</span>
-                                        {hasMultipleSizes ? (
-                                          <select
-                                            value={currentSize}
-                                            onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
-                                            className="w-full bg-white px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-[#00594c] outline-none cursor-pointer min-h-[36px]"
-                                          >
-                                            {comp.options.map(opt => (
-                                              <option key={opt} value={opt}>{opt}</option>
-                                            ))}
-                                          </select>
-                                        ) : (
-                                          <div className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-500 text-center min-h-[36px] flex items-center justify-center">
-                                            {currentSize === "0" ? "Tiêu chuẩn" : currentSize}
+                                      {/* Cột 2: Trọng lượng & Đơn giá công của từng món con */}
+                                      <div className="sm:col-span-4 flex items-center justify-between sm:justify-center px-1 sm:px-0">
+                                        <span className="text-[10px] font-semibold text-gray-500 sm:hidden">TL & Công:</span>
+                                        <div className="text-right sm:text-center">
+                                          <div className="text-xs font-bold text-gray-800">
+                                            {comp.weight ? `${Number(comp.weight).toFixed(4)}` : "—"}{" "}
+                                            <span className="text-[10px] text-gray-400 font-normal">Lượng</span>
                                           </div>
-                                        )}
+                                          <div className="text-[11px] font-semibold text-[#00594c]">
+                                            {comp.priceDisplay || (comp.wagePrice ? `${comp.wagePrice.toLocaleString('vi-VN')}đ` : "—")}
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Cột 3: Kích thước (Dropdown chọn size hoặc Tiêu chuẩn) */}
+                                      <div className="sm:col-span-3">
+                                        <div className="flex items-center justify-between sm:block">
+                                          <span className="text-[10px] font-semibold text-gray-500 sm:hidden">Kích thước:</span>
+                                          <div className="w-36 sm:w-full">
+                                            {hasMultipleSizes ? (
+                                              <select
+                                                value={currentSize}
+                                                onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
+                                                className="w-full bg-white px-2 py-1.5 border border-gray-300 hover:border-[#00594c] focus:border-[#00594c] rounded-xl text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer transition-colors min-h-[36px] shadow-2xs"
+                                              >
+                                                {comp.options.map(opt => (
+                                                  <option key={opt} value={opt}>{opt}</option>
+                                                ))}
+                                              </select>
+                                            ) : (
+                                              <div className="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 text-center min-h-[36px] flex items-center justify-center">
+                                                {currentSize === "0" ? "Tiêu chuẩn" : currentSize}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
                                   );
