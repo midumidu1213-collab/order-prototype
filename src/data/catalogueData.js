@@ -147,6 +147,53 @@ export const JEWELRY_PRODUCTS = [
     availableGoldColors: ["Vàng", "Trắng", "Hồng", "Vàng 2 màu"],
     availableGoldAges: ["18K (75Y)", "14K (58.5Y)", "10K (41.6Y)", "24K (99.9Y)"],
     availableStoneColors: ["Trắng / Đỏ", "Xanh Emerald", "Kim Cương Trắng", "Đỏ Ruby", "Tím Sapphire"],
+    // CÁC VERSION THAY ĐỔI ẢNH HƯỞNG ĐẾN DRAWING (BẢN VẼ / KHUÔN CAST)
+    drawingVersions: [
+      {
+        id: "v-std",
+        code: "A00",
+        drawingCode: "ST000001A00",
+        productCode: "GY0ST000001A00A00CZRO1CZGG1000",
+        name: "Bản vẽ chuẩn",
+        tag: "Bản vẽ chuẩn",
+        desc: "Khuôn cast gốc tiêu chuẩn",
+        badge: "Gốc",
+        imageType: "set-royal-emerald"
+      },
+      {
+        id: "v-lacquer",
+        code: "A01",
+        drawingCode: "ST000001A01",
+        productCode: "GY0ST000001A01A00CZRO1CZGG1000",
+        name: "Đắp Lacquer men sứ",
+        tag: "Đắp Lacquer",
+        desc: "Đắp men sứ viền hoa văn (thay đổi drawing)",
+        badge: "Lacquer",
+        imageType: "set-royal-emerald"
+      },
+      {
+        id: "v-cast",
+        code: "B00",
+        drawingCode: "ST000001B00",
+        productCode: "GY0ST000001B00A00CZRO1CZGG1000",
+        name: "Thay Cast ổ chấu",
+        tag: "Thay Cast",
+        desc: "Thay kết cấu khuôn ổ đá (thay đổi drawing)",
+        badge: "Thay Cast",
+        imageType: "set-royal-emerald"
+      },
+      {
+        id: "v-ball",
+        code: "C00",
+        drawingCode: "ST000001C00",
+        productCode: "GY0ST000001C00A00CZRO1CZGG1000",
+        name: "Bào Ball viền đá",
+        tag: "Bào Ball",
+        desc: "Họa tiết bào bóng viền đá (thay đổi drawing)",
+        badge: "Bào Ball",
+        imageType: "set-royal-emerald"
+      }
+    ],
     // 4 MÓN THÀNH PHẦN CHI TIẾT
     components: [
       {

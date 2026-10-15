@@ -117,6 +117,68 @@ export default function ProductDetailPage({ params }) {
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
+  // Các version thay đổi ảnh hưởng đến drawing (thay cast, đắp lacquer...)
+  const drawingVersions = useMemo(() => {
+    if (product.drawingVersions && product.drawingVersions.length > 0) {
+      return product.drawingVersions;
+    }
+    const baseDrawing = product.drawingCode || "ST000001A00";
+    const prefix10 = product.productCode ? product.productCode.slice(0, 10) : "GY0ST00000";
+    const suffix17 = product.productCode ? product.productCode.slice(13) : "A00CZRO1CZGG1000";
+
+    return [
+      {
+        id: "v-std",
+        code: "A00",
+        drawingCode: baseDrawing,
+        productCode: product.productCode,
+        name: "Bản vẽ chuẩn",
+        tag: "Bản vẽ chuẩn",
+        desc: "Khuôn cast gốc tiêu chuẩn",
+        badge: "Gốc",
+        imageType: product.imageType
+      },
+      {
+        id: "v-lacquer",
+        code: "A01",
+        drawingCode: baseDrawing.replace(/A00$/, "A01"),
+        productCode: `${prefix10}A01${suffix17}`,
+        name: "Đắp Lacquer men sứ",
+        tag: "Đắp Lacquer",
+        desc: "Đắp men sứ viền hoa văn (thay đổi drawing)",
+        badge: "Lacquer",
+        imageType: product.imageType
+      },
+      {
+        id: "v-cast",
+        code: "B00",
+        drawingCode: baseDrawing.replace(/A00$/, "B00"),
+        productCode: `${prefix10}B00${suffix17}`,
+        name: "Thay Cast ổ chấu",
+        tag: "Thay Cast",
+        desc: "Thay kết cấu khuôn ổ đá (thay đổi drawing)",
+        badge: "Thay Cast",
+        imageType: product.imageType
+      },
+      {
+        id: "v-ball",
+        code: "C00",
+        drawingCode: baseDrawing.replace(/A00$/, "C00"),
+        productCode: `${prefix10}C00${suffix17}`,
+        name: "Bào Ball viền đá",
+        tag: "Bào Ball",
+        desc: "Họa tiết bào bóng viền đá (thay đổi drawing)",
+        badge: "Bào Ball",
+        imageType: product.imageType
+      }
+    ];
+  }, [product]);
+
+  const [selectedVersionId, setSelectedVersionId] = useState("v-std");
+  const activeVersion = drawingVersions.find(v => v.id === selectedVersionId) || drawingVersions[0];
+  const displayProductCode = activeVersion?.productCode || product.productCode;
+  const displayDrawingCode = activeVersion?.drawingCode || product.drawingCode;
+
   // Set / Pair-specific state: Nhóm kích thước và số lượng từng Bộ/Cặp
   const getDefaultCompModels = () => {
     return (product.components || []).reduce((acc, comp) => {
@@ -555,7 +617,7 @@ export default function ProductDetailPage({ params }) {
   const totalSetItemCount = useMemo(() => allComps.length * totalSetOrderQty, [allComps, totalSetOrderQty]);
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(product.productCode);
+    navigator.clipboard.writeText(displayProductCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -576,14 +638,18 @@ export default function ProductDetailPage({ params }) {
           const groupWage = roundUp5k(calc.singleWage * groupQty);
 
           const groupLaserTag = group.laserText ? `[Khắc laser: "${group.laserText}"]` : "";
-          const groupNoteParts = [`[${group.nameLabel}]`, groupLaserTag, note].filter(Boolean);
+          const versionTag = activeVersion ? `[Version: ${activeVersion.name} (${activeVersion.code})]` : "";
+          const groupNoteParts = [`[${group.nameLabel}]`, versionTag, groupLaserTag, note].filter(Boolean);
           const fullGroupNote = groupNoteParts.join(" ");
 
           addToCart({
             isSet: true,
             isPair: !!product.isPair,
-            productCode: product.productCode,
+            productCode: displayProductCode,
             productName: product.productName,
+            drawingCode: displayDrawingCode,
+            drawingVersion: activeVersion?.name,
+            versionCode: activeVersion?.code,
             category: product.categoryName,
             goldColor,
             mainStoneColor,
@@ -657,7 +723,7 @@ export default function ProductDetailPage({ params }) {
             </Link>
             <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
             <span className="text-[#00594c] font-bold truncate">
-              {product.productCode}
+              {displayProductCode}
             </span>
           </div>
 
@@ -711,39 +777,94 @@ export default function ProductDetailPage({ params }) {
                 </div>
               </div>
 
-              {/* Component Gallery for Sets / Pairs */}
-              {product.isSet && product.components && product.components.length > 0 && (
-                <div className="w-full mt-3.5 space-y-2">
-                  <div className="text-xs font-semibold text-gray-500 text-center">
-                    {product.isPair ? "Xem chi tiết cặp nhẫn:" : "Xem chi tiết từng món trong bộ:"}
-                  </div>
-                  <div className={`grid gap-1.5 sm:gap-2 ${product.isPair ? "grid-cols-3 max-w-xs mx-auto" : "grid-cols-5"}`}>
-                    <button
-                      onClick={() => setActivePreviewType(product.imageType)}
-                      className={`p-1.5 sm:p-2 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center cursor-pointer ${
-                        activePreviewType === product.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm bg-emerald-50/20" : "border-gray-200 opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      <div className="text-sm sm:text-base">💍</div>
-                      <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">{product.isPair ? "Cả cặp" : "Toàn bộ"}</span>
-                    </button>
-                    {product.components.map((comp) => (
-                      <button
-                        key={comp.id}
-                        onClick={() => setActivePreviewType(comp.imageType || product.imageType)}
-                        className={`p-1.5 sm:p-2 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center cursor-pointer ${
-                          activePreviewType === comp.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm bg-emerald-50/20" : "border-gray-200 opacity-70 hover:opacity-100"
-                        }`}
-                      >
-                        <div className="text-sm sm:text-base">{comp.icon}</div>
-                        <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">
-                          {product.isPair 
-                            ? (comp.id === "ring-1" ? "Nhẫn Nam" : "Nhẫn Nữ") 
-                            : (comp.roleLabel || comp.name)}
+              {/* Component Gallery (Pair) OR Drawing Versions (Bộ trang sức) */}
+              {product.isSet && (
+                <div className="w-full mt-3.5 space-y-2.5">
+                  {product.isPair ? (
+                    <>
+                      <div className="text-xs font-semibold text-gray-500 text-center">
+                        Xem chi tiết cặp nhẫn:
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5 max-w-xs mx-auto">
+                        <button
+                          onClick={() => setActivePreviewType(product.imageType)}
+                          className={`p-1.5 sm:p-2 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center cursor-pointer ${
+                            activePreviewType === product.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm bg-emerald-50/20" : "border-gray-200 opacity-70 hover:opacity-100"
+                          }`}
+                        >
+                          <div className="text-sm sm:text-base">💍</div>
+                          <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">Cả cặp</span>
+                        </button>
+                        {product.components.map((comp) => (
+                          <button
+                            key={comp.id}
+                            onClick={() => setActivePreviewType(comp.imageType || product.imageType)}
+                            className={`p-1.5 sm:p-2 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center cursor-pointer ${
+                              activePreviewType === comp.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm bg-emerald-50/20" : "border-gray-200 opacity-70 hover:opacity-100"
+                            }`}
+                          >
+                            <div className="text-sm sm:text-base">{comp.icon}</div>
+                            <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">
+                              {comp.id === "ring-1" ? "Nhẫn Nam" : "Nhẫn Nữ"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    /* BỘ TRANG SỨC: CÁC VERSION THAY ĐỔI ẢNH HƯỞNG ĐẾN DRAWING (THAY CAST, ĐẮP LACQUER...) */
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs pb-0.5">
+                        <span className="font-bold text-gray-800 flex items-center">
+                          <Layers className="h-3.5 w-3.5 mr-1.5 text-[#00594c]" />
+                          Phiên bản thiết kế (Drawing Version):
                         </span>
-                      </button>
-                    ))}
-                  </div>
+                        <span className="text-[10px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                          Thay đổi khuôn & bản vẽ
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {drawingVersions.map((ver) => {
+                          const isSelected = selectedVersionId === ver.id;
+                          return (
+                            <button
+                              key={ver.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedVersionId(ver.id);
+                                if (ver.imageType) setActivePreviewType(ver.imageType);
+                              }}
+                              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                                isSelected
+                                  ? "bg-emerald-50/80 border-[#00594c] ring-2 ring-emerald-500/20 shadow-xs"
+                                  : "bg-white hover:bg-gray-50 border-gray-200/90 text-gray-700 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                                  isSelected ? "bg-[#00594c] text-white" : "bg-gray-100 text-gray-600"
+                                }`}>
+                                  {ver.code}
+                                </span>
+                                <span className={`text-[10px] font-bold ${
+                                  isSelected ? "text-[#00594c]" : "text-gray-500"
+                                }`}>
+                                  {ver.badge || ver.tag}
+                                </span>
+                              </div>
+                              <div className={`text-xs font-bold leading-tight ${isSelected ? "text-[#00594c]" : "text-gray-900"}`}>
+                                {ver.name}
+                              </div>
+                              <div className="text-[10px] text-gray-500 mt-1 line-clamp-1">
+                                {ver.desc}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -757,9 +878,16 @@ export default function ProductDetailPage({ params }) {
               <div className="pb-1">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <h1 className="font-mono text-base sm:text-lg lg:text-xl font-black text-gray-900 tracking-tight select-all">
-                      {product.productCode}
-                    </h1>
+                    <div className="flex items-center space-x-2 flex-wrap">
+                      <h1 className="font-mono text-base sm:text-lg lg:text-xl font-black text-gray-900 tracking-tight select-all">
+                        {displayProductCode}
+                      </h1>
+                      {activeVersion && (
+                        <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-md bg-emerald-50 text-[#00594c] border border-emerald-300">
+                          {activeVersion.code} • {activeVersion.tag}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center flex-wrap gap-2">
                       <span className="text-xs font-semibold text-gray-700">
                         {product.isPair 
@@ -990,14 +1118,14 @@ export default function ProductDetailPage({ params }) {
                           </span>
                         </div>
 
-                        {/* Nút + Thêm kích thước */}
+                        {/* Nút Thêm nhóm kích thước */}
                         <button
                           type="button"
                           onClick={handleAddSetSizeGroup}
                           className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-[#00594c] border border-emerald-300 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-95 cursor-pointer"
                         >
                           <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-                          <span>+ Thêm kích thước</span>
+                          <span>Thêm nhóm kích thước</span>
                         </button>
                       </div>
 
@@ -1057,12 +1185,11 @@ export default function ProductDetailPage({ params }) {
                               )}
                             </div>
 
-                            {/* Bảng phân bổ 4 món con: Món | Kích thước | Yêu cầu thay đổi */}
+                            {/* Bảng phân bổ 4 món con: Món thành phần & Kích thước */}
                             <div className="space-y-2">
-                              <div className="hidden sm:grid grid-cols-12 gap-2.5 px-2 py-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/70 rounded-lg">
-                                <div className="col-span-4">Món thành phần</div>
-                                <div className="col-span-3 text-center">Kích thước</div>
-                                <div className="col-span-5">Yêu cầu thay đổi</div>
+                              <div className="hidden sm:grid grid-cols-12 gap-3 px-3 py-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/70 rounded-lg">
+                                <div className="col-span-8">Món thành phần</div>
+                                <div className="col-span-4 text-center">Kích thước</div>
                               </div>
 
                               <div className="divide-y divide-gray-100">
@@ -1071,13 +1198,12 @@ export default function ProductDetailPage({ params }) {
                                   const currentSize = isEarring 
                                     ? "0" 
                                     : (group.sizes?.[comp.id] || comp.defaultOption || (comp.options && comp.options[0]) || "0");
-                                  const currentCR = group.changeRequests?.[comp.id] || "Không thay đổi";
                                   const hasMultipleSizes = comp.options && comp.options.length > 1 && !isEarring;
 
                                   return (
-                                    <div key={comp.id} className="py-2.5 first:pt-1 last:pb-0 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-2.5 items-center">
-                                      <div className="sm:col-span-4 flex items-center space-x-2">
-                                        <span className="text-base select-none shrink-0">{comp.icon}</span>
+                                    <div key={comp.id} className="py-2.5 first:pt-1 last:pb-0 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-3 items-center">
+                                      <div className="sm:col-span-8 flex items-center space-x-2.5">
+                                        <span className="text-lg select-none shrink-0">{comp.icon}</span>
                                         <div className="min-w-0">
                                           <div className="text-xs font-bold text-gray-800 truncate">{comp.name}</div>
                                           <div className="text-[10px] font-mono text-gray-400 truncate">
@@ -1086,41 +1212,23 @@ export default function ProductDetailPage({ params }) {
                                         </div>
                                       </div>
 
-                                      <div className="sm:col-span-3">
+                                      <div className="sm:col-span-4">
                                         <span className="text-[10px] font-semibold text-gray-500 mb-0.5 block sm:hidden">Kích thước:</span>
                                         {hasMultipleSizes ? (
                                           <select
                                             value={currentSize}
                                             onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
-                                            className="w-full bg-white px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-[#00594c] outline-none cursor-pointer min-h-[36px]"
+                                            className="w-full bg-white px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-[#00594c] outline-none cursor-pointer min-h-[36px]"
                                           >
                                             {comp.options.map(opt => (
                                               <option key={opt} value={opt}>{opt}</option>
                                             ))}
                                           </select>
                                         ) : (
-                                          <div className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-500 text-center min-h-[36px] flex items-center justify-center">
-                                            {currentSize}
+                                          <div className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-500 text-center min-h-[36px] flex items-center justify-center">
+                                            {currentSize === "0" ? "Tiêu chuẩn" : currentSize}
                                           </div>
                                         )}
-                                      </div>
-
-                                      <div className="sm:col-span-5">
-                                        <span className="text-[10px] font-semibold text-gray-500 mb-0.5 block sm:hidden">Yêu cầu thay đổi:</span>
-                                        <select
-                                          value={currentCR}
-                                          onChange={(e) => handleUpdateGroupChangeRequest(group.id, comp.id, e.target.value)}
-                                          className="w-full bg-white px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none cursor-pointer truncate min-h-[36px]"
-                                        >
-                                          {(comp.availableChangeRequests || [
-                                            "Không thay đổi",
-                                            "Khắc laser tên riêng",
-                                            "Thay kiểu chấu",
-                                            "Đổi loại khóa"
-                                          ]).map(cr => (
-                                            <option key={cr} value={cr}>{cr}</option>
-                                          ))}
-                                        </select>
                                       </div>
                                     </div>
                                   );
