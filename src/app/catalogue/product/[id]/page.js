@@ -896,11 +896,6 @@ export default function ProductDetailPage({ params }) {
                       <h1 className="font-mono text-base sm:text-lg lg:text-xl font-black text-gray-900 tracking-tight select-all">
                         {displayProductCode}
                       </h1>
-                      {activeVersion && (
-                        <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-md bg-emerald-50 text-[#00594c] border border-emerald-300">
-                          {activeVersion.code} • {activeVersion.tag}
-                        </span>
-                      )}
                     </div>
                     <div className="flex items-center flex-wrap gap-2">
                       <span className="text-xs font-semibold text-gray-700">
@@ -1221,14 +1216,14 @@ export default function ProductDetailPage({ params }) {
                                     title={`Món: ${comp.name} | Mã: ${comp.drawingCode || comp.sku} | Trọng lượng: ${comp.weight || '—'} Lượng | Giá công: ${comp.priceDisplay || '—'}`}
                                     className="p-3 bg-gray-50/80 hover:bg-emerald-50/25 rounded-xl border border-gray-200/90 hover:border-emerald-300 transition-all space-y-2 shadow-2xs"
                                   >
-                                    {/* Hàng trên: Icon + Tên món + Trọng lượng bổ sung */}
+                                    {/* Hàng trên: Icon + Tên món + Mã Drawing kỹ thuật của món */}
                                     <div className="flex items-center justify-between gap-1.5">
                                       <div className="flex items-center space-x-2 min-w-0">
                                         <span className="text-base select-none shrink-0">{comp.icon}</span>
                                         <span className="text-xs font-bold text-gray-800 truncate">{comp.name}</span>
                                       </div>
-                                      <span className="text-[11px] text-gray-400 font-mono font-medium shrink-0">
-                                        {comp.weight ? `${Number(comp.weight).toFixed(4)} Lượng` : ''}
+                                      <span className="text-[10px] font-mono font-bold text-[#00594c] bg-emerald-50/90 border border-emerald-200/90 px-1.5 py-0.5 rounded-md shrink-0 shadow-2xs tracking-tight">
+                                        {comp.drawingCode || comp.sku}
                                       </span>
                                     </div>
 
