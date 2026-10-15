@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="sparkle" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stopColor="#ffffff" stopOpacity="1"/>
+      <stop offset="40%" stopColor="#e0f2fe" stopOpacity="0.8"/>
+      <stop offset="80%" stopColor="#bae6fd" stopOpacity="0.4"/>
+      <stop offset="100%" stopColor="#0284c7" stopOpacity="0"/>
+    </radialGradient>
+    <linearGradient id="facetGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#fef08a"/>
+      <stop offset="50%" stopColor="#eab308"/>
+      <stop offset="100%" stopColor="#ca8a04"/>
+    </linearGradient>
+    <linearGradient id="diamondGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#ffffff"/>
+      <stop offset="30%" stopColor="#f0f9ff"/>
+      <stop offset="70%" stopColor="#e0f2fe"/>
+      <stop offset="100%" stopColor="#bae6fd"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Nền tối sang trọng chuẩn studio kim hoàn -->
+  <rect width="200" height="200" fill="#0f172a" rx="8"/>
+  <circle cx="100" cy="100" r="85" fill="url(#sparkle)"/>
+
+  <!-- Chấu 4 chân vàng bảo vệ kim cương -->
+  <circle cx="100" cy="100" r="62" fill="none" stroke="url(#facetGold)" stroke-width="3"/>
+  <circle cx="48" cy="48" r="7" fill="url(#facetGold)" stroke="#a16207" stroke-width="1"/>
+  <circle cx="152" cy="48" r="7" fill="url(#facetGold)" stroke="#a16207" stroke-width="1"/>
+  <circle cx="48" cy="152" r="7" fill="url(#facetGold)" stroke="#a16207" stroke-width="1"/>
+  <circle cx="152" cy="152" r="7" fill="url(#facetGold)" stroke="#a16207" stroke-width="1"/>
+
+  <!-- Mặt cắt kim cương tròn Brilliant Cut (Hearts & Arrows) -->
+  <circle cx="100" cy="100" r="56" fill="url(#diamondGrad)" stroke="#38bdf8" stroke-width="1"/>
+  
+  <!-- Các giác cắt tam giác & hình thang (Facets) -->
+  <polygon points="100,44 116,66 84,66" fill="#ffffff" fill-opacity="0.9" stroke="#0284c7" stroke-width="0.6"/>
+  <polygon points="100,156 116,134 84,134" fill="#bae6fd" fill-opacity="0.8" stroke="#0284c7" stroke-width="0.6"/>
+  <polygon points="44,100 66,116 66,84" fill="#e0f2fe" fill-opacity="0.85" stroke="#0284c7" stroke-width="0.6"/>
+  <polygon points="156,100 134,116 134,84" fill="#f0f9ff" fill-opacity="0.9" stroke="#0284c7" stroke-width="0.6"/>
+
+  <!-- Vòng giác cắt hình sao (Star facets) -->
+  <polygon points="100,66 134,84 116,100 100,80" fill="#ffffff" fill-opacity="0.95" stroke="#0284c7" stroke-width="0.5"/>
+  <polygon points="100,66 66,84 84,100 100,80" fill="#e0f2fe" fill-opacity="0.9" stroke="#0284c7" stroke-width="0.5"/>
+  <polygon points="100,134 134,116 116,100 100,120" fill="#bae6fd" fill-opacity="0.75" stroke="#0284c7" stroke-width="0.5"/>
+  <polygon points="100,134 66,116 84,100 100,120" fill="#7dd3fc" fill-opacity="0.75" stroke="#0284c7" stroke-width="0.5"/>
+
+  <!-- Bàn kim cương trung tâm (Table) -->
+  <polygon points="84,84 116,84 126,100 116,116 84,116 74,100" fill="#ffffff" fill-opacity="0.95" stroke="#0284c7" stroke-width="0.8"/>
+
+  <!-- Điểm lấp lánh (Shine) -->
+  <path d="M 88 88 L 92 88 L 92 92 L 88 92 Z" fill="#ffffff"/>
+  <polygon points="120,70 125,75 130,70 125,65" fill="#ffffff"/>
+</svg>

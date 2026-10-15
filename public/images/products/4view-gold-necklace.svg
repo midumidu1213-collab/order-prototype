@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Nền bản vẽ kỹ thuật 4-View Dây Chuyền Vàng & Đá CZ -->
+  <rect width="200" height="200" fill="#f8fafc" rx="8"/>
+  <rect x="2" y="2" width="196" height="196" fill="none" stroke="#cbd5e1" stroke-width="1.5" rx="6"/>
+  
+  <!-- Phân 4 view -->
+  <line x1="100" y1="4" x2="100" y2="196" stroke="#e2e8f0" stroke-width="1.2" stroke-dasharray="3,3"/>
+  <line x1="4" y1="100" x2="196" y2="100" stroke="#e2e8f0" stroke-width="1.2" stroke-dasharray="3,3"/>
+
+  <!-- View 1: Top (Mặt bằng) -->
+  <g transform="translate(10, 10)">
+    <text x="4" y="10" font-family="monospace" font-size="7" fill="#64748b" font-weight="bold">TOP</text>
+    <ellipse cx="40" cy="48" rx="26" ry="18" fill="none" stroke="#eab308" stroke-width="1.5"/>
+    <circle cx="40" cy="66" r="6" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+  </g>
+
+  <!-- View 2: Front (Mặt đứng) -->
+  <g transform="translate(110, 10)">
+    <text x="4" y="10" font-family="monospace" font-size="7" fill="#64748b" font-weight="bold">FRONT</text>
+    <path d="M 15 25 Q 40 75 65 25" fill="none" stroke="#eab308" stroke-width="2"/>
+    <circle cx="40" cy="58" r="8" fill="#fef08a" stroke="#ca8a04" stroke-width="1.2"/>
+    <polygon points="40,53 45,58 40,63 35,58" fill="#38bdf8" stroke="#0284c7" stroke-width="0.8"/>
+  </g>
+
+  <!-- View 3: Side (Mặt bên) -->
+  <g transform="translate(10, 110)">
+    <text x="4" y="10" font-family="monospace" font-size="7" fill="#64748b" font-weight="bold">SIDE</text>
+    <ellipse cx="40" cy="45" rx="12" ry="24" fill="none" stroke="#eab308" stroke-width="1.5"/>
+    <rect x="36" y="65" width="8" height="12" rx="2" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+  </g>
+
+  <!-- View 4: 3D Isometric View -->
+  <g transform="translate(110, 110)">
+    <text x="4" y="10" font-family="monospace" font-size="7" fill="#047857" font-weight="bold">3D ISO</text>
+    <ellipse cx="40" cy="46" rx="28" ry="16" fill="none" stroke="#ca8a04" stroke-width="2"/>
+    <circle cx="40" cy="62" r="7" fill="#fde047" stroke="#a16207" stroke-width="1.2"/>
+    <polygon points="40,57 45,62 40,67 35,62" fill="#bae6fd" stroke="#0369a1" stroke-width="0.8"/>
+    <rect x="52" y="70" width="30" height="10" rx="2" fill="#0f172a" fill-opacity="0.8"/>
+    <text x="56" y="77" font-family="monospace" font-size="6" fill="#ffffff" font-weight="bold">1:1 CAD</text>
+  </g>
+</svg>

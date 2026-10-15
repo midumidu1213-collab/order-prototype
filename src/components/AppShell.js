@@ -9,6 +9,7 @@ export default function AppShell({ children }) {
   const pathname = usePathname();
   const isCatalogue = pathname?.startsWith("/catalogue");
   const isUserGuide = pathname?.startsWith("/user-guide");
+  const isProductManagement = pathname?.startsWith("/product-management");
 
   if (isCatalogue) {
     return (
@@ -21,6 +22,14 @@ export default function AppShell({ children }) {
   if (isUserGuide) {
     return (
       <div className="h-full w-full overflow-hidden bg-[#f4f7f6]">
+        {children}
+      </div>
+    );
+  }
+
+  if (isProductManagement) {
+    return (
+      <div className="h-full w-full overflow-hidden bg-[#f4f6f8]">
         {children}
       </div>
     );

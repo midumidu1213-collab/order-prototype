@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Nền bản vẽ kỹ thuật CAD 4 góc nhìn -->
+  <rect width="200" height="200" fill="#f8fafc" rx="8"/>
+  <rect x="2" y="2" width="196" height="196" fill="none" stroke="#cbd5e1" stroke-width="1.5" rx="6"/>
+  
+  <!-- Trục phân chia 4 View (Front, Top, Right, Isometric) -->
+  <line x1="100" y1="4" x2="100" y2="196" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="4" y1="100" x2="196" y2="100" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+  <!-- View 1: Top (Mặt bằng) -->
+  <g transform="translate(10, 10)">
+    <text x="4" y="10" font-family="monospace" font-size="7" fill="#64748b" font-weight="bold">TOP VIEW</text>
+    <circle cx="40" cy="45" r="28" fill="none" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="40" cy="45" r="24" fill="none" stroke="#0284c7" stroke-width="1" stroke-dasharray="2,2"/>
+    <circle cx="40" cy="45" r="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.2"/>
+    <polygon points="40,35 48,45 40,55 32,45" fill="#38bdf8" fill-opacity="0.6" stroke="#0284c7" stroke-width="0.8"/>
+  </g>
+
+  <!-- View 2: Front (Mặt đứng) -->
+  <g transform="translate(110, 10)">
+    <text x="4" y="10" font-family="monospace" font-size="7" fill="#64748b" font-weight="bold">FRONT VIEW</text>
+    <path d="M 15 65 Q 40 40 65 65" fill="none" stroke="#d97706" stroke-width="2"/>
+    <rect x="35" y="32" width="10" height="12" fill="#fef3c7" stroke="#b45309" stroke-width="1"/>
+    <polygon points="40,20 48,32 32,32" fill="#38bdf8" fill-opacity="0.8" stroke="#0284c7" stroke-width="1"/>
+    <line x1="40" y1="15" x2="40" y2="70" stroke="#94a3b8" stroke-width="0.6" stroke-dasharray="2,2"/>
+  </g>
+
+  <!-- View 3: Right Side (Mặt bên) -->
+  <g transform="translate(10, 110)">
+    <text x="4" y="10" font-family="monospace" font-size="7" fill="#64748b" font-weight="bold">SIDE VIEW</text>
+    <ellipse cx="40" cy="50" rx="16" ry="24" fill="none" stroke="#d97706" stroke-width="1.5"/>
+    <circle cx="40" cy="30" r="6" fill="#38bdf8" fill-opacity="0.7" stroke="#0284c7" stroke-width="1"/>
+    <line x1="20" y1="50" x2="60" y2="50" stroke="#94a3b8" stroke-width="0.6" stroke-dasharray="2,2"/>
+  </g>
+
+  <!-- View 4: 3D Isometric (Phối cảnh 3D kỹ thuật) -->
+  <g transform="translate(110, 110)">
+    <text x="4" y="10" font-family="monospace" font-size="7" fill="#047857" font-weight="bold">3D CAD VIEW</text>
+    <!-- Vòng xích phối cảnh 3D -->
+    <ellipse cx="40" cy="52" rx="30" ry="14" fill="none" stroke="#f59e0b" stroke-width="2"/>
+    <!-- Chấu đá nổi 3D -->
+    <path d="M 32 38 L 48 38 L 44 48 L 36 48 Z" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+    <polygon points="40,24 50,38 40,44 30,38" fill="#0ea5e9" fill-opacity="0.85" stroke="#0284c7" stroke-width="1.2"/>
+    <!-- Nhãn tỷ lệ CAD -->
+    <rect x="52" y="70" width="30" height="10" rx="2" fill="#0f172a" fill-opacity="0.75"/>
+    <text x="56" y="77" font-family="monospace" font-size="6" fill="#ffffff" font-weight="bold">1:1 CAD</text>
+  </g>
+</svg>
