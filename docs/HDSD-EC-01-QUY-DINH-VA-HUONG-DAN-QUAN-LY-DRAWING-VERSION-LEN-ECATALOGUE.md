@@ -1,27 +1,29 @@
-# TÀI LIỆU QUY ĐỊNH & HƯỚNG DẪN TÁC NGHIỆP: QUẢN LÝ VÀ ĐƯA DRAWING VERSION LÊN E-CATALOGUE (EC)
-**Mã tài liệu:** `HDSD-EC-01` | **Hệ thống:** SEVAGO E-Catalogue (EC) & Quản lý Đơn hàng | **Phiên bản:** `1.0`
+# TÀI LIỆU QUY ĐỊNH & HƯỚNG DẪN TÁC NGHIỆP: QUY TRÌNH ĐƯA DRAWING VERSION LÊN E-CATALOGUE (EC)
+**Mã tài liệu:** `HDSD-EC-01` | **Phân hệ:** Quản lý đơn hàng (OMS) - Quản lý sản phẩm (PDM) - E-Catalogue (EC) | **Phiên bản:** `2.0`
 
 ---
 
 ## PHẦN I: THÔNG TIN CHUNG & NỘI DUNG BÀI VIẾT (Article Meta)
 
 ### 1. Tên bài hướng dẫn (*)
-**Quy định và Quy trình đưa Phiên bản Bản vẽ Thiết kế (Drawing Version) lên Hệ thống E-Catalogue**
+**Quy trình Phối hợp Liên phân hệ Đưa Phiên bản Bản vẽ Thiết kế (Drawing Version) lên E-Catalogue**
 
 ### 2. Màn hình áp dụng & Danh mục (*)
-* **Màn hình áp dụng:** 
-  - Màn hình Quản trị Sản phẩm E-Catalogue (`/admin/catalogue/products`)
-  - Màn hình Chi tiết Sản phẩm E-Catalogue dành cho Khách hàng & Sales (`/catalogue/product/[id]`)
-  - Màn hình Lập đơn hàng & Đồng bộ Item (`/orders/create`)
-* **Danh mục (*):** Quản lý Sản phẩm & Danh mục Chào hàng (E-Catalogue Management)
+* **Màn hình áp dụng:**
+  1. `Quản lý đơn hàng > Yêu cầu khách hàng` (`/dashboard/request-customer`)
+  2. `Quản lý sản phẩm > Yêu cầu thiết kế > Cấu hình loại thay đổi` (`/pdm/change-type-config`)
+  3. `Quản lý sản phẩm > BOM/Routing` (`/pdm/bom-routing`)
+  4. `Quản lý đơn hàng > Cấu hình > Cấu hình sản phẩm` (`/dashboard/config-product`)
+  5. `E-Catalogue > Chi tiết sản phẩm` (`/catalogue/product/[id]`)
+* **Danh mục (*):** Quản lý Danh mục Chào hàng & Cấu hình Phiên bản Sản phẩm (E-Catalogue & Order Management)
 
 ### 3. Mô tả ngắn (*)
-Tài liệu quy định chi tiết tiêu chí phân định, nguyên tắc đặt mã Drawing (11 ký tự) và quy trình chuẩn hóa để đưa các phiên bản thiết kế (Drawing Version) đã phát sinh lên giao diện E-Catalogue. Mục tiêu giúp Khách hàng tham khảo lịch sử cải tiến, Sales nhận biết chính xác các biến thể thay đổi quy trình công nghệ (Routing) và loại trừ triệt để việc tạo version dư thừa cho các tùy biến thuộc tính đơn hàng thông thường (ni, xi, màu đá, loại khóa).
+Hướng dẫn chi tiết luồng nghiệp vụ phối hợp liên phân hệ giữa **Quản lý đơn hàng (QLĐH)** và **Quản lý sản phẩm (QLSP)** để quản lý và công bố các phiên bản thiết kế (Drawing Version) lên **E-Catalogue (EC)**. Quy trình bắt đầu từ việc tiếp nhận Yêu cầu khách hàng gửi sang QLSP cập nhật kỹ thuật BOM/Routing; căn cứ cấu hình loại thay đổi có ảnh hưởng Routing để sinh Mã Drawing mới; và bước phê duyệt có điều kiện tại màn hình Cấu hình sản phẩm (QLĐH) để quyết định item/version nào được phép xuất hiện trên E-Catalogue chào hàng.
 
 ### 4. Video hướng dẫn
-* **Tên file video:** `HDSD_Quan_Ly_Drawing_Version_EC_v1.mp4`
-* **Thời lượng:** `05:30`
-* **Ảnh thumbnail:** `thumb_drawing_version_management.jpg`
+* **Tên file video:** `HDSD_LienPhanHe_QuanLy_Drawing_Version_EC_v2.mp4`
+* **Thời lượng:** `07:15`
+* **Ảnh thumbnail:** `thumb_drawing_version_lifecycle.jpg`
 
 ---
 
@@ -29,32 +31,58 @@ Tài liệu quy định chi tiết tiêu chí phân định, nguyên tắc đặ
 
 #### 5.1. MỤC ĐÍCH & PHẠM VI ÁP DỤNG
 * **Mục đích:**
-  1. **Chuẩn hóa dữ liệu Master Data:** Định nghĩa rõ ràng ranh giới kỹ thuật giữa **Phiên bản Bản vẽ (Drawing Version)** và **Thuộc tính tùy chọn đơn hàng (Attributes/Options)**.
-  2. **Minh bạch hóa lịch sử thiết kế:** Hiển thị trực quan các phiên bản tiền nhiệm và cải tiến (thay cast, đắp lacquer, bào ball...) dưới dạng Thumbnail trực quan kèm Tooltip giải thích trên E-Catalogue để Khách hàng và Sales nhận biết ngay lập tức.
-  3. **Tối ưu hóa Routing & Định mức sản xuất:** Đảm bảo mỗi Drawing Version trên EC tương ứng 1-1 với một quy trình công nghệ (Routing) và khuôn đúc (Mold/Cast) cụ thể dưới xưởng, tránh sai sót khi xuất lệnh sản xuất (Production Order).
+  1. **Đồng bộ hóa luồng nghiệp vụ liên phòng ban:** Tạo sự kết nối liền mạch từ Sales (ghi nhận yêu cầu khách) $\rightarrow$ Kỹ thuật R&D/BOM/Routing (xử lý kỹ thuật và cấp mã drawing mới) $\rightarrow$ Admin Bán hàng (chọn lọc version hiển thị) $\rightarrow$ Khách hàng & Sales trên E-Catalogue.
+  2. **Kiểm soát chặt chẽ nguồn sinh Version:** Chỉ những yêu cầu thay đổi được gắn cờ **Ảnh hưởng Routing** tại QLSP mới làm đổi mã Drawing và trở thành nguồn Version tiềm năng trên E-Catalogue.
+  3. **Cung cấp cơ chế chọn lọc chủ động (Publishing Gate):** E-Catalogue không tự động hiển thị tràn lan mọi mã item kỹ thuật, mà phải qua bước rà soát, tìm kiếm (theo mã item cũ, mã mới, ghi chú) và tích chọn tại màn hình **Cấu hình sản phẩm** thuộc QLĐH.
 * **Phạm vi áp dụng:**
-  - Bộ phận Kỹ thuật Thiết kế 3D CAD & R&D Khuôn mẫu.
-  - Bộ phận Quản trị Danh mục Sản phẩm (Master Data Admin / EC Admin).
-  - Khối Kinh doanh, Sales Chào hàng B2B, Chăm sóc Khách hàng và Đại lý tiệm vàng.
+  - Bộ phận Kinh doanh & Bán hàng (tiếp nhận yêu cầu khách hàng, lập đơn hàng).
+  - Bộ phận Kỹ thuật Thiết kế 3D CAD, Định mức BOM & Quy trình Routing (QLSP).
+  - Bộ phận Master Data & Quản trị Bán hàng (QLĐH).
 
 #### 5.2. QUY ĐỊNH BỔ SUNG & THUẬT NGỮ CHUYÊN MÔN
-* **Mã Drawing (Bản vẽ / Khuôn mẫu):** Chuỗi ký tự chuẩn hóa gồm **đúng 11 ký tự** đại diện cho khuôn gốc và kết cấu cơ học của sản phẩm.
-  $$\text{Cấu trúc: } \underbrace{\mathbf{XX}}_{\text{Loại món (2)}} + \underbrace{\mathbf{012345}}_{\text{Mã thiết kế gốc (6)}} + \underbrace{\mathbf{X00}}_{\text{Mã Version Drawing (3)}} = 11\text{ ký tự}$$
-  *Ví dụ:* `BE012345A00` $\longrightarrow$ `BE012345B01`.
-* **Routing sản xuất:** Chuỗi các nguyên công kỹ thuật tuần tự tại xưởng kim hoàn để tạo ra sản phẩm (Đúc $\rightarrow$ Gọt nguội $\rightarrow$ Đắp men Lacquer $\rightarrow$ Vào đá $\rightarrow$ Bào ball $\rightarrow$ Xi mạ $\rightarrow$ KCS).
-* **Thay Cast (Khuôn đúc):** Việc can thiệp chỉnh sửa file 3D CAD làm thay đổi kết cấu khuôn thạch cao/silicon, ổ đá, chấu đá hoặc tỷ lệ phân bổ kim loại.
-* **Đắp Lacquer men sứ:** Công đoạn xử lý bề mặt bằng men màu chuyên dụng qua sấy nung nhiệt, làm phát sinh công đoạn riêng biệt trong Routing.
+* **Yêu cầu khách hàng (Customer Request):** Phiếu yêu cầu kỹ thuật (mã `BDR-xxxxxx`) do Sales khởi tạo khi khách hàng muốn chỉnh sửa mẫu có sẵn từ Mã Drawing gốc và Mã Item gốc.
+* **Cấu hình loại thay đổi (Change Type Config):** Danh mục master data tại QLSP định nghĩa các dạng chỉnh sửa (Thay kích thước ball, Thay màu dây, Thay kiểu bào ball, Đắp lacquer, Thay Khóa, Cast...). Cột **Routing** là cờ quyết định việc thay đổi đó có làm đổi quy trình công nghệ hay không.
+* **Mã Drawing (11 ký tự):** Mã định danh cấu trúc khuôn đúc và routing sản xuất. Khi loại thay đổi có tick **Routing**, hệ thống bắt buộc sinh Mã Drawing mới (Ví dụ: `BE000148A00` $\longrightarrow$ `BE000148B01`).
+* **Cấu hình sản phẩm (Product Configuration - QLĐH):** Cổng kiểm soát (Publishing Gate) cho phép tìm kiếm theo `Mã item cũ`, `Mã item mới`, `Mã Drawing`, `Ghi chú` để tích chọn chính xác item/version nào được kích hoạt hiển thị trên E-Catalogue.
 
-#### 5.3. CÁC LUỒNG THỰC HIỆN CHÍNH
-1. **Luồng 1 - Thẩm định tiêu chí phát sinh Version:** R&D và Admin kiểm tra thay đổi có làm đổi Routing/Khuôn hay không.
-2. **Luồng 2 - Đặt mã Drawing chuẩn hóa (11 ký tự):** Sinh mã Version mới theo quy tắc kế thừa.
-3. **Luồng 3 - Cấu hình hiển thị lên E-Catalogue:** Upload ảnh visual phiên bản, cập nhật mã drawing, gán nhãn ngắn và mô tả tooltip kỹ thuật.
-4. **Luồng 4 - Tác nghiệp Chào hàng & Đặt hàng của Sales:** Nhận diện phiên bản trên giao diện, tư vấn khách và chốt đơn đúng mã item.
+#### 5.3. SƠ ĐỒ LUỒNG THỰC HIỆN CHÍNH (END-TO-END WORKFLOW)
+
+```mermaid
+flowchart TD
+    subgraph G1 [PHÂN HỆ QUẢN LÝ ĐƠN HÀNG - QLĐH]
+        A[Khách hàng / Sales phát sinh yêu cầu thay đổi] --> B[Màn hình: Yêu cầu khách hàng<br/>Tạo phiếu BDR-xxxxxx từ Mã Drawing & Item gốc]
+        B -->|Gửi yêu cầu sang QLSP| C[Chuyển tiếp thông tin kỹ thuật]
+    end
+
+    subgraph G2 [PHÂN HỆ QUẢN LÝ SẢN PHẨM - QLSP]
+        C --> D[Kỹ thuật / R&D tiếp nhận<br/>Cập nhật BOM & Routing]
+        D --> E{Kiểm tra Cấu hình loại thay đổi:<br/>Cột Routing có dấu Tick?}
+        E -- KHÔNG (VD: Thay khóa, đổi Ni, đổi xi) --> F[Giữ nguyên Mã Drawing gốc<br/>Không làm đổi Routing -> KHÔNG tạo Version EC]
+        E -- CÓ (VD: Thay cast, Đắp lacquer, Bào ball) --> G[Thay đổi Routing sản xuất<br/>Sinh Mã Drawing mới 11 ký tự & Item mới]
+        G --> H[Nguồn dữ liệu Version tiềm năng<br/>sẵn sàng cho QLĐH]
+    end
+
+    subgraph G3 [PHÊ DUYỆT CÔNG BỐ - GATEWAY QLĐH]
+        H --> I[Màn hình: Cấu hình sản phẩm<br/>Admin tìm kiếm: Mã item cũ, Mã mới, Ghi chú...]
+        I --> J[Tích chọn các Item / Version<br/>mong muốn xuất hiện trên E-Catalogue]
+        J --> K[Bấm 'Cập nhật' xuất bản lên EC]
+    end
+
+    subgraph G4 [PHÂN HỆ E-CATALOGUE - CLIENT]
+        K --> L[E-Catalogue: Hiển thị Thẻ Thumbnail Version trực quan<br/>+ Tooltip giải thích thay đổi Routing<br/>+ Mã Drawing & Ni từng món con]
+    end
+
+    style B fill:#e6f4ea,stroke:#137333,stroke-width:2px
+    style E fill:#fef7e0,stroke:#b06000,stroke-width:2px
+    style G fill:#ceead6,stroke:#0d652d,stroke-width:2px
+    style I fill:#e8f0fe,stroke:#1a73e8,stroke-width:2px
+    style L fill:#d1e7dd,stroke:#0f5132,stroke-width:2px
+```
 
 #### 5.4. BÀI VIẾT LIÊN QUAN
-* `HDSD-EC-02`: Quy trình cấu hình Sản phẩm Bộ (Jewelry Suites) và Cặp nhẫn cưới trên E-Catalogue.
-* `HDSD-DH-04`: Quy chuẩn định dạng Mã Item 30 ký tự và Đồng bộ Tồn kho Thành phẩm.
-* `HDSD-SX-01`: Quy định bốc khuôn và điều độ Lệnh sản xuất theo Mã Drawing.
+* `HDSD-EC-02`: Hướng dẫn cấu hình hiển thị Sản phẩm Bộ (Suites) và Cặp nhẫn cưới trên E-Catalogue.
+* `HDSD-DH-01`: Quy trình xử lý Phiếu Yêu cầu khách hàng (BDR) và Tích hợp Tồn kho Thành phẩm.
+* `HDSD-SP-03`: Quy chuẩn thiết lập BOM và Routing sản xuất tại phân hệ Quản lý sản phẩm.
 
 ---
 
@@ -62,53 +90,57 @@ Tài liệu quy định chi tiết tiêu chí phân định, nguyên tắc đặ
 
 ### TAB 1: CÁC BƯỚC THỰC HIỆN (Milestones)
 
-| Bước | Tiêu đề bước | Mô tả thao tác | Lưu ý | Mốc video |
-| :---: | :--- | :--- | :--- | :---: |
-| **1** | **Xác thực tiêu chí Version (Routing Check)** | Đối chiếu yêu cầu thay đổi với Ma trận phân loại tại Tab 2. Xác định xem thay đổi có can thiệp cấu trúc khuôn (thay cast) hoặc quy trình (đắp lacquer, bào ball) hay không. | Tuyệt đối **KHÔNG** tạo version nếu chỉ thay đổi Ni, màu xi, màu đá hay loại khóa. | `00:30` |
-| **2** | **Khởi tạo Mã Drawing 11 ký tự** | Cấp mã Drawing Version mới kế thừa 8 ký tự đầu của mẫu gốc: <br>• Ký tự 9: Ký tự phân nhóm khuôn (`A`, `B`, `C`...). <br>• Ký tự 10-11: Số thứ tự biến thể (`00`, `01`, `02`...). <br>*Ví dụ:* `BE012345A00` nâng cấp đắp men $\rightarrow$ `BE012345A01`. Thay cast ổ đá $\rightarrow$ `BE012345B00`. | Đảm bảo đúng 11 ký tự, không chứa khoảng trắng hay ký tự đặc biệt. | `01:45` |
-| **3** | **Chuẩn bị hình ảnh Visual chuẩn EC** | Chụp hoặc Render ảnh sản phẩm thực tế của phiên bản mới theo tỷ lệ 1:1, phông nền trắng xám chuẩn studio SEVAGO, làm nổi bật rõ điểm khác biệt (màu men lacquer, kiểu chấu mới). | Tên file ảnh chuẩn hóa: `[Mã_Drawing]_visual.jpg` để hệ thống tự động nhận diện. | `02:50` |
-| **4** | **Cấu hình Version trên Admin E-Catalogue** | Truy cập `Admin > Sản phẩm > Tab Drawing Versions`: <br>1. Nhập Mã Drawing (11 ký tự). <br>2. Nhập Tên phiên bản ngắn (hiển thị dưới thumbnail, tối đa 15 ký tự). <br>3. Nhập Huy hiệu nhận diện (Tag: `Bản vẽ chuẩn`, `Đắp Lacquer`, `Thay Cast`...). <br>4. Nhập Mô tả kỹ thuật Tooltip (tóm tắt thay đổi routing). <br>5. Đính kèm ảnh Thumbnail. | Ghi rõ nguyên nhân thay đổi kỹ thuật để Sales nắm bắt khi hover chuột. | `03:40` |
-| **5** | **Kiểm thử hiển thị & Xuất bản (Publish)** | Mở trang chi tiết sản phẩm trên E-Catalogue: <br>• Kiểm tra Thumbnail hiển thị đủ trong thanh chọn dưới ảnh. <br>• Rê chuột kiểm tra Tooltip hiển thị chuẩn xác tên và mô tả. <br>• Click chọn phiên bản và kiểm tra mã sản phẩm (Item Code 30 ký tự) tự động cập nhật đúng phân đoạn Drawing. | Thử nghiệm trên cả giao diện Desktop và Mobile trước khi lưu trạng thái Hoạt động. | `04:50` |
+| Bước số | Tiêu đề bước | Phân hệ / Màn hình thực hiện | Mô tả thao tác chi tiết | Điểm lưu ý quan trọng | Mốc video |
+| :---: | :--- | :--- | :--- | :--- | :---: |
+| **1** | **Tiếp nhận & Tạo Yêu cầu khách hàng** | `QLĐH > Yêu cầu khách hàng` (`/dashboard/request-customer`) | 1. Nhấn `+ Tạo yêu cầu` từ đơn hàng hoặc chào hàng. <br>2. Chọn `Mã Drawing gốc` và `Mã Item gốc`. <br>3. Chọn `Loại thay đổi` mong muốn (ví dụ: `Cast`, `Đắp lacquer - móc máy`...). <br>4. Ghi chú yêu cầu cụ thể của khách và gửi phê duyệt. | Phiếu tạo ra có mã định dạng `BDR-xxxxxx` với trạng thái `Chờ xử lý`. | `00:40` |
+| **2** | **Xử lý Kỹ thuật & Đối chiếu Cấu hình Loại thay đổi** | `QLSP > Yêu cầu thiết kế > Cấu hình loại thay đổi` & `BOM/Routing` | 1. Kỹ thuật viên R&D mở phiếu yêu cầu từ khách hàng. <br>2. Đối chiếu mã loại thay đổi trong bảng `Cấu hình loại thay đổi`: <br>• Kiểm tra cột **Routing** có dấu check xanh hay không. <br>3. Tiến hành cập nhật định mức BOM và các bước công nghệ trong Routing. | Chỉ loại thay đổi có **check ở cột Routing** mới được phép sinh Mã Drawing mới. | `02:15` |
+| **3** | **Khởi tạo Mã Drawing mới & Sinh Mã Item mới** | `QLSP > Drawing No` & `Item` | Khi loại thay đổi có tick Routing: <br>1. Hệ thống tự động/cho phép cấp **Mã Drawing mới 11 ký tự** (ví dụ: `BE000148A00` $\longrightarrow$ `BE000148B01`). <br>2. Cập nhật các thông số kỹ thuật (file 3D, khuôn cast, ảnh render 4view, trọng lượng vàng dự kiến). <br>3. Tạo ra bản ghi Mã Item mới và chuyển trạng thái phiếu BDR sang `Hoàn thành`. | Mã Drawing mới 11 ký tự này là nguồn dữ liệu chuẩn bị đưa lên E-Catalogue. | `03:45` |
+| **4** | **Phê duyệt & Chọn Item hiển thị trên E-Catalogue** | `QLĐH > Cấu hình > Cấu hình sản phẩm` (`/dashboard/config-product`) | 1. Admin truy cập màn hình **Cấu hình sản phẩm**. <br>2. Sử dụng ô tìm kiếm đa năng: gõ tìm theo `Mã item cũ`, `Mã item mới`, `Mã Drawing`, hoặc `Ghi chú...` <br>3. Kiểm tra thông tin hình ảnh render, hình 4view, trọng lượng và phụ liệu. <br>4. **Tích chọn (Checkbox)** vào các Item/Version muốn công bố lên E-Catalogue. <br>5. Bấm nút **Cập nhật** (góc trên bên phải). | Bước này là chốt chặn (Gateway) bắt buộc, không cấu hình thì item/version sẽ KHÔNG hiện lên EC. | `05:10` |
+| **5** | **Kiểm thử hiển thị & Vận hành Chào hàng trên E-Catalogue** | `E-Catalogue > Chi tiết sản phẩm` (`/catalogue/product/[id]`) | 1. Mở trang chi tiết sản phẩm trên EC. <br>2. Kiểm tra thanh Thumbnail Drawing Version dưới ảnh chính đã xuất hiện phiên bản mới hay chưa. <br>3. Rê chuột vào Thumbnail: kiểm tra Tooltip hiển thị chuẩn tên phiên bản và tóm tắt sự thay đổi routing. <br>4. Thử chọn phiên bản và đối chiếu Mã Item 30 ký tự cùng bộ chọn kích thước Ni của từng món con. | Đảm bảo Khách hàng và Sales nhận biết rõ ràng các phiên bản thiết kế cải tiến. | `06:30` |
 
 ---
 
 ### TAB 2: QUY ĐỊNH NGHIỆP VỤ (Business Rules & Prerequisites)
 
-#### Quy định 1: Ma trận Phân định Version (BẮT BUỘC TUÂN THỦ)
-Hệ thống phân định nghiêm ngặt 2 nhóm thay đổi sản phẩm:
+#### Quy định 1: Nguyên tắc Cốt lõi của Cột "Routing" tại QLSP
+Hệ thống căn cứ vào cột **Routing** trong bảng `Quản lý sản phẩm > Cấu hình loại thay đổi` để phân định luồng xử lý:
 
-| STT | Loại thay đổi | Làm đổi Routing? | Đổi khuôn Cast? | Xử lý trên Hệ thống | Ví dụ minh họa |
-| :---: | :--- | :---: | :---: | :---: | :--- |
-| **1** | **Bản vẽ tiêu chuẩn gốc** | Không (Gốc) | Không (Gốc) | **Version A00 (Gốc)** | `BE012345A00`: Khuôn cast gốc ban đầu |
-| **2** | **Đắp men sứ Lacquer** | **CÓ** (Thêm bước đắp & nung men) | Có thể | **TẠO VERSION MỚI** | `BE012345A01`: Đắp men sứ viền hoa văn |
-| **3** | **Thay đổi Cast / Ổ chấu đá** | **CÓ** (Thay khuôn đúc, sửa 3D) | **CÓ** | **TẠO VERSION MỚI** | `BE012345B00`: Thay cast ổ 6 chấu sang chấu chìm |
-| **4** | **Bào ball viền đá / Chạm khuôn** | **CÓ** (Thêm kỹ thuật chạm khuôn) | **CÓ** | **TẠO VERSION MỚI** | `BE012345C00`: Họa tiết bào bóng viền đá |
-| **5** | **Thay đổi Kích thước (Ni/Size)** | **KHÔNG** | **KHÔNG** | **Thuộc tính Kích thước (Options)** | Ni nhẫn 10-18, Ni lắc 15-19, Dây 40-50cm |
-| **6** | **Thay đổi Màu xi / Tuổi vàng** | **KHÔNG** (Cùng bể xi tiêu chuẩn) | **KHÔNG** | **Thuộc tính Màu xi / Tuổi vàng** | Vàng, Trắng, Hồng; 10K, 14K, 18K |
-| **7** | **Thay đổi Màu đá chính / Đá phụ** | **KHÔNG** (Cùng thông số ổ chấu) | **KHÔNG** | **Thuộc tính Màu đá** | CZ Trắng, Đỏ Ruby, Xanh Emerald |
-| **8** | **Đổi loại khóa thông thường** | **KHÔNG** (Khóa phụ kiện ráp sẵn) | **KHÔNG** | **Yêu cầu thay đổi phụ (Change Request)** | Đổi khóa tròn sang khóa càng cua |
-| **9** | **Khắc laser tên riêng / ngày cưới** | **KHÔNG** (Công đoạn hoàn thiện phụ) | **KHÔNG** | **Ghi chú sản phẩm (Note)** | Khắc chữ "H & M 2026" |
+$$\begin{aligned}
+\mathbf{Cột\ Routing\ [CHECK\ \checkmark]} &\Longrightarrow \text{Làm thay đổi quy trình công nghệ / Khuôn 3D} \Longrightarrow \mathbf{SINH\ MÃ\ DRAWING\ MỚI} \Longrightarrow \mathbf{NGUỒN\ VERSION\ EC} \\
+\mathbf{Cột\ Routing\ [TRỐNG\ ---]} &\Longrightarrow \text{Tùy biến phụ kiện / Kích thước thông thường} \Longrightarrow \mathbf{GIỮ\ MÃ\ DRAWING\ GỐC} \Longrightarrow \mathbf{KHÔNG\ TẠO\ VERSION\ EC}
+\end{aligned}$$
 
-#### Quy định 2: Quy chuẩn Đặt Mã Drawing (11 ký tự)
-* **Ký tự 1-2 (Loại món - Item Type):** `RG` (Nhẫn), `NL` (Dây chuyền), `EG` (Bông tai), `BE` (Lắc tay/Vòng), `ST` (Bộ), `PD` (Mặt dây).
-* **Ký tự 3-8 (Mã thiết kế mẫu):** 6 chữ số định danh mẫu độc nhất (ví dụ `012345`, `000001`).
-* **Ký tự 9-11 (Phiên bản Drawing):**
-  - Ký tự 9 đại diện cho Thế hệ khuôn cast: `A` (Khuôn chuẩn), `B` (Khuôn biến thể 1), `C` (Khuôn biến thể 2)...
-  - Ký tự 10-11 đại diện cho Xử lý công nghệ bổ sung: `00` (Không xử lý thêm), `01` (Men Lacquer), `02` (Bào bóng đặc thù)...
-  *Mẫu gốc:* `BE012345A00` $\longrightarrow$ *Thêm men:* `BE012345A01` $\longrightarrow$ *Đổi khuôn ổ:* `BE012345B00`.
+* **Danh mục loại thay đổi làm đổi Routing (CÓ SINH VERSION):**
+  - `Cast`: Thay đổi khuôn đúc, sửa kết cấu ổ chấu đá, sửa file 3D.
+  - `Đắp lacquer - móc máy`: Thêm công đoạn xử lý men sứ nung nhiệt hoặc móc máy hoa văn chuyên dụng.
+  - `Thay Pearl sang Ball`: Thay đổi kết cấu gắn giữ từ ngọc trai sang bi đúc kim loại trên khuôn.
+  - `Thay kiểu bào ball`: Can thiệp trực tiếp cấu trúc bề mặt khuôn đúc.
+* **Danh mục loại thay đổi KHÔNG đổi Routing (KHÔNG SINH VERSION):**
+  - `Thay Khóa`: Đổi phụ kiện khóa tròn, khóa càng cua, khóa hộp (lắp ráp phụ kiện hoàn thiện).
+  - `Thay kích thước dây HTJ`: Cắt ngắn hoặc nối dài đoạn dây tiêu chuẩn.
+  - `Thay kích thước ball`: Điều chỉnh bi phụ kiện lắp ghép.
+  - `Thay màu dây / Thay màu xi`: Chọn màu trong bể xi tiêu chuẩn có sẵn.
+  - `Kích thước Ni`: Chọn size nhẫn, size lắc, chiều dài dây (xử lý ở ô Kích thước).
 
-#### Quy định 3: Ràng buộc tính đồng nhất trong Cấu hình Mã Item 30 ký tự
-* Khi Khách hàng hoặc Sales click chọn một Version Drawing trên E-Catalogue, hệ thống **bắt buộc phải tự động cập nhật phân đoạn ký tự 3-13 trong Mã Item 30 ký tự**:
-  $$\mathbf{GY0} + \mathbf{[Mã\ Drawing\ 11\ ký\ tự]} + \mathbf{[Phân\ đoạn\ Option\ 16\ ký\ tự]} = 30\text{ ký tự}$$
-* *Ví dụ:* 
-  - Chọn Version Gốc: `GY0` + `BE012345A00` + `A00CZRO1CZGG1016` = `GY0BE012345A00A00CZRO1CZGG1016`.
-  - Chọn Version Đắp Lacquer: `GY0` + `BE012345A01` + `A00CZRO1CZGG1016` = `GY0BE012345A01A00CZRO1CZGG1016`.
+#### Quy định 2: Điều kiện Tiên quyết đưa Item/Version lên E-Catalogue
+Một Drawing Version chỉ được phép xuất hiện trên giao diện E-Catalogue khi thỏa mãn đồng thời **4 điều kiện**:
+1. **Điều kiện 1 (Kỹ thuật):** Loại thay đổi phát sinh từ phiếu `Yêu cầu khách hàng` đã được QLSP cập nhật BOM/Routing và được xác nhận có cờ `Routing = TRUE`.
+2. **Điều kiện 2 (Mã hóa):** Đã được cấp Mã Drawing mới hợp lệ gồm **đúng 11 ký tự** và Mã Item 30 ký tự hoàn chỉnh.
+3. **Điều kiện 3 (Tài sản số):** Đã có tối thiểu 01 ảnh Render Visual hoặc 4view đạt chuẩn phông nền studio SEVAGO.
+4. **Điều kiện 4 (Phê duyệt Bán hàng):** Đã được **Tích chọn (Checkbox)** và bấm **Cập nhật** tại màn hình `Quản lý đơn hàng > Cấu hình > Cấu hình sản phẩm`.
 
-#### Quy định 4: Trải nghiệm UI/UX trên E-Catalogue
-1. Không hiển thị các phiên bản dưới dạng văn bản dài dòng gây choáng ngợp. Phải sử dụng **Thẻ Thumbnail hình ảnh trực quan (Visual Cards)** đặt ngay dưới ảnh chính sản phẩm.
-2. Thẻ phiên bản được chọn phải có **viền xanh Emerald (#00594c), hiệu ứng nổi bật (ring/shadow) và dấu Checkmark nhận diện**.
-3. Khi rê chuột (Hover), hệ thống phải hiển thị **Tooltip nổi bật** nêu rõ: `[Mã Version] • [Tên phiên bản]` và dòng mô tả ngắn giải thích sự thay đổi về mặt kỹ thuật/routing.
-4. Tại khu vực chọn kích thước cho từng món trong Bộ: hiển thị song hành **[Mã Drawing kỹ thuật]** bên cạnh **[Dropdown chọn Ni]**, giữ nguyên trường **[Trọng lượng]** ở góc phụ.
+#### Quy định 3: Ràng buộc Tính năng Tìm kiếm tại Màn hình Cấu hình sản phẩm
+* Ô tìm kiếm tại màn hình `Cấu hình sản phẩm` bắt buộc hỗ trợ tìm kiếm linh hoạt đa trường:
+  - Tìm theo **Mã item cũ** (mã gốc trước khi thay đổi).
+  - Tìm theo **Mã item mới** (mã mới sinh ra sau khi duyệt yêu cầu kỹ thuật).
+  - Tìm theo **Mã Drawing** (11 ký tự).
+  - Tìm theo **Ghi chú** (nội dung diễn giải yêu cầu kỹ thuật hoặc mô tả phiên bản).
+
+#### Quy định 4: Chuẩn hóa Trải nghiệm Khách hàng & Sales trên E-Catalogue
+1. Các version được phê duyệt hiển thị dưới dạng **Thẻ Thumbnail hình ảnh trực quan (Visual Cards)** đặt dưới ảnh chính sản phẩm.
+2. Thẻ phiên bản được chọn phải có **viền xanh Emerald (#00594c), viền ring nổi bật và dấu Checkmark nhận diện**.
+3. Khi rê chuột (Hover) vào Thumbnail, hiển thị **Tooltip nổi bật** giải thích: `[Mã Version] • [Tên phiên bản]` kèm dòng mô tả ngắn về sự thay đổi routing (ví dụ: *A01 • Đắp Lacquer men sứ - Đắp men sứ viền hoa văn*).
+4. Tại khu vực chọn kích thước cho từng món con trong Bộ: Hiển thị sóng đôi **Mã Drawing kỹ thuật** bên cạnh **Dropdown chọn Ni**, giữ nguyên **Trường Trọng lượng** ở góc phụ.
 
 ---
 
@@ -116,11 +148,11 @@ Hệ thống phân định nghiêm ngặt 2 nhóm thay đổi sản phẩm:
 
 | STT | Hiện tượng / Tên lỗi | Nguyên nhân | Cách xử lý |
 | :---: | :--- | :--- | :--- |
-| **1** | **Tạo thừa Drawing Version khi khách đổi màu xi hoặc đổi Ni** | Nhân viên Master Data hiểu nhầm việc đổi xi (Vàng $\rightarrow$ Trắng) hoặc đổi Ni (12 $\rightarrow$ 14) là một phiên bản thiết kế mới. | **Hủy Drawing Version thừa.** Chuyển thông tin màu xi vào dropdown `Màu xi` và thông tin Ni vào dropdown `Kích thước`. Không phát sinh mã drawing mới. |
-| **2** | **Mã Drawing không đủ hoặc vượt quá 11 ký tự** | Nhập thiếu số 0 hoặc gõ thừa ký tự (ví dụ gõ `BE01234A00` chỉ 10 ký tự, hoặc `BE00012345A00` 12 ký tự). | Kiểm tra và chuẩn hóa cấu trúc: 2 chữ cái + 6 chữ số + 3 ký tự version = Đúng 11 ký tự (Ví dụ: `BE012345A00`). |
-| **3** | **Ảnh Thumbnail phiên bản bị méo hoặc không load được** | Upload ảnh sai tỷ lệ (ảnh chữ nhật dài) hoặc tên file chứa dấu tiếng Việt/khoảng trắng. | Cắt ảnh về tỷ lệ vuông 1:1, dung lượng dưới 500KB, lưu tên file không dấu dạng `drawing_BE012345B01.jpg`. |
-| **4** | **Click đổi phiên bản nhưng mã Item 30 ký tự không đổi** | Cấu hình liên kết giữa Version ID và Drawing Code trong cơ sở dữ liệu bị ngắt quãng. | Kiểm tra lại trường `drawingCode` trong cấu hình Drawing Versions của sản phẩm trong file `catalogueData.js` hoặc cơ sở dữ liệu Master Data. |
-| **5** | **Khách hàng không phân biệt được sự khác nhau giữa các version** | Tên phiên bản hoặc mô tả Tooltip ghi chung chung (ví dụ chỉ ghi "Bản vẽ 2", "Mẫu mới"). | Cập nhật lại tên và mô tả kỹ thuật rõ ràng: Ví dụ `A01 • Đắp Lacquer men sứ` kèm mô tả `Đắp men sứ viền hoa văn (thay đổi routing)`. |
+| **1** | **Item/Version đã tạo ở QLSP nhưng không hiển thị trên E-Catalogue** | Admin bán hàng chưa thực hiện bước tích chọn và nhấn "Cập nhật" tại màn hình `Cấu hình sản phẩm` (QLĐH). | Truy cập `QLĐH > Cấu hình > Cấu hình sản phẩm`, tìm kiếm theo mã item mới hoặc mã drawing, tích chọn checkbox và nhấn nút **Cập nhật**. |
+| **2** | **Loại thay đổi chỉ đổi khóa hoặc đổi xi nhưng bị sinh mã drawing mới** | Khi cấu hình loại thay đổi tại QLSP, người thiết lập lỡ tay tích dấu check vào cột **Routing**. | Truy cập `QLSP > Yêu cầu thiết kế > Cấu hình loại thay đổi`, bỏ dấu check ở cột Routing đối với các loại thay đổi không can thiệp kết cấu khuôn (như Thay Khóa, Thay màu dây). |
+| **3** | **Không tìm thấy Item mới trong màn hình Cấu hình sản phẩm** | Phiếu `Yêu cầu khách hàng` bên QLSP chưa hoàn tất hoặc gõ sai từ khóa tìm kiếm. | 1. Kiểm tra trạng thái phiếu yêu cầu khách hàng xem đã chuyển sang `Hoàn thành` chưa. <br>2. Sử dụng chức năng tìm kiếm theo `Mã item cũ` hoặc `Ghi chú` để truy xuất bản ghi kế thừa. |
+| **4** | **Ảnh Thumbnail phiên bản trên E-Catalogue bị lỗi hoặc hiển thị placeholder** | Khi tạo Item tại QLSP chưa đính kèm ảnh Render Visual hoặc đường dẫn ảnh bị lỗi. | Vào chi tiết Item bên QLSP hoặc tải ảnh lên mục tài nguyên visual của Drawing Version tương ứng, đảm bảo ảnh tỷ lệ 1:1 dưới 500KB. |
+| **5** | **Tooltip trên E-Catalogue không giải thích được lý do thay đổi** | Khi cấu hình không nhập trường mô tả kỹ thuật (Technical Description) cho version. | Bổ sung mô tả ngắn gọn về nguyên công routing thay đổi (ví dụ: *Thay đổi kết cấu khuôn ổ đá 6 chấu sang chấu chìm*). |
 
 ---
 
@@ -128,9 +160,9 @@ Hệ thống phân định nghiêm ngặt 2 nhóm thay đổi sản phẩm:
 
 | STT | Tên tài liệu / Biểu mẫu | Định dạng | Dung lượng | Mục đích sử dụng |
 | :---: | :--- | :---: | :---: | :--- |
-| **1** | `BM-EC-01_Phieu_De_Xuat_Tao_Drawing_Version.docx` | DOCX | 145 KB | Biểu mẫu dành cho R&D/Kỹ thuật đề xuất tạo version mới khi thay đổi khuôn cast/routing. |
-| **2** | `BM-EC-02_Bang_Ma_Tran_Phan_Dinh_Routing_Sevago.xlsx` | XLSX | 320 KB | File bảng tính tra cứu nhanh các nguyên công làm đổi routing để kiểm tra tự động. |
-| **3** | `Spec_Drawing_Code_Standard_11_Digits.pdf` | PDF | 510 KB | Tài liệu quy chuẩn kiến trúc mã 11 ký tự và mã Item 30 ký tự toàn hệ thống SEVAGO. |
+| **1** | `BM-EC-01_Quy_Trinh_Lien_Phan_He_CustomerRequest_To_EC.pdf` | PDF | 680 KB | Sơ đồ BPMN chi tiết luồng luân chuyển chứng từ từ Yêu cầu khách hàng đến công bố E-Catalogue. |
+| **2** | `BM-EC-02_Danh_Muc_Loai_Thay_Doi_Va_Routing_Sevago.xlsx` | XLSX | 290 KB | Bảng danh mục chuẩn hóa các loại thay đổi kỹ thuật và cờ đánh dấu ảnh hưởng Routing tại QLSP. |
+| **3** | `BM-EC-03_Checklist_Phe_Duyet_Cong_Bo_SanPham_EC.docx` | DOCX | 160 KB | Bảng kiểm soát (Checklist) dành cho Admin bán hàng trước khi bấm "Cập nhật" hiển thị Item lên E-Catalogue. |
 
 ---
-*Tài liệu được ban hành chính thức bởi Ban Quản lý Chất lượng và Bộ phận Phân tích Nghiệp vụ (BA) - SEVAGO.*
+*Tài liệu được cập nhật và ban hành theo chuẩn nghiệp vụ liên phân hệ SEVAGO (QLĐH - QLSP - EC).*
