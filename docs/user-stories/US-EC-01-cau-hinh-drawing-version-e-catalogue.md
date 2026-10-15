@@ -97,39 +97,65 @@ sequenceDiagram
 ---
 
 ### 4.2. Màn hình 2: Quản lý đơn hàng > Danh sách Yêu cầu khách hàng
-*URL tham chiếu: `/orders/customer-requests`*
+*URL tham chiếu: `/orders/customer-requests` (Khớp chuẩn dữ liệu thực tế từ video quản trị)*
 
-| STT | Tên trường / Cột | Kiểu dữ liệu | Bắt buộc | Mô tả & Quy tắc hiển thị |
+| STT | Tên trường / Cột | Kiểu dữ liệu | Bắt buộc | Mô tả & Giá trị nghiệp vụ |
 | :---: | :--- | :--- | :---: | :--- |
 | 1 | **STT** | Số nguyên | Có | Đánh số thứ tự tăng dần. |
-| 2 | **Mã yêu cầu kỹ thuật** | Chuỗi (Code) | Có | Định dạng `BDR-xxxxxx` (ví dụ: `BDR-000291`, `BDR-000287`). |
-| 3 | **Mã Drawing gốc** | Chuỗi (11 ký tự) | Có | Mã bản vẽ hiện tại của sản phẩm (ví dụ: `BE000148A00`, `BT000153A00`). |
-| 4 | **Mã Item gốc** | Chuỗi (30 ký tự) | Có | Mã item đầy đủ đang đặt (ví dụ: `GY0BE000148A00A00C00000CZWW1048`). |
-| 5 | **Loại thay đổi** | Chuỗi / Enum | Có | Lấy từ Master Data Loại thay đổi (ví dụ: `A00`, `D - Thay Khóa`, `C - Đắp lacquer`). |
-| 6 | **Người yêu cầu** | Chuỗi | Có | Tên nhân viên kinh doanh / CS tạo yêu cầu (kèm avatar). |
-| 7 | **Ngày tạo** | Ngày & Giờ | Có | Format `DD/MM/YYYY HH:mm`. |
-| 8 | **Trạng thái** | Phân loại (Enum) | Có | • `Chờ xử lý` (Badge xám)<br>• `Chờ thiết kế` (Badge cam)<br>• `Đang xử lý` (Badge xanh dương)<br>• `Hoàn thành` (Badge xanh lá) |
-| 9 | **Mã Drawing mới** | Chuỗi | Không | • Hiển thị `---` nếu đang xử lý hoặc thay đổi không đổi Routing.<br>• Hiển thị mã Drawing mới (ví dụ: `GW...`, `GY...`, `BE000148B01`) khi kỹ thuật hoàn tất và loại thay đổi có `Routing = TRUE`. |
+| 2 | **Mã yêu cầu kỹ thuật** | Chuỗi (Code) | Có | Mã định danh phiếu yêu cầu dạng `BDR-xxxxxx` (ví dụ: `BDR-000291`, `BDR-000287`). |
+| 3 | **Mã đơn hàng** *(Mới)* | Chuỗi (Code) | Không | Mã đơn hàng phát sinh yêu cầu (ví dụ: `SO2610023`, `SO2610019`). Giúp BA & Sale biết yêu cầu thuộc đơn hàng nào. |
+| 4 | **Tên khách hàng** *(Mới)* | Chuỗi | Có | Tên/Mã khách hàng sỉ đặt hàng (ví dụ: `200121 - SEVATECH`, `200105 - LUXURY GEMS`). |
+| 5 | **Mã Drawing gốc** | Chuỗi (11 ký tự) | Có | Mã bản vẽ ban đầu của sản phẩm (ví dụ: `BE000148A00`, `BT000153A00`). |
+| 6 | **Mã Item gốc** | Chuỗi (30 ký tự) | Có | Mã item 30 ký tự đầy đủ đang đặt (ví dụ: `GY0BE000148A00A00C00000CZWW1048`). |
+| 7 | **Loại thay đổi** | Chuỗi / Enum | Có | Loại thay đổi kỹ thuật áp dụng (ví dụ: `A00`, `B - Cast`, `C - Đắp lacquer`, `D - Thay Khóa`). |
+| 8 | **Người yêu cầu** | Chuỗi | Có | Tên nhân viên kinh doanh / CS tạo yêu cầu kèm Avatar. |
+| 9 | **Ngày tạo** | Ngày & Giờ | Có | Format `DD/MM/YYYY HH:mm` (ví dụ: `14/10/2026 14:15`). |
+| 10 | **Trạng thái** | Phân loại (Enum) | Có | • `Chờ xử lý` (Badge xám)<br>• `Chờ thiết kế` (Badge cam)<br>• `Đang xử lý` (Badge xanh dương)<br>• `Hoàn thành` (Badge xanh lá) |
+| 11 | **Mã Drawing mới** | Chuỗi (11 ký tự) | Không | • Hiển thị `---` nếu đang xử lý hoặc thay đổi không đổi Routing.<br>• Hiển thị mã Drawing mới (ví dụ: `BE000148B01`, `BT000153B01`) khi kỹ thuật duyệt hoàn tất. |
+| 12 | **Mã Item mới** *(Mới)* | Chuỗi (30 ký tự) | Không | Mã định danh Item 30 ký tự mới sinh ra sau khi áp dụng Drawing mới (ví dụ: `GW0BE000148B01A00C00000CZWW1048`). |
 
 ---
 
 ### 4.3. Màn hình 3: Quản lý đơn hàng > Cấu hình > Cấu hình sản phẩm (Publishing Gate)
-*URL tham chiếu: `/orders/config-product`*
+*URL tham chiếu: `/orders/config-product` (Khớp chuẩn 18 cột dữ liệu thực tế và 2 Popup Modal từ video)*
 
 | STT | Tên trường / Cột | Kiểu dữ liệu | Bắt buộc | Mô tả & Quy tắc hiển thị / Validation |
 | :---: | :--- | :--- | :---: | :--- |
-| 1 | **Ô Tìm Kiếm Đa Trường** | Chuỗi tìm kiếm | Không | **Hỗ trợ tìm kiếm thông minh:**<br>• Tìm theo Mã Item cũ (bắt đầu bằng `PW...`)<br>• Tìm theo Mã Item mới (bắt đầu bằng `GY...`)<br>• Tìm theo Mã Drawing (11 ký tự)<br>• Tìm theo Ghi chú / Loại thay đổi ("Đắp lacquer", "Thay cast", "Bào ball") |
-| 2 | **Checkbox Chọn** | Boolean | Có | Checkbox ở từng dòng và Checkbox Chọn tất cả ở header: Dùng để tích chọn item/version được hiển thị trên E-Catalogue. |
-| 3 | **STT** | Số nguyên | Có | Thứ tự dòng trong bảng. |
-| 4 | **Mã item** | Chuỗi (30 ký tự) | Có | Font mono, hiển thị mã item 30 ký tự chuẩn ERP. |
-| 5 | **Mã drawing** | Chuỗi (11 ký tự) | Có | Font mono, hiển thị mã drawing đại diện. |
-| 6 | **Hình render** | Ảnh Thumbnail | Có | Ảnh render 3D chất lượng cao của sản phẩm/version. |
-| 7 | **Hình 4view** | Ảnh Thumbnail | Có | Ảnh kỹ thuật 4 góc nhìn phục vụ kiểm tra kết cấu. |
-| 8 | **Loại sản phẩm** | Chuỗi | Có | Dây chuyền nữ, Nhẫn nữ, Lắc tay nữ, Bộ trang sức... |
-| 9 | **Trọng lượng vàng** | Số thực (gam) | Có | Hiển thị chính xác đến 4 chữ số thập phân (ví dụ: `0.0783g`). |
-| 10 | **Loại phụ liệu chính / phụ** | Chuỗi | Không | Loại đá hoặc phụ kiện đính kèm (Đá CZ, Ngọc trai...). |
-| 11 | **Trạng thái Xuất bản EC** | Phân loại (Enum) | Có | • `Đã bật trên EC` (Badge xanh lục): Đang hiển thị cho Sale/Khách xem.<br>• `Chưa bật` (Badge xám): Ẩn khỏi E-Catalogue. |
-| 12 | **Nút "Cập nhật"** | Hành động | Có | Nút bấm góc trên bên phải: Nhận diện danh sách item được tích chọn và lưu trạng thái xuất bản lên E-Catalogue; hiển thị Toast xác nhận. |
+| 1 | **Checkbox Chọn** | Boolean | Có | Checkbox ở từng dòng và Checkbox Chọn tất cả ở header: Dùng để tích chọn item/version được xuất bản lên E-Catalogue. |
+| 2 | **STT** | Số nguyên | Có | Thứ tự dòng trong bảng. |
+| 3 | **Mã item** | Chuỗi (30 ký tự) | Có | Font mono, hiển thị mã item 30 ký tự chuẩn ERP (ví dụ: `PW0NE000172A00...`, `GY0NE000189B01...`). |
+| 4 | **Mã drawing** | Chuỗi (11 ký tự) | Có | Font mono, hiển thị mã bản vẽ đại diện (ví dụ: `NE000172A00`, `NE000189B01`). |
+| 5 | **Hình render** | Ảnh Thumbnail | Có | Ảnh render 3D sản phẩm. Click vào mở popup xem chi tiết sản phẩm. |
+| 6 | **Hình 4view** | Ảnh Thumbnail | Có | Ảnh kỹ thuật 4 góc nhìn có huy hiệu `4V`. Click mở **Modal Hình ảnh 4 góc nhìn**. |
+| 7 | **Loại sản phẩm** | Chuỗi | Có | Dây chuyền nữ, Nhẫn nữ, Lắc tay nữ, Bộ trang sức... |
+| 8 | **Trọng lượng vàng** | Số thực (gam) | Có | Hiển thị chính xác đến 4 chữ số thập phân (ví dụ: `0.0783g`, `0.1025g`). |
+| 9 | **Loại phụ liệu chính** | Chuỗi | Không | Loại đá/phụ liệu chính đính kèm (ví dụ: `CZ`, `Ngọc trai`). |
+| 10 | **Loại phụ liệu phụ** | Chuỗi | Không | Loại phụ liệu phụ đính kèm (ví dụ: `CZ tấm`, `---`). |
+| 11 | **Màu phụ liệu chính** *(Mới)* | Chuỗi | Không | Màu sắc của phụ liệu chính (ví dụ: `Trắng`, `Đỏ`, `Xanh dương`...). |
+| 12 | **Màu phụ liệu phụ** *(Mới)* | Chuỗi | Không | Màu sắc của phụ liệu phụ (ví dụ: `Trắng`, `Vàng`...). |
+| 13 | **Cấp đá** *(Mới)* | Chuỗi / Số | Không | Phân cấp chất lượng đá (ví dụ: `1`, `2`, `AAA`). |
+| 14 | **Cột E-Catalogue** | Boolean (Icon) | Có | Checkbox xanh lá hiển thị trực tiếp trạng thái hiển thị trên E-Catalogue chào hàng. |
+| 15 | **Ngày tạo** *(Mới)* | Ngày | Có | Format `DD/MM/YYYY` (ví dụ: `14/10/2026`). |
+| 16 | **Người tạo** *(Mới)* | Chuỗi | Có | Họ tên nhân sự tạo bản ghi (ví dụ: `Lê Thân Diệu Yến`) kèm avatar. |
+| 17 | **Trạng thái** *(Mới)* | Enum | Có | Trạng thái phát triển kỹ thuật (`Pending Approval`, `Making Sample`, `Unknown`, `Approved`). |
+| 18 | **Actions (Chi tiết)** | Nút hành động | Có | Icon 4 ô vuông: Bấm mở **Modal Chi tiết sản phẩm** toàn diện. |
+
+#### Bổ sung: Đặc tả 2 Modal tương tác chuẩn Video Admin thực tế
+
+1. **Modal Hình ảnh 4 góc nhìn (4-View Modal - Kích hoạt khi bấm vào ô Hình 4view):**
+   - Tiêu đề: `HÌNH ẢNH` (kèm mã Item và nút đóng `X`).
+   - Bố cục 2x2 gồm đúng 4 góc nhìn kỹ thuật:
+     * `1. Mặt trước` (Front View)
+     * `2. Góc nghiêng` (Perspective View)
+     * `3. Mặt sau` (Back View)
+     * `4. Mặt bên` (Side View)
+   - Từng ảnh có khung bo góc, zoom hover mượt mà và nhãn chú thích rõ ràng.
+
+2. **Modal Chi tiết sản phẩm (Product Detail Modal - Kích hoạt khi bấm icon Actions hoặc click ảnh Render):**
+   - Tiêu đề: `CHI TIẾT SẢN PHẨM` kèm nút đóng `X`.
+   - Bố cục chia 2 phần:
+     * **Cột hình ảnh:** 2 khung ảnh Render 3D & Bản vẽ 4view kỹ thuật.
+     * **Bảng thông số kỹ thuật:** Trình bày dạng danh sách nhãn & giá trị tinh gọn gồm: `Mã item`, `Mã Drawing`, `Mã bộ`, `Loại sản phẩm`, `Bộ sưu tập`, `Nguyên liệu`, `Màu xi`, `Trọng lượng vàng`, `Loại phụ liệu chính / phụ`, `Màu phụ liệu chính / phụ`, `Cấp đá`, `Trạng thái`, `Ngày tạo`, `Người tạo`.
 
 ---
 

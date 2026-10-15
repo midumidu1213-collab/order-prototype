@@ -1,7 +1,8 @@
-// Mock data phục vụ luồng liên phân hệ:
+// Mock data phục vụ luồng liên phân hệ trích xuất trực tiếp từ video thực tế:
+// Video: "Sevago - E-Catalogue Admin - YCKH + SP.mp4"
 // 1. QLSP: Cấu hình loại thay đổi (Cờ Routing quyết định đổi mã Drawing)
-// 2. QLĐH: Yêu cầu khách hàng (Tiếp nhận & chuyển QLSP cập nhật BOM/Routing)
-// 3. QLĐH: Cấu hình sản phẩm (Cổng duyệt chọn item/version xuất bản lên E-Catalogue)
+// 2. QLĐH: Yêu cầu khách hàng (Có Mã đơn hàng, Tên khách hàng, Mã item mới)
+// 3. QLĐH: Cấu hình sản phẩm (Có Cột E-Catalogue, Màu phụ liệu chính/phụ, Người tạo, Ngày tạo, Modal 4view 4 góc nhìn chuẩn)
 
 // ==========================================
 // 1. MASTER DATA: CẤU HÌNH LOẠI THAY ĐỔI (QLSP)
@@ -14,7 +15,7 @@ export const CHANGE_TYPES_CONFIG = [
     productType: "Vòng tay, Lắc chân nữ, Lắc trẻ em, Lắc...",
     design: true,
     bom: true,
-    routing: false, // Không đổi routing
+    routing: false,
     showAdmin: true,
     showClient: false,
     scope: "---",
@@ -40,7 +41,7 @@ export const CHANGE_TYPES_CONFIG = [
     productType: "Dây chuyền nữ, Kiềng cổ, Lắc tay n...",
     design: true,
     bom: true,
-    routing: false, // Một số cấu hình đặc thù
+    routing: false,
     showAdmin: true,
     showClient: true,
     scope: "7 Hiệu ứng",
@@ -114,133 +115,166 @@ export const CHANGE_TYPES_CONFIG = [
 ];
 
 // ==========================================
-// 2. DANH SÁCH YÊU CẦU KHÁCH HÀNG (QLĐH)
+// 2. DANH SÁCH YÊU CẦU KHÁCH HÀNG (QLĐH) - CHUẨN VIDEO THỰC TẾ
 // ==========================================
 export const CUSTOMER_REQUESTS_MOCK = [
   {
     stt: 1,
     requestCode: "BDR-000291",
+    orderCode: "SO2610023",
+    customerName: "200121 - SEVATECH",
     originalDrawing: "BE000148A00",
-    originalItem: "GY0BE000148A00A00C00000CZWW1048",
-    changeType: "C - Đắp lacquer - móc máy",
-    changeTypeCode: "C",
+    originalItem: "00148A00A0000000CZWW1048",
+    fullOriginalItem: "GY0BE000148A00A00C00000CZWW1048",
+    changeType: "A00",
     affectsRouting: true,
     requester: "Lê Văn Châu",
     createdAt: "15/10/2026 08:45",
     status: "Chờ xử lý",
-    statusBadge: "bg-slate-100 text-slate-700 border-slate-300",
     newDrawing: "---",
+    newItemCode: "GW0BE000148A00A00000000CZWW1048",
     notes: "Khách yêu cầu phủ men sứ lacquer viền hoa văn cánh bướm"
   },
   {
     stt: 2,
     requestCode: "BDR-000290",
+    orderCode: "SO2610021",
+    customerName: "200121 - SEVATECH",
     originalDrawing: "NE000147A00",
-    originalItem: "GY2NE000147A00A0000000000000420",
-    changeType: "B - Cast",
-    changeTypeCode: "B",
+    originalItem: "00147A00A000000000000420",
+    fullOriginalItem: "GY2NE000147A00A0000000000000420",
+    changeType: "A00",
     affectsRouting: true,
     requester: "Lê Văn Châu",
     createdAt: "11/10/2026 17:38",
     status: "Hoàn thành",
-    statusBadge: "bg-emerald-100 text-emerald-800 border-emerald-300",
     newDrawing: "GW0NE000147B01",
+    newItemCode: "GY0NE000147A00A0000000000000420",
     notes: "Đã duyệt khuôn đúc mới, đã sinh Drawing Version B01 và Item mới"
   },
   {
     stt: 3,
     requestCode: "BDR-000289",
+    orderCode: "SO2610020",
+    customerName: "200121 - SEVATECH",
     originalDrawing: "NE000147A00",
-    originalItem: "GY2NE000147A00A0000000000000420",
+    originalItem: "00147A00A000000000000420",
+    fullOriginalItem: "GY2NE000147A00A0000000000000420",
     changeType: "A00",
-    changeTypeCode: "A00",
     affectsRouting: false,
     requester: "Lê Văn Châu",
     createdAt: "11/10/2026 17:33",
     status: "Hoàn thành",
-    statusBadge: "bg-emerald-100 text-emerald-800 border-emerald-300",
     newDrawing: "---",
+    newItemCode: "GW0NE000147A00A0000000000000420",
     notes: "Chuẩn hóa mã item theo bản vẽ A00 tiêu chuẩn"
   },
   {
     stt: 4,
     requestCode: "BDR-000288",
+    orderCode: "---",
+    customerName: "---",
     originalDrawing: "RG000144A00",
-    originalItem: "GY0RG000144A00A00CZBB1CZWW1013",
-    changeType: "F - Thay Pearl sang Ball",
-    changeTypeCode: "F",
+    originalItem: "00144A00A00CZBB1CZWW1013",
+    fullOriginalItem: "GY0RG000144A00A00CZBB1CZWW1013",
+    changeType: "A00",
     affectsRouting: true,
     requester: "Nguyễn Mỹ Dung",
     createdAt: "07/10/2026 10:12",
     status: "Đang xử lý",
-    statusBadge: "bg-blue-100 text-blue-800 border-blue-300",
     newDrawing: "---",
+    newItemCode: "GY0RG000144A00A00CZBB1CZWW1013",
     notes: "Kỹ thuật đang lập sơ đồ gá đặt bi kim loại thay ngọc trai"
   },
   {
     stt: 5,
     requestCode: "BDR-000287",
+    orderCode: "---",
+    customerName: "---",
     originalDrawing: "BT000153A00",
-    originalItem: "GY0BT000153A00A00CZMM1CZMM1170",
-    changeType: "D - Thay Khóa",
-    changeTypeCode: "D",
-    affectsRouting: false, // KHÔNG ĐỔI ROUTING
+    originalItem: "00153A00A00CZMM1CZMM1170",
+    fullOriginalItem: "GY0BT000153A00A00CZMM1CZMM1170",
+    changeType: "D — Thay Khóa",
+    affectsRouting: false,
     requester: "Huỳnh Tấn Thành",
     createdAt: "05/10/2026 14:11",
     status: "Chờ thiết kế",
-    statusBadge: "bg-amber-100 text-amber-800 border-amber-300",
     newDrawing: "---",
+    newItemCode: "GY0BT000153A00D02CZMM1CZMM1170",
     notes: "Khách đổi sang khóa hộp tròn, không ảnh hưởng kết cấu chính"
   },
   {
     stt: 6,
     requestCode: "BDR-000286",
+    orderCode: "---",
+    customerName: "---",
     originalDrawing: "BT000153A00",
-    originalItem: "GY0BT000153A00A00CZMM1CZMM1170",
-    changeType: "D - Thay Khóa",
-    changeTypeCode: "D",
+    originalItem: "00153A00A00CZMM1CZMM1170",
+    fullOriginalItem: "GY0BT000153A00A00CZMM1CZMM1170",
+    changeType: "D — Thay Khóa",
     affectsRouting: false,
     requester: "Huỳnh Tấn Thành",
     createdAt: "05/10/2026 14:11",
     status: "Chờ thiết kế",
-    statusBadge: "bg-amber-100 text-amber-800 border-amber-300",
     newDrawing: "---",
+    newItemCode: "GW0BT000153A00D02CZMM1CZMM1170",
     notes: "Thay khóa phụ cho lắc tay"
   },
   {
     stt: 7,
+    requestCode: "BDR-000285",
+    orderCode: "---",
+    customerName: "---",
+    originalDrawing: "BT000153A00",
+    originalItem: "00153A00A00CZMM1CZMM1170",
+    fullOriginalItem: "GY0BT000153A00A00CZMM1CZMM1170",
+    changeType: "D — Thay Khóa",
+    affectsRouting: false,
+    requester: "Huỳnh Tấn Thành",
+    createdAt: "05/10/2026 14:11",
+    status: "Chờ xử lý",
+    newDrawing: "---",
+    newItemCode: "GW0BT000153A00D02CZMM1CZMM1170",
+    notes: "Thay khóa càng cua inox sang khóa bấm vàng"
+  },
+  {
+    stt: 8,
     requestCode: "BDR-000284",
+    orderCode: "---",
+    customerName: "---",
     originalDrawing: "RG000143A00",
-    originalItem: "GY0RG000143A00A0000000000000014",
-    changeType: "B - Cast",
-    changeTypeCode: "B",
+    originalItem: "00143A00A000000000000014",
+    fullOriginalItem: "GY0RG000143A00A0000000000000014",
+    changeType: "A00",
     affectsRouting: true,
     requester: "Nguyễn Thị Mỹ Dung",
     createdAt: "04/10/2026 13:15",
     status: "Chờ xử lý",
-    statusBadge: "bg-slate-100 text-slate-700 border-slate-300",
     newDrawing: "---",
+    newItemCode: "GY0RG000143A00A0000000000000014",
     notes: "Hạ chấu nhẫn 0.8mm và gia cố bản đúc"
   },
   {
-    stt: 8,
+    stt: 9,
     requestCode: "BDR-000281",
+    orderCode: "---",
+    customerName: "---",
     originalDrawing: "BE000178A00",
-    originalItem: "GW0BE000178A00A0000000000000048",
-    changeType: "C - Đắp lacquer - móc máy",
-    changeTypeCode: "C",
+    originalItem: "00178A00A000000000000048",
+    fullOriginalItem: "GW0BE000178A00A0000000000000048",
+    changeType: "A00",
     affectsRouting: true,
     requester: "Nguyễn Thị Mỹ Dung",
     createdAt: "04/10/2026 12:58",
-    status: "Hoàn thành",
-    statusBadge: "bg-emerald-100 text-emerald-800 border-emerald-300",
-    newDrawing: "GW0BE000178A01",
-    notes: "Đã hoàn tất bản vẽ A01 viền lacquer, sẵn sàng cấu hình lên E-Catalogue"
+    status: "Chờ xử lý",
+    newDrawing: "---",
+    newItemCode: "GW0BE000178A00A0000000000000048",
+    notes: "Bản vẽ viền hoa văn mới"
   }
 ];
 
 // ==========================================
-// 3. DANH SÁCH CẤU HÌNH SẢN PHẨM (QLĐH PUBLISHING GATE)
+// 3. DANH SÁCH CẤU HÌNH SẢN PHẨM (QLĐH PUBLISHING GATE) - CHUẨN VIDEO THỰC TẾ
 // ==========================================
 export const PRODUCT_CATALOGUE_CONFIG_LIST = [
   {
@@ -257,9 +291,30 @@ export const PRODUCT_CATALOGUE_CONFIG_LIST = [
     goldWeight: "0.0650g",
     mainSubMaterial: "---",
     extraSubMaterial: "---",
+    mainSubMaterialColor: "---",
+    extraSubMaterialColor: "---",
+    productionLine: "---",
+    productionMethod: "---",
+    stoneQualityGrade: "1",
     isPublishedToEC: true,
+    createdDate: "14/10/2026",
+    creator: "Lê Thân Diệu Yến",
+    status: "Unknown",
+    statusColor: "bg-gray-400",
     notes: "Mẫu dây chuyền nữ cổ điển (Mã item cũ hệ thống PW)",
-    category: "Dây chuyền nữ"
+    category: "Dây chuyền nữ",
+    // 4 góc nhìn chuẩn video frame 04
+    views4: [
+      { id: 1, title: "1. Mặt trước", img: "/images/products/diamond-solitaire.svg" },
+      { id: 2, title: "2. Góc nghiêng", img: "/images/products/necklace-emerald.jpg" },
+      { id: 3, title: "3. Mặt sau", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 4, title: "4. Mặt bên", img: "/images/products/necklace-emerald.jpg" }
+    ],
+    // Chi tiết mở rộng (frame 12)
+    collection: "Lumea",
+    setSeriesCode: "DR202610001",
+    material: "Vàng",
+    platingColor: "Vàng"
   },
   {
     id: "cfg-2",
@@ -275,9 +330,28 @@ export const PRODUCT_CATALOGUE_CONFIG_LIST = [
     goldWeight: "0.0610g",
     mainSubMaterial: "---",
     extraSubMaterial: "---",
+    mainSubMaterialColor: "---",
+    extraSubMaterialColor: "---",
+    productionLine: "---",
+    productionMethod: "---",
+    stoneQualityGrade: "1",
     isPublishedToEC: true,
+    createdDate: "14/10/2026",
+    creator: "Lê Thân Diệu Yến",
+    status: "Unknown",
+    statusColor: "bg-gray-400",
     notes: "Item cũ chuẩn PW chiều dài 45cm",
-    category: "Dây chuyền nữ"
+    category: "Dây chuyền nữ",
+    views4: [
+      { id: 1, title: "1. Mặt trước", img: "/images/products/diamond-solitaire.svg" },
+      { id: 2, title: "2. Góc nghiêng", img: "/images/products/necklace-emerald.jpg" },
+      { id: 3, title: "3. Mặt sau", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 4, title: "4. Mặt bên", img: "/images/products/necklace-emerald.jpg" }
+    ],
+    collection: "Lumea",
+    setSeriesCode: "DR202610001",
+    material: "Vàng",
+    platingColor: "Vàng"
   },
   {
     id: "cfg-3",
@@ -293,9 +367,28 @@ export const PRODUCT_CATALOGUE_CONFIG_LIST = [
     goldWeight: "0.0580g",
     mainSubMaterial: "---",
     extraSubMaterial: "---",
+    mainSubMaterialColor: "---",
+    extraSubMaterialColor: "---",
+    productionLine: "---",
+    productionMethod: "---",
+    stoneQualityGrade: "1",
     isPublishedToEC: false,
+    createdDate: "14/10/2026",
+    creator: "Lê Thân Diệu Yến",
+    status: "Unknown",
+    statusColor: "bg-gray-400",
     notes: "Item cũ 42cm tạm ẩn chưa đưa lên EC",
-    category: "Dây chuyền nữ"
+    category: "Dây chuyền nữ",
+    views4: [
+      { id: 1, title: "1. Mặt trước", img: "/images/products/diamond-solitaire.svg" },
+      { id: 2, title: "2. Góc nghiêng", img: "/images/products/necklace-emerald.jpg" },
+      { id: 3, title: "3. Mặt sau", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 4, title: "4. Mặt bên", img: "/images/products/necklace-emerald.jpg" }
+    ],
+    collection: "Lumea",
+    setSeriesCode: "DR202610001",
+    material: "Vàng",
+    platingColor: "Vàng"
   },
   {
     id: "cfg-4",
@@ -311,9 +404,28 @@ export const PRODUCT_CATALOGUE_CONFIG_LIST = [
     goldWeight: "0.0690g",
     mainSubMaterial: "---",
     extraSubMaterial: "---",
+    mainSubMaterialColor: "---",
+    extraSubMaterialColor: "---",
+    productionLine: "---",
+    productionMethod: "---",
+    stoneQualityGrade: "1",
     isPublishedToEC: true,
+    createdDate: "14/10/2026",
+    creator: "Lê Thân Diệu Yến",
+    status: "Unknown",
+    statusColor: "bg-gray-400",
     notes: "Item cũ chuẩn PW chiều dài 50cm",
-    category: "Dây chuyền nữ"
+    category: "Dây chuyền nữ",
+    views4: [
+      { id: 1, title: "1. Mặt trước", img: "/images/products/diamond-solitaire.svg" },
+      { id: 2, title: "2. Góc nghiêng", img: "/images/products/necklace-emerald.jpg" },
+      { id: 3, title: "3. Mặt sau", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 4, title: "4. Mặt bên", img: "/images/products/necklace-emerald.jpg" }
+    ],
+    collection: "Lumea",
+    setSeriesCode: "DR202610001",
+    material: "Vàng",
+    platingColor: "Vàng"
   },
   {
     id: "cfg-5",
@@ -329,9 +441,28 @@ export const PRODUCT_CATALOGUE_CONFIG_LIST = [
     goldWeight: "0.0783g",
     mainSubMaterial: "Đá CZ",
     extraSubMaterial: "Đá CZ",
+    mainSubMaterialColor: "Trắng",
+    extraSubMaterialColor: "Trắng",
+    productionLine: "---",
+    productionMethod: "---",
+    stoneQualityGrade: "1",
     isPublishedToEC: true,
+    createdDate: "11/10/2026",
+    creator: "Lê Thân Diệu Yến",
+    status: "Pending Approval",
+    statusColor: "bg-amber-500",
     notes: "Mã item mới chuẩn ERP - Bản vẽ chuẩn A00",
-    category: "Dây chuyền nữ"
+    category: "Dây chuyền nữ",
+    views4: [
+      { id: 1, title: "1. Mặt trước", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 2, title: "2. Góc nghiêng", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 3, title: "3. Mặt sau", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 4, title: "4. Mặt bên", img: "/images/products/gold-chain-bracelet.jpg" }
+    ],
+    collection: "Lumea",
+    setSeriesCode: "DR202610002",
+    material: "Vàng",
+    platingColor: "Vàng"
   },
   {
     id: "cfg-6",
@@ -347,9 +478,28 @@ export const PRODUCT_CATALOGUE_CONFIG_LIST = [
     goldWeight: "0.0795g",
     mainSubMaterial: "Đá CZ",
     extraSubMaterial: "Men sứ Lacquer",
+    mainSubMaterialColor: "Trắng",
+    extraSubMaterialColor: "Đỏ",
+    productionLine: "---",
+    productionMethod: "Móc máy mạ men",
+    stoneQualityGrade: "1",
     isPublishedToEC: true,
+    createdDate: "11/10/2026",
+    creator: "Lê Thân Diệu Yến",
+    status: "Making Sample",
+    statusColor: "bg-blue-600",
     notes: "Drawing mới sinh từ yêu cầu BDR-000291 (Đắp lacquer ảnh hưởng Routing)",
-    category: "Dây chuyền nữ"
+    category: "Dây chuyền nữ",
+    views4: [
+      { id: 1, title: "1. Mặt trước", img: "/images/products/necklace-emerald.jpg" },
+      { id: 2, title: "2. Góc nghiêng", img: "/images/products/necklace-emerald.jpg" },
+      { id: 3, title: "3. Mặt sau", img: "/images/products/necklace-emerald.jpg" },
+      { id: 4, title: "4. Mặt bên", img: "/images/products/necklace-emerald.jpg" }
+    ],
+    collection: "Lumea",
+    setSeriesCode: "DR202610002",
+    material: "Vàng",
+    platingColor: "Vàng"
   },
   {
     id: "cfg-7",
@@ -365,9 +515,28 @@ export const PRODUCT_CATALOGUE_CONFIG_LIST = [
     goldWeight: "0.0820g",
     mainSubMaterial: "Đá CZ",
     extraSubMaterial: "Đá CZ",
+    mainSubMaterialColor: "Trắng",
+    extraSubMaterialColor: "Trắng",
+    productionLine: "---",
+    productionMethod: "Đúc Cast",
+    stoneQualityGrade: "1",
     isPublishedToEC: true,
+    createdDate: "11/10/2026",
+    creator: "Lê Thân Diệu Yến",
+    status: "Making Sample",
+    statusColor: "bg-blue-600",
     notes: "Drawing mới sinh từ yêu cầu Cast khuôn mới (Ảnh hưởng Routing)",
-    category: "Dây chuyền nữ"
+    category: "Dây chuyền nữ",
+    views4: [
+      { id: 1, title: "1. Mặt trước", img: "/images/products/necklace-emerald.jpg" },
+      { id: 2, title: "2. Góc nghiêng", img: "/images/products/necklace-emerald.jpg" },
+      { id: 3, title: "3. Mặt sau", img: "/images/products/necklace-emerald.jpg" },
+      { id: 4, title: "4. Mặt bên", img: "/images/products/necklace-emerald.jpg" }
+    ],
+    collection: "Lumea",
+    setSeriesCode: "DR202610002",
+    material: "Vàng",
+    platingColor: "Vàng"
   },
   {
     id: "cfg-8",
@@ -383,27 +552,65 @@ export const PRODUCT_CATALOGUE_CONFIG_LIST = [
     goldWeight: "0.0467g",
     mainSubMaterial: "Đá CZ",
     extraSubMaterial: "Đá CZ",
+    mainSubMaterialColor: "Trắng",
+    extraSubMaterialColor: "Trắng",
+    productionLine: "---",
+    productionMethod: "---",
+    stoneQualityGrade: "1",
     isPublishedToEC: true,
+    createdDate: "05/10/2026",
+    creator: "Lê Thân Diệu Yến",
+    status: "Making Sample",
+    statusColor: "bg-blue-600",
     notes: "Lắc tay nữ đính đá thời trang",
-    category: "Lắc tay nữ"
+    category: "Lắc tay nữ",
+    views4: [
+      { id: 1, title: "1. Mặt trước", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 2, title: "2. Góc nghiêng", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 3, title: "3. Mặt sau", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 4, title: "4. Mặt bên", img: "/images/products/gold-chain-bracelet.jpg" }
+    ],
+    collection: "Lumea",
+    setSeriesCode: "DR202610003",
+    material: "Vàng",
+    platingColor: "Vàng"
   },
   {
     id: "cfg-9",
     stt: 9,
-    itemCode: "GY0RG000001A00A00CZRO1CZGG1012",
-    oldItemCode: "PW0RG000001-A00",
+    itemCode: "GY0RM000186A00A00CZWW1000000020",
+    oldItemCode: "---",
     isOldItem: false,
-    drawingCode: "RG000001A00",
-    versionLabel: "A00 • Nhẫn nữ Bộ Hoàng Gia",
+    drawingCode: "RM000186A00",
+    versionLabel: "A00 • Nhẫn Nam Lumea",
     renderImage: "/images/products/ring-solitaire.jpg",
     fourViewImage: "/images/products/4view-technical.svg",
-    productType: "Nhẫn nữ",
-    goldWeight: "0.0120 Lượng",
-    mainSubMaterial: "Emerald Colombia",
-    extraSubMaterial: "Kim Cương CZ",
+    productType: "Nhẫn Nam",
+    goldWeight: "0.0294g",
+    mainSubMaterial: "Đá CZ",
+    extraSubMaterial: "---",
+    mainSubMaterialColor: "Đỏ Ruby",
+    extraSubMaterialColor: "---",
+    productionLine: "---",
+    productionMethod: "Đúc Cast",
+    stoneQualityGrade: "1",
     isPublishedToEC: true,
-    notes: "Món nhẫn nữ trong Bộ Hoàng Gia Emerald (set-1)",
-    category: "Bộ"
+    createdDate: "10/10/2026",
+    creator: "Lê Thân Diệu Yến",
+    status: "Making Sample",
+    statusColor: "bg-blue-600",
+    notes: "Mẫu nhẫn nam RM43085 trong video frame 12",
+    category: "Nhẫn Nam",
+    views4: [
+      { id: 1, title: "1. Mặt trước (CAD Top)", img: "/images/products/4view-technical.svg" },
+      { id: 2, title: "2. Góc nghiêng (3D Iso)", img: "/images/products/ring-solitaire.jpg" },
+      { id: 3, title: "3. Mặt sau (Size 60)", img: "/images/products/4view-technical.svg" },
+      { id: 4, title: "4. Mặt bên (Side View)", img: "/images/products/ring-solitaire.jpg" }
+    ],
+    collection: "Lumea",
+    setSeriesCode: "DR202610004",
+    material: "Vàng",
+    platingColor: "Vàng"
   },
   {
     id: "cfg-10",
@@ -419,8 +626,27 @@ export const PRODUCT_CATALOGUE_CONFIG_LIST = [
     goldWeight: "0.0460 Lượng",
     mainSubMaterial: "Emerald Colombia",
     extraSubMaterial: "CZ Grade A+",
+    mainSubMaterialColor: "Xanh lục",
+    extraSubMaterialColor: "Trắng",
+    productionLine: "Cao Cấp",
+    productionMethod: "Chế tác thủ công",
+    stoneQualityGrade: "A+",
     isPublishedToEC: true,
+    createdDate: "01/10/2026",
+    creator: "Lê Văn Châu",
+    status: "Approved",
+    statusColor: "bg-emerald-600",
     notes: "Bộ trang sức 4 món Hoàng Gia Emerald (Link E-Catalogue: /catalogue/product/set-1)",
-    category: "Bộ"
+    category: "Bộ",
+    views4: [
+      { id: 1, title: "1. Mặt trước", img: "/images/products/set-royal-emerald.jpg" },
+      { id: 2, title: "2. Góc nghiêng", img: "/images/products/necklace-emerald.jpg" },
+      { id: 3, title: "3. Mặt sau", img: "/images/products/gold-chain-bracelet.jpg" },
+      { id: 4, title: "4. Mặt bên", img: "/images/products/ring-solitaire.jpg" }
+    ],
+    collection: "Hoàng Gia",
+    setSeriesCode: "DR202610005",
+    material: "Vàng 18K",
+    platingColor: "Vàng"
   }
 ];
