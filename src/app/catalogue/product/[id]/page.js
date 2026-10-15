@@ -1200,7 +1200,7 @@ export default function ProductDetailPage({ params }) {
                             </div>
 
                             {/* KHU VỰC CHỌN KÍCH THƯỚC TỪNG MÓN: LƯỚI 2x2 TINH GỌN, TỐI ƯU UX */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                               {(product.components || []).map((comp) => {
                                 const isEarring = comp.itemType === "earrings" || comp.name?.toLowerCase().includes("bông tai");
                                 const currentSize = isEarring 
@@ -1219,31 +1219,26 @@ export default function ProductDetailPage({ params }) {
                                   <div 
                                     key={comp.id}
                                     title={`Món: ${comp.name} | Mã: ${comp.drawingCode || comp.sku} | Trọng lượng: ${comp.weight || '—'} Lượng | Giá công: ${comp.priceDisplay || '—'}`}
-                                    className="p-2.5 sm:p-3 bg-gray-50/80 hover:bg-emerald-50/30 rounded-xl border border-gray-200/90 hover:border-emerald-300 transition-all flex items-center justify-between gap-2.5 shadow-2xs"
+                                    className="p-3 bg-gray-50/80 hover:bg-emerald-50/25 rounded-xl border border-gray-200/90 hover:border-emerald-300 transition-all space-y-2 shadow-2xs"
                                   >
-                                    {/* Món thành phần & Thông tin bổ sung */}
-                                    <div className="flex items-center space-x-2.5 min-w-0">
-                                      <span className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-base select-none shrink-0 shadow-2xs">
-                                        {comp.icon}
-                                      </span>
-                                      <div className="min-w-0">
-                                        <div className="text-xs font-bold text-gray-800 truncate">
-                                          {comp.name}
-                                        </div>
-                                        {/* Thông tin bổ sung nhẹ nhàng: Trọng lượng */}
-                                        <div className="text-[10px] text-gray-400 font-mono truncate">
-                                          {comp.weight ? `${Number(comp.weight).toFixed(4)} Lượng` : (comp.drawingCode || comp.sku)}
-                                        </div>
+                                    {/* Hàng trên: Icon + Tên món + Trọng lượng bổ sung */}
+                                    <div className="flex items-center justify-between gap-1.5">
+                                      <div className="flex items-center space-x-2 min-w-0">
+                                        <span className="text-base select-none shrink-0">{comp.icon}</span>
+                                        <span className="text-xs font-bold text-gray-800 truncate">{comp.name}</span>
                                       </div>
+                                      <span className="text-[11px] text-gray-400 font-mono font-medium shrink-0">
+                                        {comp.weight ? `${Number(comp.weight).toFixed(4)} Lượng` : ''}
+                                      </span>
                                     </div>
 
-                                    {/* Bộ chọn kích thước tinh gọn */}
-                                    <div className="shrink-0 w-28 sm:w-32">
+                                    {/* Hàng dưới: Bộ chọn kích thước tinh gọn, dễ bấm */}
+                                    <div>
                                       {hasMultipleSizes ? (
                                         <select
                                           value={currentSize}
                                           onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
-                                          className="w-full bg-white px-2.5 py-1.5 border border-gray-300 hover:border-[#00594c] focus:border-[#00594c] rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer transition-colors min-h-[36px] shadow-2xs"
+                                          className="w-full bg-white px-3 py-1.5 border border-gray-300 hover:border-[#00594c] focus:border-[#00594c] rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer transition-colors min-h-[36px] shadow-2xs"
                                         >
                                           {comp.options.map(opt => (
                                             <option key={opt} value={opt}>
@@ -1252,7 +1247,7 @@ export default function ProductDetailPage({ params }) {
                                           ))}
                                         </select>
                                       ) : (
-                                        <div className="w-full px-2.5 py-1.5 bg-gray-100/70 border border-gray-200 rounded-lg text-xs font-medium text-gray-400 text-center min-h-[36px] flex items-center justify-center select-none">
+                                        <div className="w-full px-3 py-1.5 bg-white border border-gray-200/80 rounded-lg text-xs font-medium text-gray-400 text-center min-h-[36px] flex items-center justify-center select-none shadow-2xs">
                                           Tiêu chuẩn
                                         </div>
                                       )}
