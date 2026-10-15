@@ -1216,36 +1216,49 @@ export default function ProductDetailPage({ params }) {
                                     title={`Món: ${comp.name} | Mã: ${comp.drawingCode || comp.sku} | Trọng lượng: ${comp.weight || '—'} Lượng | Giá công: ${comp.priceDisplay || '—'}`}
                                     className="p-3 bg-gray-50/80 hover:bg-emerald-50/25 rounded-xl border border-gray-200/90 hover:border-emerald-300 transition-all space-y-2 shadow-2xs"
                                   >
-                                    {/* Hàng trên: Icon + Tên món + Mã Drawing kỹ thuật của món */}
+                                    {/* Hàng trên: Icon + Tên món + Trọng lượng (giữ nguyên như cũ) */}
                                     <div className="flex items-center justify-between gap-1.5">
                                       <div className="flex items-center space-x-2 min-w-0">
                                         <span className="text-base select-none shrink-0">{comp.icon}</span>
                                         <span className="text-xs font-bold text-gray-800 truncate">{comp.name}</span>
                                       </div>
-                                      <span className="text-[10px] font-mono font-bold text-[#00594c] bg-emerald-50/90 border border-emerald-200/90 px-1.5 py-0.5 rounded-md shrink-0 shadow-2xs tracking-tight">
-                                        {comp.drawingCode || comp.sku}
+                                      <span className="text-[11px] text-gray-400 font-mono font-medium shrink-0">
+                                        {comp.weight ? `${Number(comp.weight).toFixed(4)} Lượng` : ''}
                                       </span>
                                     </div>
 
-                                    {/* Hàng dưới: Bộ chọn kích thước tinh gọn, dễ bấm */}
-                                    <div>
-                                      {hasMultipleSizes ? (
-                                        <select
-                                          value={currentSize}
-                                          onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
-                                          className="w-full bg-white px-3 py-1.5 border border-gray-300 hover:border-[#00594c] focus:border-[#00594c] rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer transition-colors min-h-[36px] shadow-2xs"
-                                        >
-                                          {comp.options.map(opt => (
-                                            <option key={opt} value={opt}>
-                                              {formatSizeLabel(opt)}
-                                            </option>
-                                          ))}
-                                        </select>
-                                      ) : (
-                                        <div className="w-full px-3 py-1.5 bg-white border border-gray-200/80 rounded-lg text-xs font-medium text-gray-400 text-center min-h-[36px] flex items-center justify-center select-none shadow-2xs">
-                                          Tiêu chuẩn
-                                        </div>
-                                      )}
+                                    {/* Hàng dưới: Mã Drawing (trái) + Bộ chọn kích thước Ni (phải) */}
+                                    <div className="grid grid-cols-2 gap-2 pt-0.5">
+                                      {/* Mã Drawing của món con */}
+                                      <div 
+                                        className="bg-gray-100/80 hover:bg-gray-200/70 border border-gray-200/90 rounded-lg px-2 py-1.5 flex items-center justify-center min-h-[36px] shadow-2xs transition-colors"
+                                        title={`Mã Drawing: ${comp.drawingCode || comp.sku}`}
+                                      >
+                                        <span className="text-[11px] font-mono font-bold text-gray-700 tracking-tight truncate select-all">
+                                          {comp.drawingCode || comp.sku}
+                                        </span>
+                                      </div>
+
+                                      {/* Bộ chọn kích thước Ni */}
+                                      <div>
+                                        {hasMultipleSizes ? (
+                                          <select
+                                            value={currentSize}
+                                            onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
+                                            className="w-full bg-white px-2 py-1.5 border border-gray-300 hover:border-[#00594c] focus:border-[#00594c] rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer transition-colors min-h-[36px] shadow-2xs"
+                                          >
+                                            {comp.options.map(opt => (
+                                              <option key={opt} value={opt}>
+                                                {formatSizeLabel(opt)}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        ) : (
+                                          <div className="w-full px-2 py-1.5 bg-white border border-gray-200/80 rounded-lg text-xs font-medium text-gray-400 text-center min-h-[36px] flex items-center justify-center select-none shadow-2xs">
+                                            Tiêu chuẩn
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 );
