@@ -1199,78 +1199,67 @@ export default function ProductDetailPage({ params }) {
                               )}
                             </div>
 
-                            {/* Bảng phân bổ 4 món con: 3 cột cân xứng (Món thành phần | Trọng lượng & Giá công | Kích thước) */}
-                            <div className="space-y-2">
-                              <div className="hidden sm:grid grid-cols-12 gap-3 px-3 py-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 rounded-xl border border-gray-100">
-                                <div className="col-span-5">Món thành phần</div>
-                                <div className="col-span-4 text-center">Trọng lượng & Giá công</div>
-                                <div className="col-span-3 text-center">Kích thước</div>
-                              </div>
+                            {/* KHU VỰC CHỌN KÍCH THƯỚC TỪNG MÓN: LƯỚI 2x2 TINH GỌN, TỐI ƯU UX */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+                              {(product.components || []).map((comp) => {
+                                const isEarring = comp.itemType === "earrings" || comp.name?.toLowerCase().includes("bông tai");
+                                const currentSize = isEarring 
+                                  ? "0" 
+                                  : (group.sizes?.[comp.id] || comp.defaultOption || (comp.options && comp.options[0]) || "0");
+                                const hasMultipleSizes = comp.options && comp.options.length > 1 && !isEarring;
 
-                              <div className="divide-y divide-gray-100">
-                                {(product.components || []).map((comp) => {
-                                  const isEarring = comp.itemType === "earrings" || comp.name?.toLowerCase().includes("bông tai");
-                                  const currentSize = isEarring 
-                                    ? "0" 
-                                    : (group.sizes?.[comp.id] || comp.defaultOption || (comp.options && comp.options[0]) || "0");
-                                  const hasMultipleSizes = comp.options && comp.options.length > 1 && !isEarring;
+                                const formatSizeLabel = (opt) => {
+                                  if (comp.itemType === "ring" || comp.name?.toLowerCase().includes("nhẫn")) return `Ni ${opt}`;
+                                  if (comp.itemType === "necklace" || comp.name?.toLowerCase().includes("dây")) return `${opt} cm`;
+                                  if (comp.itemType === "bracelet" || comp.name?.toLowerCase().includes("lắc")) return `Ni ${opt}`;
+                                  return `Size ${opt}`;
+                                };
 
-                                  return (
-                                    <div key={comp.id} className="py-2.5 first:pt-1 last:pb-0 grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-3 items-center">
-                                      {/* Cột 1: Món thành phần (Icon + Tên + Mã Drawing) */}
-                                      <div className="sm:col-span-5 flex items-center space-x-2.5">
-                                        <span className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-base select-none shrink-0 shadow-2xs">
-                                          {comp.icon}
-                                        </span>
-                                        <div className="min-w-0">
-                                          <div className="text-xs font-bold text-gray-800 truncate">{comp.name}</div>
-                                          <div className="text-[10px] font-mono text-gray-400 truncate">
-                                            {comp.drawingCode || comp.sku}
-                                          </div>
+                                return (
+                                  <div 
+                                    key={comp.id}
+                                    title={`Món: ${comp.name} | Mã: ${comp.drawingCode || comp.sku} | Trọng lượng: ${comp.weight || '—'} Lượng | Giá công: ${comp.priceDisplay || '—'}`}
+                                    className="p-2.5 sm:p-3 bg-gray-50/80 hover:bg-emerald-50/30 rounded-xl border border-gray-200/90 hover:border-emerald-300 transition-all flex items-center justify-between gap-2.5 shadow-2xs"
+                                  >
+                                    {/* Món thành phần & Thông tin bổ sung */}
+                                    <div className="flex items-center space-x-2.5 min-w-0">
+                                      <span className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-base select-none shrink-0 shadow-2xs">
+                                        {comp.icon}
+                                      </span>
+                                      <div className="min-w-0">
+                                        <div className="text-xs font-bold text-gray-800 truncate">
+                                          {comp.name}
                                         </div>
-                                      </div>
-
-                                      {/* Cột 2: Trọng lượng & Đơn giá công của từng món con */}
-                                      <div className="sm:col-span-4 flex items-center justify-between sm:justify-center px-1 sm:px-0">
-                                        <span className="text-[10px] font-semibold text-gray-500 sm:hidden">TL & Công:</span>
-                                        <div className="text-right sm:text-center">
-                                          <div className="text-xs font-bold text-gray-800">
-                                            {comp.weight ? `${Number(comp.weight).toFixed(4)}` : "—"}{" "}
-                                            <span className="text-[10px] text-gray-400 font-normal">Lượng</span>
-                                          </div>
-                                          <div className="text-[11px] font-semibold text-[#00594c]">
-                                            {comp.priceDisplay || (comp.wagePrice ? `${comp.wagePrice.toLocaleString('vi-VN')}đ` : "—")}
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      {/* Cột 3: Kích thước (Dropdown chọn size hoặc Tiêu chuẩn) */}
-                                      <div className="sm:col-span-3">
-                                        <div className="flex items-center justify-between sm:block">
-                                          <span className="text-[10px] font-semibold text-gray-500 sm:hidden">Kích thước:</span>
-                                          <div className="w-36 sm:w-full">
-                                            {hasMultipleSizes ? (
-                                              <select
-                                                value={currentSize}
-                                                onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
-                                                className="w-full bg-white px-2 py-1.5 border border-gray-300 hover:border-[#00594c] focus:border-[#00594c] rounded-xl text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer transition-colors min-h-[36px] shadow-2xs"
-                                              >
-                                                {comp.options.map(opt => (
-                                                  <option key={opt} value={opt}>{opt}</option>
-                                                ))}
-                                              </select>
-                                            ) : (
-                                              <div className="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 text-center min-h-[36px] flex items-center justify-center">
-                                                {currentSize === "0" ? "Tiêu chuẩn" : currentSize}
-                                              </div>
-                                            )}
-                                          </div>
+                                        {/* Thông tin bổ sung nhẹ nhàng: Trọng lượng */}
+                                        <div className="text-[10px] text-gray-400 font-mono truncate">
+                                          {comp.weight ? `${Number(comp.weight).toFixed(4)} Lượng` : (comp.drawingCode || comp.sku)}
                                         </div>
                                       </div>
                                     </div>
-                                  );
-                                })}
-                              </div>
+
+                                    {/* Bộ chọn kích thước tinh gọn */}
+                                    <div className="shrink-0 w-28 sm:w-32">
+                                      {hasMultipleSizes ? (
+                                        <select
+                                          value={currentSize}
+                                          onChange={(e) => handleUpdateGroupSize(group.id, comp.id, e.target.value)}
+                                          className="w-full bg-white px-2.5 py-1.5 border border-gray-300 hover:border-[#00594c] focus:border-[#00594c] rounded-lg text-xs font-bold text-[#00594c] text-center focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer transition-colors min-h-[36px] shadow-2xs"
+                                        >
+                                          {comp.options.map(opt => (
+                                            <option key={opt} value={opt}>
+                                              {formatSizeLabel(opt)}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      ) : (
+                                        <div className="w-full px-2.5 py-1.5 bg-gray-100/70 border border-gray-200 rounded-lg text-xs font-medium text-gray-400 text-center min-h-[36px] flex items-center justify-center select-none">
+                                          Tiêu chuẩn
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         ))}
