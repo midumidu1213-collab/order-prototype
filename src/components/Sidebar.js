@@ -104,10 +104,17 @@ export default function Sidebar() {
               </span>
             </Link>
             <Link
-              href="#"
-              className="group flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-[#004737] text-gray-300"
+              href="/orders/customer-requests"
+              className={`group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                pathname.startsWith("/orders/customer-requests")
+                  ? "bg-white/20 text-white font-semibold"
+                  : "hover:bg-[#004737] text-gray-300"
+              }`}
             >
-              DS Yêu cầu thay đổi
+              <span>Yêu cầu khách hàng</span>
+              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-400/30">
+                QLSP
+              </span>
             </Link>
             <Link
               href="#"
@@ -158,16 +165,32 @@ export default function Sidebar() {
           </div>
           <ChevronDown className="h-4 w-4" />
         </Link>
-        <Link
-          href="#"
-          className="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md hover:bg-[#004737] text-gray-200"
-        >
-          <div className="flex items-center">
-            <Settings className="mr-3 h-5 w-5 text-emerald-300" />
-            Cấu hình
+        
+        {/* Nhóm Cấu hình - có Cấu hình sản phẩm */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md bg-[#004737]/60 text-white">
+            <div className="flex items-center">
+              <Settings className="mr-3 h-5 w-5 text-emerald-300" />
+              Cấu hình
+            </div>
+            <ChevronDown className="h-4 w-4 text-emerald-300" />
           </div>
-          <ChevronDown className="h-4 w-4" />
-        </Link>
+          <div className="pl-11 space-y-1">
+            <Link
+              href="/orders/config-product"
+              className={`group flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-all ${
+                pathname.startsWith("/orders/config-product")
+                  ? "bg-emerald-400 text-slate-950 font-bold shadow-xs"
+                  : "hover:bg-[#004737] text-emerald-200 hover:text-white"
+              }`}
+            >
+              <span>Cấu hình sản phẩm</span>
+              <span className="text-[9px] font-black uppercase px-1 py-0.5 rounded bg-emerald-800 text-white">
+                EC Gate
+              </span>
+            </Link>
+          </div>
+        </div>
 
         {/* Phân hệ Hướng dẫn sử dụng */}
         <Link

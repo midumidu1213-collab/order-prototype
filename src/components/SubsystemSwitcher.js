@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingCart, BookOpen, ChevronDown, Check, LayoutGrid } from "lucide-react";
+import { ShoppingCart, BookOpen, ChevronDown, Check, LayoutGrid, Box, Sparkles } from "lucide-react";
 
 export default function SubsystemSwitcher() {
   const pathname = usePathname();
@@ -11,6 +11,8 @@ export default function SubsystemSwitcher() {
   const dropdownRef = useRef(null);
 
   const isUserGuide = pathname?.startsWith("/user-guide");
+  const isProductManagement = pathname?.startsWith("/product-management");
+  const isCatalogue = pathname?.startsWith("/catalogue");
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -21,6 +23,37 @@ export default function SubsystemSwitcher() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Xác định icon & label hiển thị trên nút chính
+  let currentIcon = (
+    <div className="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+      <ShoppingCart className="h-4 w-4" />
+    </div>
+  );
+  let currentLabel = "Bán Hàng";
+
+  if (isProductManagement) {
+    currentIcon = (
+      <div className="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-xs font-bold">
+        <Box className="h-4 w-4" />
+      </div>
+    );
+    currentLabel = "Quản Lý Sản Phẩm";
+  } else if (isUserGuide) {
+    currentIcon = (
+      <div className="w-7 h-7 rounded-lg bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-xs">
+        <BookOpen className="h-4 w-4" />
+      </div>
+    );
+    currentLabel = "Hướng Dẫn Sử Dụng";
+  } else if (isCatalogue) {
+    currentIcon = (
+      <div className="w-7 h-7 rounded-lg bg-emerald-800 text-amber-300 flex items-center justify-center shrink-0 shadow-xs">
+        <Sparkles className="h-4 w-4" />
+      </div>
+    );
+    currentLabel = "E-Catalogue";
+  }
 
   return (
     <div className="h-16 px-3 border-b border-[#004737] flex items-center relative shrink-0" ref={dropdownRef}>
@@ -34,21 +67,13 @@ export default function SubsystemSwitcher() {
           <div className="text-gray-400 group-hover:text-emerald-800 transition-colors">
             <LayoutGrid className="h-4 w-4" />
           </div>
-          {isUserGuide ? (
-            <div className="w-7 h-7 rounded-lg bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <BookOpen className="h-4 w-4" />
-            </div>
-          ) : (
-            <div className="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <ShoppingCart className="h-4 w-4" />
-            </div>
-          )}
+          {currentIcon}
           <div className="text-left min-w-0">
             <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block leading-none">
               Phân Hệ ERP
             </span>
             <span className="text-sm font-bold text-gray-900 block truncate leading-tight mt-0.5">
-              {isUserGuide ? "Hướng Dẫn Sử Dụng" : "Bán Hàng"}
+              {currentLabel}
             </span>
           </div>
         </div>
@@ -73,7 +98,7 @@ export default function SubsystemSwitcher() {
               href="/"
               onClick={() => setOpen(false)}
               className={`flex items-center justify-between p-2 rounded-lg transition-colors text-xs ${
-                !isUserGuide
+                !isUserGuide && !isProductManagement && !isCatalogue
                   ? "bg-emerald-50 text-emerald-950 font-bold border border-emerald-200"
                   : "hover:bg-gray-50 text-gray-700 font-medium"
               }`}
@@ -84,10 +109,48 @@ export default function SubsystemSwitcher() {
                 </div>
                 <span>Bán Hàng</span>
               </div>
-              {!isUserGuide && <Check className="h-3.5 w-3.5 text-emerald-700" />}
+              {!isUserGuide && !isProductManagement && !isCatalogue && <Check className="h-3.5 w-3.5 text-emerald-700" />}
             </Link>
 
-            {/* 2. Hướng Dẫn Sử Dụng */}
+            {/* 2. Quản Lý Sản Phẩm (Mới) */}
+            <Link
+              href="/product-management/change-types"
+              onClick={() => setOpen(false)}
+              className={`flex items-center justify-between p-2 rounded-lg transition-colors text-xs ${
+                isProductManagement
+                  ? "bg-amber-50 text-amber-950 font-bold border border-amber-300"
+                  : "hover:bg-gray-50 text-gray-700 font-medium"
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 font-bold">
+                  <Box className="h-3.5 w-3.5" />
+                </div>
+                <span>Quản Lý Sản Phẩm</span>
+              </div>
+              {isProductManagement && <Check className="h-3.5 w-3.5 text-amber-700" />}
+            </Link>
+
+            {/* 3. E-Catalogue Chào Hàng */}
+            <Link
+              href="/catalogue"
+              onClick={() => setOpen(false)}
+              className={`flex items-center justify-between p-2 rounded-lg transition-colors text-xs ${
+                isCatalogue
+                  ? "bg-emerald-50 text-emerald-950 font-bold border border-emerald-200"
+                  : "hover:bg-gray-50 text-gray-700 font-medium"
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 rounded-lg bg-emerald-800 text-amber-300 flex items-center justify-center shrink-0">
+                  <Sparkles className="h-3.5 w-3.5" />
+                </div>
+                <span>E-Catalogue</span>
+              </div>
+              {isCatalogue && <Check className="h-3.5 w-3.5 text-emerald-700" />}
+            </Link>
+
+            {/* 4. Hướng Dẫn Sử Dụng */}
             <Link
               href="/user-guide"
               onClick={() => setOpen(false)}
