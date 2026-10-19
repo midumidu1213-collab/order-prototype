@@ -392,11 +392,102 @@ export const INITIAL_ORDERS = [
         qtyNewProduction: 10
       }
     ]
+  },
+  {
+    id: 13,
+    code: "SO2608013-CUSTOM",
+    customerCode: "2037105",
+    customer: "DOANH NGHIỆP TƯ NHÂN Ý NGỌC",
+    customerStatus: "Hiện tại",
+    team: "TEAM 3_B2B2C_HCM & Miền Đông",
+    gold: "18K",
+    material: "Vàng",
+    platingMaterial: "1",
+    type: "Đơn Gia công đặc biệt (Tách từ E-C)",
+    date: "19/10/2026",
+    correspondingCode: "CUS-EC",
+    weight: "0.4500L",
+    tempTotal: "Tính giá sau",
+    discount: "0%",
+    finalPrice: "Tính giá sau",
+    deliveryAddress: "123 Nguyễn Ái Quốc",
+    deliveryProgress: "Chờ duyệt kỹ thuật",
+    note: "Đơn tách tự động từ E-Catalogue do có Yêu cầu thay đổi khác",
+    productionProgressNote: "CHỜ-XỬ-LÝ-KT",
+    stoneHoldStatus: "Chờ xác định loại đá",
+    creator: "[04144] - Nguyễn Thị Mỹ Dung",
+    createdAt: "19/10/2026 22:30",
+    qty: 1,
+    total: "Tính giá sau",
+    status: "Chờ xử lý", // Trạng thái Chờ xử lý theo đúng yêu cầu của Chị đẹp
+    isSplitCustomOrder: true,
+    hasOtherChangeRequest: true,
+    // Thuộc tính Admin đã cấu hình lại (chưa có trên E-C)
+    adminConfiguredAttrs: {
+      lacquerMachine: "Móc máy + Lácquer",
+      lacquerTechGroup: "Nhóm 1 - Men sứ đơn sắc phủ nano",
+      lacquerNote: "Men nano phủ lòng trong chấu đá",
+      cordColor: "Dây đỏ may mắn",
+      castChange: "Đổi cast ổ 6 chấu cao cấp viền kim",
+      pearlToBall: "---",
+      sideStone: "4 viên đá CZ phụ 1.2mm giác cắt kim cương",
+      officialWage: "" // Giá công chính thức (Admin sẽ nhập vào)
+    },
+    items: [
+      {
+        stt: 1,
+        image: "ring",
+        itemCode: "GYORG000143A00A00000000000015",
+        name: "Nhẫn nữ",
+        drawingCode: "RG000143A00",
+        platingColor: "Vàng",
+        stoneColor: "Trắng",
+        size: "15",
+        qty: 1,
+        changeReq: "Khác",
+        otherChangeDescription: "Đắp hoa văn rồng nổi 3D, phối thêm 4 viên đá phụ emerald",
+        weight: "0.4500L",
+        unitPrice: "Tính giá sau",
+        isPricePending: true,
+        note: "Yêu cầu thay đổi khác: Đắp hoa văn rồng nổi 3D, phối thêm 4 viên đá phụ emerald",
+        routingStatus: "Chờ cấu hình KT Admin",
+        sourceType: "NEW_PRODUCTION",
+        qtyFromStock: 0,
+        qtyNewProduction: 1
+      }
+    ]
   }
 ];
 
 export function getOrderById(id) {
+  if (!id) return INITIAL_ORDERS[0];
+  const strId = String(id).toLowerCase().trim();
   const numericId = Number(id);
-  // Ưu tiên khớp id, nếu id là 11 (hoặc không truyền) lấy SO2608011
-  return INITIAL_ORDERS.find((o) => o.id === numericId) || INITIAL_ORDERS[0];
+
+  // 1. Kiểm tra trong localStorage (nếu có đơn lưu từ giỏ hàng checkout)
+  if (typeof window !== "undefined") {
+    try {
+      const savedOrders = localStorage.getItem("SEVAGO_ORDERS_STORE");
+      if (savedOrders) {
+        const parsed = JSON.parse(savedOrders);
+        const found = parsed.find(
+          (o) =>
+            String(o.id) === strId ||
+            String(o.code).toLowerCase() === strId ||
+            (o.code && o.code.toLowerCase().includes(strId))
+        );
+        if (found) return found;
+      }
+    } catch (e) {}
+  }
+
+  // 2. Tìm trong INITIAL_ORDERS theo id hoặc code
+  return (
+    INITIAL_ORDERS.find(
+      (o) =>
+        o.id === numericId ||
+        String(o.code).toLowerCase() === strId ||
+        (o.code && o.code.toLowerCase().includes(strId))
+    ) || INITIAL_ORDERS[0]
+  );
 }

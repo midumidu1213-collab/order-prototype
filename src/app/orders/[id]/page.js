@@ -32,12 +32,15 @@ import {
   CornerDownRight,
   Tag,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Clock,
+  SlidersHorizontal
 } from "lucide-react";
 import { getOrderById, ALLOWED_SYNC_STATUSES, INITIAL_ORDERS } from "@/data/ordersData";
 import { findMatchingWarehouseItems, ROUTING_FG_FIXED } from "@/data/warehouseStockData";
 import WarehouseSyncPopup from "@/components/orders/WarehouseSyncPopup";
 import SetProductionBagModal from "@/components/orders/SetProductionBagModal";
+import AdminTechnicalConfigModal from "@/components/orders/AdminTechnicalConfigModal";
 
 export default function OrderDetailPage({ params }) {
   // Unwrap params trong Next.js 15/16
@@ -90,6 +93,31 @@ export default function OrderDetailPage({ params }) {
   // State quản lý Modal xem Kế hoạch sản xuất 2 luồng (SX Mới & Kho TP)
   const [isProductionPlanModalOpen, setIsProductionPlanModalOpen] = useState(false);
   const [selectedPlanItem, setSelectedPlanItem] = useState(null);
+
+  // State quản lý Modal Tùy chọn thuộc tính kỹ thuật nội bộ (Admin) cho đơn Chờ xử lý
+  const [isAdminConfigModalOpen, setIsAdminConfigModalOpen] = useState(false);
+
+  const handleSaveAdminConfig = (newConfig) => {
+    const formattedWage = Number(newConfig.officialWage || 250000).toLocaleString() + "đ";
+    setOrder((prev) => ({
+      ...prev,
+      status: "Đủ thông tin KT", // Cập nhật từ Chờ xử lý -> Đủ thông tin KT
+      total: formattedWage,
+      finalPrice: formattedWage,
+      tempTotal: formattedWage,
+      adminConfiguredAttrs: newConfig,
+      items: prev.items.map((it) => ({
+        ...it,
+        unitPrice: Number(newConfig.officialWage || 250000),
+        isPricePending: false,
+        routingStatus: "Đã hoàn tất cấu hình KT Admin",
+        note: `Đã cấu hình Admin: ${newConfig.cordColor} • ${newConfig.lacquerMethod}`
+      }))
+    }));
+    setIsAdminConfigModalOpen(false);
+    setSyncToastMessage("Đã cấu hình thuộc tính kỹ thuật nội bộ Admin & cập nhật giá công chính thức thành công!");
+    setTimeout(() => setSyncToastMessage(""), 5000);
+  };
 
   // Thao tác bấm nút Đồng bộ
   const handleTriggerSync = () => {
@@ -255,11 +283,32 @@ export default function OrderDetailPage({ params }) {
               <Crown className="h-3.5 w-3.5 text-amber-500" />
               <span>SO2608012</span>
             </Link>
+            <Link
+              href="/orders/13"
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                String(orderId) === "13" || String(order.code).includes("CUSTOM")
+                  ? "bg-amber-600 text-white shadow-2xs"
+                  : "bg-white text-amber-900 hover:bg-amber-50 border border-amber-300"
+              }`}
+              title="Đơn hàng Chờ xử lý tách tự động từ E-Catalogue do có Yêu cầu thay đổi khác"
+            >
+              <Clock className="h-3.5 w-3.5 text-amber-300" />
+              <span>SO2608013 (Chờ xử lý)</span>
+            </Link>
           </div>
         </div>
 
         {/* Hàng nút chức năng góc trên bên phải */}
         <div className="flex flex-wrap items-center gap-2">
+          {order.status === "Chờ xử lý" && (
+            <button
+              onClick={() => setIsAdminConfigModalOpen(true)}
+              className="flex items-center px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow-md animate-pulse cursor-pointer"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
+              Tùy chọn kỹ thuật Admin
+            </button>
+          )}
           <button className="flex items-center px-3 py-1.5 border border-slate-300 rounded-lg bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
             <Download className="h-3.5 w-3.5 mr-1.5 text-slate-500" />
             Xuất báo giá
@@ -278,6 +327,38 @@ export default function OrderDetailPage({ params }) {
           </button>
         </div>
       </div>
+
+      {/* ALERT BANNER: NẾU ĐƠN Ở TRẠNG THÁI CHỜ XỬ LÝ (TÁCH TỪ E-C DO CÓ YÊU CẦU THAY ĐỔI KHÁC) */}
+      {order.status === "Chờ xử lý" && (
+        <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-start space-x-3">
+            <div className="p-2.5 bg-amber-200 text-amber-900 rounded-xl shrink-0 mt-0.5 shadow-2xs">
+              <Clock className="w-5 h-5 text-amber-800 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2 flex-wrap gap-1">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-amber-300 text-amber-950 px-2 py-0.5 rounded border border-amber-400">
+                  Đơn hàng Chờ xử lý (Tách tự động từ E-Catalogue)
+                </span>
+                <span className="text-xs font-bold text-amber-900 font-mono bg-white px-2 py-0.5 rounded border border-amber-200">
+                  Giá công: Tính giá sau
+                </span>
+              </div>
+              <p className="text-xs text-amber-950 mt-1 leading-relaxed">
+                Đơn hàng chứa sản phẩm có <b>Yêu cầu thay đổi khác (hoặc chọn 'Khác')</b>. Quản trị viên (Admin) có thể tùy chọn lại các thuộc tính kỹ thuật nội bộ đã được cấu hình trong bảng mà chưa có trên E-C (như Màu dây, Đắp lacquer-móc máy, Thay cast, Thay pearl sang ball, Đá phụ) và định giá công chính thức.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsAdminConfigModalOpen(true)}
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shrink-0 shadow-md flex items-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            <span>Tùy chọn thuộc tính kỹ thuật Admin</span>
+          </button>
+        </div>
+      )}
 
       {/* CARD THÔNG TIN CHUNG: ĐẦY ĐỦ 100% CÁC TRƯỜNG NHƯ ẢNH CHỤP */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-5">
@@ -1122,6 +1203,14 @@ export default function OrderDetailPage({ params }) {
         isOpen={isBagModalOpen}
         onClose={() => setIsBagModalOpen(false)}
         setItem={selectedSetItem}
+      />
+
+      {/* MODAL TÙY CHỌN THUỘC TÍNH KỸ THUẬT NỘI BỘ (ADMIN) CHO ĐƠN CHỜ XỬ LÝ */}
+      <AdminTechnicalConfigModal
+        isOpen={isAdminConfigModalOpen}
+        onClose={() => setIsAdminConfigModalOpen(false)}
+        order={order}
+        onSaveConfig={handleSaveAdminConfig}
       />
     </div>
   );

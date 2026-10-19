@@ -5,6 +5,178 @@
 // 3. QLĐH: Cấu hình sản phẩm (Có Cột E-Catalogue, Màu phụ liệu chính/phụ, Người tạo, Ngày tạo, Modal 4view 4 góc nhìn chuẩn)
 
 // ==========================================
+// 1. MASTER DATA: BẢNG MA TRẬN CẤU HÌNH THUỘC TÍNH THAY ĐỔI (KHỚP 100% EXCEL ẢNH 2)
+// ==========================================
+// - Tùy chọn -> Yêu cầu thay đổi ở dạng dropdown
+// - Mô tả (Ghi chú) -> Yêu cầu thay đổi ở dạng ghi chú (chỉ ở admin)
+// - Cả tùy chọn và mô tả -> Vừa chọn vừa nhập (có checkbox để tích chọn yêu cầu thay đổi khác) -> Nếu có nhập mô tả thì "Tính giá sau"
+// - Trên E-Catalogue (E-C) CHỈ hiển thị các thuộc tính có cờ showEC = true + Loại 'Khác'
+export const ATTRIBUTE_CHANGE_CONFIGS = [
+  {
+    stt: 1,
+    name: "Màu xi",
+    type: "option", // Tùy chọn
+    hasOption: true,
+    hasDescription: false,
+    showEC: true,
+    showAdmin: true,
+    condition: "",
+    defaultOptions: ["Vàng", "Trắng", "Hồng", "Hai màu"],
+    isBasicAttr: true // Thuộc tính cơ bản trên header sản phẩm
+  },
+  {
+    stt: 2,
+    name: "Màu đá chính",
+    type: "option", // Tùy chọn
+    hasOption: true,
+    hasDescription: false,
+    showEC: true,
+    showAdmin: true,
+    condition: "",
+    defaultOptions: ["Trắng", "Đỏ", "Xanh", "Tím", "Vàng", "Hồng", "Đen", "Không đá"],
+    isBasicAttr: true // Thuộc tính cơ bản trên header sản phẩm
+  },
+  {
+    stt: 3,
+    name: "Kích thước",
+    type: "option", // Tùy chọn
+    hasOption: true,
+    hasDescription: false,
+    showEC: true,
+    showAdmin: true,
+    condition: "",
+    defaultOptions: ["14", "15", "16", "17", "18"],
+    isBasicAttr: true // Thuộc tính cơ bản trên header sản phẩm
+  },
+  {
+    stt: 4,
+    name: "Khóa (khóa càng cua/mỏ vịt)",
+    type: "option", // Tùy chọn
+    hasOption: true,
+    hasDescription: false,
+    showEC: true,
+    showAdmin: true,
+    condition: "Chị Vy đưa lại cái tên khóa",
+    defaultOptions: ["Khóa càng cua", "Khóa mỏ vịt", "Khóa tròn lò xo", "Khóa hộp bấm"],
+    isBasicAttr: false
+  },
+  {
+    stt: 5,
+    name: "Tăng đơ (đổi/bỏ)",
+    type: "option", // Tùy chọn
+    hasOption: true,
+    hasDescription: false,
+    showEC: true,
+    showAdmin: true,
+    condition: "",
+    defaultOptions: ["Đổi loại tăng đơ chữ nhật", "Đổi loại tăng đơ hình tim", "Bỏ tăng đơ"],
+    isBasicAttr: false
+  },
+  {
+    stt: 6,
+    name: "Kiểu bào ball",
+    type: "option", // Tùy chọn
+    hasOption: true,
+    hasDescription: false,
+    showEC: true,
+    showAdmin: true,
+    condition: "- Nhiều loại ball khác kích thước nhau thì không cho thay đổi kiểu bào\n- Chị Vy đưa lại tên kiểu bào + hình ảnh",
+    defaultOptions: ["CR - Cross 45", "CS - Chữ S", "MO - Moon", "SL45 - Slash 45", "TR - Trơn"],
+    isBasicAttr: false
+  },
+  {
+    stt: 7,
+    name: "Thay kích thước dây HTJ (Tăng/giảm size)",
+    type: "option", // Tùy chọn
+    hasOption: true,
+    hasDescription: false,
+    showEC: true,
+    showAdmin: true,
+    condition: "",
+    defaultOptions: ["Tăng size (+0.2mm)", "Giảm size (-0.2mm)", "Dây HTJ 1.2mm", "Dây HTJ 1.5mm"],
+    isBasicAttr: false
+  },
+  {
+    stt: 8,
+    name: "Màu dây (phụ liệu - vải,da)",
+    type: "option", // Tùy chọn
+    hasOption: true,
+    hasDescription: false,
+    showEC: false, // CHỈ Ở ADMIN
+    showAdmin: true,
+    condition: "CNS đánh giá chỉ lấy cùng loại dây, cùng kích thước",
+    defaultOptions: ["Dây đỏ may mắn", "Dây đen chỉ dù", "Dây ngũ sắc Tây Tạng", "Dây hồng pastel", "Dây da nâu bò", "Dây da đen trơn"],
+    isBasicAttr: false
+  },
+  {
+    stt: 9,
+    name: "Đắp lacquer-móc máy",
+    type: "both", // Cả tùy chọn và mô tả -> Vừa chọn vừa nhập -> Có checkbox yêu cầu thay đổi khác -> Nếu có nhập mô tả thì Tính giá sau
+    hasOption: true,
+    hasDescription: true,
+    showEC: false, // CHỈ Ở ADMIN
+    showAdmin: true,
+    condition: "Móc máy / Lácquer / Móc máy + Lácquer",
+    defaultOptions: ["Móc máy", "Lácquer", "Móc máy + Lácquer"],
+    subOptions: [
+      "Nhóm 1 - Men sứ đơn sắc phủ nano",
+      "Nhóm 2 - Men sứ đa sắc viền kim",
+      "Nhóm 3 - Móc máy hoa văn nổi 3D"
+    ],
+    isBasicAttr: false
+  },
+  {
+    stt: 10,
+    name: "Thay cast",
+    type: "description", // Mô tả (Ghi chú) -> CHỈ Ở ADMIN
+    hasOption: false,
+    hasDescription: true,
+    showEC: false, // CHỈ Ở ADMIN
+    showAdmin: true,
+    condition: "Khuôn đúc, ổ chấu",
+    defaultOptions: [],
+    isBasicAttr: false
+  },
+  {
+    stt: 11,
+    name: "Thay pearl sang ball",
+    type: "description", // Mô tả (Ghi chú) -> CHỈ Ở ADMIN
+    hasOption: false,
+    hasDescription: true,
+    showEC: false, // CHỈ Ở ADMIN
+    showAdmin: true,
+    condition: "Thay cấu trúc pearl sang ball",
+    defaultOptions: [],
+    isBasicAttr: false
+  },
+  {
+    stt: 12,
+    name: "Đá phụ",
+    type: "description", // Mô tả (Ghi chú) -> CHỈ Ở ADMIN
+    hasOption: false,
+    hasDescription: true,
+    showEC: false, // CHỈ Ở ADMIN
+    showAdmin: true,
+    condition: "Thay đổi đá phụ (loại đá, cách kết)",
+    defaultOptions: [],
+    isBasicAttr: false
+  }
+];
+
+// Danh sách các tùy chọn hiển thị trên E-Catalogue (Chỉ các mục có showEC = true + Khác)
+export const EC_ALLOWED_CHANGE_REQUESTS = [
+  "Không thay đổi",
+  "Khóa (khóa càng cua/mỏ vịt)",
+  "Tăng đơ (đổi/bỏ)",
+  "Kiểu bào ball",
+  "Thay kích thước dây HTJ (Tăng/giảm size)",
+  "Khác"
+];
+
+// Danh sách các thuộc tính cấu hình nội bộ Admin (chưa có trên E-C để Admin xử lý đơn chờ)
+export const ADMIN_INTERNAL_ATTRIBUTES = ATTRIBUTE_CHANGE_CONFIGS.filter(a => !a.showEC && a.showAdmin);
+
+// ==========================================
 // 1. MASTER DATA: CẤU HÌNH LOẠI THAY ĐỔI (QLSP)
 // ==========================================
 export const CHANGE_TYPES_CONFIG = [

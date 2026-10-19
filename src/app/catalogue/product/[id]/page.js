@@ -17,10 +17,11 @@ import {
   Settings2,
   Trash2,
   Maximize2,
-  X
+  X,
+  Clock
 } from "lucide-react";
 import { JEWELRY_PRODUCTS } from "@/data/catalogueData";
-import { CHANGE_TYPES_CONFIG } from "@/data/productVersionConfigData";
+import { CHANGE_TYPES_CONFIG, EC_ALLOWED_CHANGE_REQUESTS, ATTRIBUTE_CHANGE_CONFIGS } from "@/data/productVersionConfigData";
 import { useCatalogueCart } from "@/context/CatalogueCartContext";
 import JewelryVisual from "@/components/catalogue/JewelryVisual";
 
@@ -83,7 +84,7 @@ export const CHANGE_REQUEST_CONFIGS = {
   }
 };
 
-// Cấu hình các tùy chọn cho Yêu cầu thay đổi E-Catalogue chuẩn (Dropdown -> Dropdown)
+// Cấu hình các tùy chọn cho Yêu cầu thay đổi E-Catalogue chuẩn (Chỉ hiển thị các thuộc tính có cờ Hiển thị E_C + Khác)
 export const EC_CHANGE_REQUEST_OPTIONS = {
   "Không thay đổi": [],
   "Khóa (khóa càng cua/mỏ vịt)": [
@@ -109,16 +110,6 @@ export const EC_CHANGE_REQUEST_OPTIONS = {
     "Giảm size (-0.2mm)",
     "Dây HTJ 1.2mm",
     "Dây HTJ 1.5mm"
-  ],
-  "Đắp lacquer - móc máy": [
-    "Nhóm 1 - Men sứ đơn sắc phủ nano",
-    "Nhóm 2 - Men sứ đa sắc viền kim",
-    "Nhóm 3 - Móc máy hoa văn nổi 3D"
-  ],
-  "Cast (khuôn đúc, ổ chấu)": [
-    "Cast ổ 6 chấu vương miện",
-    "Cast ổ 4 chấu hoa sen",
-    "Cast thân nhẫn dập nổi"
   ],
   "Khác": []
 };
@@ -227,6 +218,14 @@ export default function ProductDetailPage({ params }) {
     }
   }, [otherChangeMode]);
 
+  // Nghiệp vụ theo yêu cầu của Chị đẹp:
+  // - Nếu chọn Loại thay đổi là "Khác" HOẶC (có checkbox thay đổi khác và có nhập mô tả)
+  // -> Giá công: "Tính giá sau"
+  // -> Khi tạo đơn tự động tách đơn đặc biệt ở trạng thái Chờ xử lý
+  const isCustomOrOther = useMemo(() => {
+    return ecChangeCategory === "Khác" || (hasOtherChange && otherChangeDescription.trim().length > 0);
+  }, [ecChangeCategory, hasOtherChange, otherChangeDescription]);
+
   const handleSelectEcChangeCategory = (cat) => {
     setEcChangeCategory(cat);
     setFormError("");
@@ -315,11 +314,15 @@ export default function ProductDetailPage({ params }) {
       hasOtherChange: hasOtherChange || ecChangeCategory === "Khác",
       otherChangeDescription: otherChangeDescription,
       changeRequest: changeRequestSummary,
+      // Quy tắc tách đơn & tính giá sau theo yêu cầu của Chị đẹp
+      isCustomOrOther: isCustomOrOther,
+      isPricePending: isCustomOrOther,
+      priceDisplay: isCustomOrOther ? "Tính giá sau" : (product.specs?.wage || "205,000đ"),
       // Trường note được thay thế bằng mô tả thay đổi khác khi tick chọn
       note: otherChangeDescription,
       qty: Number(singleQty) || 1,
-      wagePrice: product.wagePrice,
-      totalWage: (product.wagePrice || 205000) * (Number(singleQty) || 1),
+      wagePrice: isCustomOrOther ? 0 : (product.wagePrice || 205000),
+      totalWage: isCustomOrOther ? 0 : ((product.wagePrice || 205000) * (Number(singleQty) || 1)),
       weight: product.goldWeight || "0.4500g",
       imageType: product.imageType
     });
@@ -1576,9 +1579,16 @@ export default function ProductDetailPage({ params }) {
                         </div>
                         <div>
                           <div className="text-[11px] text-gray-500 font-medium">Giá công</div>
-                          <div className="text-sm font-bold text-[#00594c] mt-0.5 font-mono">
-                            {product.specs?.wage || "205,000đ"}
-                          </div>
+                          {isCustomOrOther ? (
+                            <div className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 mt-0.5 shadow-2xs">
+                              <Clock className="w-3 h-3 mr-1 text-amber-600 animate-pulse" />
+                              <span>Tính giá sau</span>
+                            </div>
+                          ) : (
+                            <div className="text-sm font-bold text-[#00594c] mt-0.5 font-mono">
+                              {product.specs?.wage || "205,000đ"}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -1627,7 +1637,7 @@ export default function ProductDetailPage({ params }) {
                         </div>
                       </div>
 
-                      {/* PHẦN 2: YÊU CẦU THAY ĐỔI CHUẨN: LIÊN KẾT ĐỘNG VỚI CẤU HÌNH QLSP */}
+                      {/* PHẦN 2: YÊU CẦU THAY ĐỔI CHUẨN: CHỈ HIỂN THỊ CÁC THUỘC TÍNH CÓ TÍCH CHỌN TRONG BẢNG + 'KHÁC' */}
                       <div className="pt-2 border-t border-gray-100 space-y-2">
                         <div className={`grid gap-3.5 ${ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
                           {/* Dropdown 1: Yêu cầu thay đổi */}
@@ -1640,14 +1650,9 @@ export default function ProductDetailPage({ params }) {
                               onChange={(e) => handleSelectEcChangeCategory(e.target.value)}
                               className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer shadow-2xs"
                             >
-                              <option value="Không thay đổi">Không thay đổi</option>
-                              <option value="Khóa (khóa càng cua/mỏ vịt)">Khóa (khóa càng cua/mỏ vịt)</option>
-                              <option value="Tăng đơ (đổi/bỏ)">Tăng đơ (đổi/bỏ)</option>
-                              <option value="Kiểu bào ball">Kiểu bào ball</option>
-                              <option value="Thay kích thước dây HTJ (Tăng/giảm size)">Thay kích thước dây HTJ (Tăng/giảm size)</option>
-                              <option value="Đắp lacquer - móc máy">Đắp lacquer - móc máy</option>
-                              <option value="Cast (khuôn đúc, ổ chấu)">Cast (khuôn đúc, ổ chấu)</option>
-                              <option value="Khác">Khác (Yêu cầu riêng)</option>
+                              {EC_ALLOWED_CHANGE_REQUESTS.map((req) => (
+                                <option key={req} value={req}>{req}</option>
+                              ))}
                             </select>
 
                             {/* Ghi chú phản ánh trạng thái cấu hình QLSP theo yêu cầu của Chị đẹp */}

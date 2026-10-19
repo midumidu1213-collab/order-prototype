@@ -16,12 +16,14 @@ import {
   X,
   FileText,
   ListFilter,
-  CheckCircle2
+  CheckCircle2,
+  TableProperties
 } from "lucide-react";
-import { CHANGE_TYPES_CONFIG } from "@/data/productVersionConfigData";
+import { CHANGE_TYPES_CONFIG, ATTRIBUTE_CHANGE_CONFIGS } from "@/data/productVersionConfigData";
 
 export default function ProductManagementChangeTypesPage() {
   const [changeTypes, setChangeTypes] = useState(CHANGE_TYPES_CONFIG);
+  const [activeViewTab, setActiveViewTab] = useState("attributes"); // Mặc định hiển thị tab Ma trận thuộc tính theo yêu cầu của Chị đẹp
   const [searchQuery, setSearchQuery] = useState("");
   
   // Khởi tạo từ localStorage nếu có để đồng bộ tức thì sang E-Catalogue
@@ -351,58 +353,223 @@ export default function ProductManagementChangeTypesPage() {
           </div>
         )}
 
-        {/* Nội dung danh sách khớp 100% Ảnh 1 */}
+        {/* Nội dung danh sách khớp 100% Ảnh 1 & Ma trận Thuộc tính Ảnh 2 */}
         <main className="flex-1 overflow-y-auto p-6 space-y-4">
-          <div className="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
-            {/* Header Card: Tiêu đề & Nút Thêm mới, Lọc, Reload */}
-            <div className="p-5 pb-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-gray-100">
-              <h1 className="text-lg font-bold text-gray-900 tracking-tight">
-                Danh sách Loại thay đổi
-              </h1>
+          
+          {/* TAB SWITCHER: CHUYỂN ĐỔI GIỮA MA TRẬN THUỘC TÍNH (ẢNH 2) & DANH SÁCH LOẠI THAY ĐỔI */}
+          <div className="flex items-center space-x-2 bg-gray-200/70 p-1.5 rounded-xl w-fit">
+            <button
+              type="button"
+              onClick={() => setActiveViewTab("attributes")}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
+                activeViewTab === "attributes"
+                  ? "bg-[#005a46] text-white shadow-xs"
+                  : "text-gray-700 hover:bg-white/60"
+              }`}
+            >
+              <TableProperties className="h-4 w-4" />
+              <span>Ma trận Cấu hình Thuộc tính (Chuẩn Excel Ảnh 2)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveViewTab("types")}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
+                activeViewTab === "types"
+                  ? "bg-[#005a46] text-white shadow-xs"
+                  : "text-gray-700 hover:bg-white/60"
+              }`}
+            >
+              <ListFilter className="h-4 w-4" />
+              <span>Danh sách Loại thay đổi (10 Loại & Cờ Routing)</span>
+            </button>
+          </div>
 
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={handleOpenCreate}
-                  className="px-3.5 py-2 bg-[#005a46] hover:bg-[#004737] text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 shadow-2xs transition-colors cursor-pointer"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Thêm mới</span>
-                </button>
-                <button
-                  type="button"
-                  className="p-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 cursor-pointer"
-                  title="Tùy chỉnh cột"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setChangeTypes(CHANGE_TYPES_CONFIG);
-                    showToast("Đã tải lại danh sách loại thay đổi gốc!");
-                  }}
-                  className="p-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 cursor-pointer"
-                  title="Tải lại"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+          {activeViewTab === "attributes" ? (
+            /* ========================================================================= */
+            /* VIEW 1: BẢNG MA TRẬN CẤU HÌNH THUỘC TÍNH THAY ĐỔI (KHỚP 100% EXCEL ẢNH 2) */
+            /* ========================================================================= */
+            <div className="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden space-y-4">
+              <div className="p-5 pb-3 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-emerald-50/50 to-white">
+                <div>
+                  <h1 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight flex items-center space-x-2">
+                    <span>Bảng Ma trận Cấu hình Thuộc tính Thay đổi</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-[#00594c] px-2 py-0.5 rounded border border-emerald-300">
+                      Chuẩn Excel B2B/B2C
+                    </span>
+                  </h1>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Định nghĩa hình thức nhập liệu (Dropdown vs Ghi chú), phạm vi hiển thị trên E-Catalogue và quyền cấu hình Admin.
+                  </p>
+                </div>
 
-            {/* Input Search */}
-            <div className="px-5 py-3 border-b border-gray-100">
-              <div className="relative max-w-xs">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm kiếm mã loại, tên loại thay đổi..."
-                  className="w-full pl-8 pr-3 py-1.5 bg-gray-50/60 border border-gray-300 rounded-lg text-xs focus:bg-white focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 placeholder:text-gray-400"
-                />
+                <div className="flex items-center space-x-2 text-xs">
+                  <span className="flex items-center space-x-1 font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Hiển thị E-C: 4 thuộc tính + Loại 'Khác'</span>
+                  </span>
+                </div>
               </div>
+
+              {/* Bảng Excel 7 Cột Khớp 100% Ảnh 2 */}
+              <div className="overflow-x-auto px-5 pb-5">
+                <table className="w-full border-collapse text-left text-xs border border-gray-300">
+                  <thead className="bg-[#b4c6e7] text-gray-900 font-bold border-b-2 border-gray-400 text-center">
+                    <tr>
+                      <th className="w-12 px-3 py-3 border border-gray-300">STT</th>
+                      <th className="px-4 py-3 min-w-[200px] border border-gray-300 text-left">Thuộc tính</th>
+                      <th className="w-40 px-3 py-3 border border-gray-300 bg-[#d9e1f2]">Tùy chọn</th>
+                      <th className="w-36 px-3 py-3 border border-gray-300 bg-[#d9e1f2]">Mô tả (Ghi chú)</th>
+                      <th className="w-32 px-3 py-3 border border-gray-300 bg-[#c6e0b4]">Hiển thị E_C</th>
+                      <th className="w-24 px-3 py-3 border border-gray-300">Admin</th>
+                      <th className="px-4 py-3 min-w-[260px] border border-gray-300 text-left">Điều kiện / Ghi chú</th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-gray-200">
+                    {ATTRIBUTE_CHANGE_CONFIGS.map((attr) => (
+                      <tr key={attr.stt} className="hover:bg-amber-50/40 transition-colors">
+                        {/* STT */}
+                        <td className="px-3 py-2.5 text-center font-bold text-gray-700 border border-gray-300">
+                          {attr.stt}
+                        </td>
+
+                        {/* Thuộc tính */}
+                        <td className="px-4 py-2.5 font-semibold text-gray-900 border border-gray-300">
+                          <div className="flex items-center space-x-1.5">
+                            <span className={attr.stt === 9 ? "font-bold text-gray-900" : ""}>{attr.name}</span>
+                            {attr.isBasicAttr && (
+                              <span className="text-[9px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded">
+                                Cơ bản
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Tùy chọn */}
+                        <td className="px-3 py-2.5 text-center font-bold border border-gray-300 bg-[#f9fbfd]">
+                          {attr.hasOption ? (
+                            attr.stt === 9 ? (
+                              <div className="space-y-0.5">
+                                <span className="text-red-600 font-black text-sm">X</span>
+                                <div className="text-[10px] text-red-600 font-semibold leading-tight">
+                                  (Móc máy / Lácquer / Móc máy + Lácquer)
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-900 font-black text-sm">X</span>
+                            )
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+
+                        {/* Mô tả (Ghi chú) */}
+                        <td className="px-3 py-2.5 text-center font-bold border border-gray-300 bg-[#f9fbfd]">
+                          {attr.hasDescription ? (
+                            <span className="text-red-600 font-black text-sm">X</span>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+
+                        {/* Hiển thị E_C */}
+                        <td className="px-3 py-2.5 text-center font-bold border border-gray-300 bg-[#f4f9f2]">
+                          {attr.showEC ? (
+                            <span className="text-gray-900 font-black text-sm">X</span>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+
+                        {/* Admin */}
+                        <td className="px-3 py-2.5 text-center font-bold border border-gray-300">
+                          {attr.showAdmin ? (
+                            <span className="text-gray-900 font-black text-sm">X</span>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+
+                        {/* Điều kiện / Ghi chú */}
+                        <td className="px-4 py-2.5 text-xs text-gray-700 border border-gray-300 whitespace-pre-line leading-relaxed">
+                          {attr.condition || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Tóm tắt quy tắc nghiệp vụ vàng của Chị đẹp */}
+              <div className="mx-5 mb-5 p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2 text-xs text-emerald-950">
+                <div className="font-bold text-sm text-[#00594c] flex items-center space-x-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>Quy tắc Vận Hành & Tính Giá (Theo cấu hình Chị đẹp):</span>
+                </div>
+                <ul className="list-disc pl-5 space-y-1 text-[11.5px] leading-relaxed">
+                  <li><strong>Tùy chọn:</strong> Yêu cầu thay đổi ở cột thuộc tính ở dạng dropdown.</li>
+                  <li><strong>Mô tả:</strong> Yêu cầu thay đổi ở cột thuộc tính ở dạng ghi chú (chỉ hiển thị ở Admin).</li>
+                  <li><strong>Cả tùy chọn và mô tả:</strong> Vừa chọn vừa nhập (có checkbox để tích chọn yêu cầu thay đổi khác) &rarr; Nếu có nhập mô tả thì <strong>Giá tính sau</strong>.</li>
+                  <li><strong>Trên E-Catalogue:</strong> Chỉ hiển thị các thuộc tính có cờ <code>showEC = true</code> (Khóa, Tăng đơ, Kiểu bào ball, HTJ) + Loại <code>'Khác'</code>. Khi chọn 'Khác', hiển thị ô nhập mô tả thay đổi &rarr; <strong>Tính giá sau</strong>.</li>
+                  <li><strong>Tự động tách đơn:</strong> Đơn có Yêu cầu thay đổi là Khác HOẶC có nhập mô tả thay đổi khác thì khi tạo xong tự động tách làm 2 đơn: Đơn chứa Yêu cầu thay đổi khác sẽ ở trạng thái <strong>Chờ xử lý</strong> và Admin có thể tùy chọn lại các thuộc tính kỹ thuật nội bộ (Màu dây, Đắp lacquer, Thay cast, Thay pearl sang ball, Đá phụ).</li>
+                </ul>
+              </div>
+
             </div>
+          ) : (
+            /* ========================================================================= */
+            /* VIEW 2: DANH SÁCH LOẠI THAY ĐỔI (BẢNG GỐC 10 LOẠI CÓ CỜ ROUTING)           */
+            /* ========================================================================= */
+            <div className="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
+              {/* Header Card: Tiêu đề & Nút Thêm mới, Lọc, Reload */}
+              <div className="p-5 pb-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-gray-100">
+                <h1 className="text-lg font-bold text-gray-900 tracking-tight">
+                  Danh sách Loại thay đổi
+                </h1>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={handleOpenCreate}
+                    className="px-3.5 py-2 bg-[#005a46] hover:bg-[#004737] text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Thêm mới</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="p-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 cursor-pointer"
+                    title="Tùy chỉnh cột"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChangeTypes(CHANGE_TYPES_CONFIG);
+                      showToast("Đã tải lại danh sách loại thay đổi gốc!");
+                    }}
+                    className="p-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 cursor-pointer"
+                    title="Tải lại"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Input Search */}
+              <div className="px-5 py-3 border-b border-gray-100">
+                <div className="relative max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Tìm kiếm mã loại, tên loại thay đổi..."
+                    className="w-full pl-8 pr-3 py-1.5 bg-gray-50/60 border border-gray-300 rounded-lg text-xs focus:bg-white focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 placeholder:text-gray-400"
+                  />
+                </div>
+              </div>
 
             {/* Bảng Dữ Liệu Khớp 100% Ảnh 1 & 2 kèm hiển thị Cấu hình chi tiết */}
             <div className="overflow-x-auto">
@@ -608,6 +775,7 @@ export default function ProductManagementChangeTypesPage() {
               </div>
             </div>
           </div>
+        )}
         </main>
       </div>
 

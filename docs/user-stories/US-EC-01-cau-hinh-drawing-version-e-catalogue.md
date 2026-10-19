@@ -88,6 +88,64 @@ sequenceDiagram
 
 ---
 
+### 3.3. Ma Trận Cấu Hình Thuộc Tính Thay Đổi (Chuẩn Excel Quản Trị Hệ Thống)
+
+Dựa trên cấu hình phân loại thuộc tính thay đổi:
+1. **Tùy chọn:** Yêu cầu thay đổi ở cột thuộc tính thể hiện ở dạng **dropdown**.
+2. **Mô tả (Ghi chú):** Yêu cầu thay đổi ở cột thuộc tính thể hiện ở dạng **ghi chú** (chỉ có quyền tác nghiệp ở Admin).
+3. **Cả tùy chọn và mô tả:** Vừa chọn dropdown vừa nhập text ghi chú (có checkbox để tích chọn yêu cầu thay đổi khác). **Nếu có nhập mô tả thì Giá công: "Tính giá sau"**.
+4. **Quy tắc hiển thị trên E-Catalogue (E-C):**
+   - Trên E-C **chỉ hiển thị các thuộc tính có tích chọn trong bảng (`showEC = true`) + Loại `'Khác'`**.
+   - Khi chọn loại `'Khác'`: Hiển thị ô nhập mô tả thay đổi $\rightarrow$ Giá công chuyển thành: **"Tính giá sau"**.
+
+| STT | Thuộc tính | Tùy chọn | Mô tả (Ghi chú) | Hiển thị E_C | Admin | Điều kiện / Ghi chú |
+| :---: | :--- | :---: | :---: | :---: | :---: | :--- |
+| **1** | **Màu xi** | **X** | | **X** | **X** | Thuộc tính cơ bản (Vàng, Trắng, Hồng, Hai màu) |
+| **2** | **Màu đá chính** | **X** | | **X** | **X** | Thuộc tính cơ bản (Trắng, Đỏ, Xanh, Tím, Vàng, Hồng, Đen...) |
+| **3** | **Kích thước** | **X** | | **X** | **X** | Thuộc tính cơ bản (Size Ni 14, 15, 16, 17, 18...) |
+| **4** | **Khóa (khóa càng cua/mỏ vịt)** | **X** | | **X** | **X** | Chị Vy đưa lại cái tên khóa |
+| **5** | **Tăng đơ (đổi/bỏ)** | **X** | | **X** | **X** | Đổi tăng đơ chữ nhật, tim, hoặc bỏ tăng đơ |
+| **6** | **Kiểu bào ball** | **X** | | **X** | **X** | • Nhiều loại ball khác kích thước nhau thì không cho thay đổi kiểu bào<br>• Chị Vy đưa lại tên kiểu bào + hình ảnh |
+| **7** | **Thay kích thước dây HTJ (Tăng/giảm size)** | **X** | | **X** | **X** | Tăng/giảm size cỡ dây |
+| **8** | **Màu dây (phụ liệu - vải,da)** | **X** | | | **X** | CNS đánh giá chỉ lấy cùng loại dây, cùng kích thước |
+| **9** | **Đắp lacquer-móc máy** | **X**<br>*(Móc máy / Lácquer / Móc máy + Lácquer)* | **X** | | **X** | Cả tùy chọn và mô tả: vừa chọn vừa nhập, có checkbox yêu cầu thay đổi khác $\rightarrow$ Nếu có nhập mô tả thì **Giá tính sau** |
+| **10** | **Thay cast** | | **X** | | **X** | Khuôn đúc, ổ chấu (Chỉ Admin) |
+| **11** | **Thay pearl sang ball** | | **X** | | **X** | Thay cấu trúc pearl sang ball kim loại (Chỉ Admin) |
+| **12** | **Đá phụ** | | **X** | | **X** | Thay đổi đá phụ (loại đá, cách kết) (Chỉ Admin) |
+
+---
+
+### 3.4. Quy Tắc Tự Động Tách Đơn Hàng (Automatic Order Splitting) & Thẩm Định Kỹ Thuật Admin
+
+Khi khách hàng / sale đặt hàng qua Giỏ hàng E-Catalogue hoặc Tạo đơn hàng:
+- **Điều kiện kích hoạt tách đơn tự động:**
+  Đơn hàng có sản phẩm có **Yêu cầu thay đổi là "Khác"** HOẶC **có nhập mô tả thay đổi khác**.
+- **Hành vi tách đơn tự động của hệ thống:**
+  Hệ thống tự động phân tách thành **2 mã đơn hàng SO độc lập**:
+  1. **Đơn Hàng Tiêu Chuẩn (Mã: `SOxxxxxxx-STD`):**
+     - Chứa các sản phẩm tiêu chuẩn (không có thay đổi khác).
+     - Trạng thái: **`Chờ xác nhận`** (hoặc Đang xử lý).
+     - Giá công: Đã tính theo đơn giá định mức tiêu chuẩn.
+  2. **Đơn Hàng Gia Công Đặc Biệt (Mã: `SOxxxxxxx-CUSTOM`):**
+     - Chứa các sản phẩm có Yêu cầu thay đổi khác hoặc chọn 'Khác'.
+     - Trạng thái: **`Chờ xử lý`** (Pending Review).
+     - Giá công: **`Tính giá sau`**.
+- **Quyền hạn & Nghiệp vụ Quản trị viên (Admin) trên Đơn Chờ Xử Lý:**
+  - Tại màn hình Chi tiết đơn hàng `/orders/[id]`:
+  - Xuất hiện Alert Banner thông báo trạng thái Chờ xử lý kèm nút tác vụ: **`Tùy chọn thuộc tính kỹ thuật (Admin)`**.
+  - Admin mở form/modal thẩm định và tùy chọn lại **5 thuộc tính kỹ thuật nội bộ đã được cấu hình trong bảng mà chưa có trên E-C**:
+    1. `Màu dây (phụ liệu - vải,da)`: Chọn từ danh sách phụ liệu chuẩn.
+    2. `Đắp lacquer-móc máy`: Chọn phương pháp (Móc máy / Lacquer / Cả hai) + Nhóm kỹ thuật (Nhóm 1, 2, 3) + Ghi chú chi tiết.
+    3. `Thay cast`: Ghi chú kỹ thuật khuôn đúc, ổ chấu.
+    4. `Thay pearl sang ball`: Ghi chú kỹ thuật bi kim loại.
+    5. `Đá phụ`: Ghi chú kỹ thuật loại đá, số lượng, giác cắt, cách kết đá.
+    6. **Định giá công chính thức (VNĐ):** Admin nhập số tiền công cụ thể (Ví dụ: `250,000đ`).
+  - Sau khi Admin bấm **Lưu cấu hình**:
+    * Đơn hàng tự động chuyển từ trạng thái `Chờ xử lý` sang **`Đủ thông tin KT`** (hoặc `Chờ xác nhận`).
+    * Giá công chuyển từ nhãn `Tính giá sau` thành số tiền chính thức và tự động tính tổng tiền cho đơn hàng.
+
+---
+
 ## 4. Đặc Tả Giao Diện & Dữ Liệu (Field Specifications)
 
 ### 4.1. Màn hình 1: Quản lý sản phẩm > Cấu hình loại thay đổi
