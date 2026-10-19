@@ -200,7 +200,7 @@ export default function ProductDetailPage({ params }) {
       return "is_other";
     }
     if (ecChangeCategory === "Không thay đổi") {
-      return "optional";
+      return "hidden";
     }
     const cfg = currentChangeTypeConfig?.otherChangeConfig || "optional";
     if (cfg === "not_allowed") return "hidden";
@@ -1654,30 +1654,6 @@ export default function ProductDetailPage({ params }) {
                                 <option key={req} value={req}>{req}</option>
                               ))}
                             </select>
-
-                            {/* Ghi chú phản ánh trạng thái cấu hình QLSP theo yêu cầu của Chị đẹp */}
-                            {ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (
-                              <div className="mt-1 text-[10px] leading-tight">
-                                {otherChangeMode === "hidden" && (
-                                  <span className="text-gray-500 font-medium flex items-center">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1 shrink-0" />
-                                    Cấu hình QLSP: <b className="ml-1 text-gray-700">Không được phép thay đổi</b> (Ẩn nút checkbox)
-                                  </span>
-                                )}
-                                {otherChangeMode === "optional" && (
-                                  <span className="text-blue-700 font-medium flex items-center">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1 shrink-0" />
-                                    Cấu hình QLSP: <b className="ml-1 text-blue-900">Được phép thay đổi</b> (Hiện checkbox không bắt buộc)
-                                  </span>
-                                )}
-                                {otherChangeMode === "required" && (
-                                  <span className="text-amber-800 font-medium flex items-center">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 shrink-0 animate-pulse" />
-                                    Cấu hình QLSP: <b className="ml-1 text-amber-950">Bắt buộc thay đổi</b> (Hiện checkbox bắt buộc)
-                                  </span>
-                                )}
-                              </div>
-                            )}
                           </div>
 
                           {/* Dropdown 2: Dropdown con chi tiết xuất hiện khi chọn Loại thay đổi có tùy biến (không phải Khác) */}
@@ -1708,33 +1684,9 @@ export default function ProductDetailPage({ params }) {
                             </div>
                           )}
                         </div>
-
-                        {/* QUY TẮC 1: NẾU CHỌN YÊU CẦU THAY ĐỔI = KHÁC -> HIỂN THỊ Ô NHẬP MÔ TẢ YÊU CẦU THAY ĐỔI */}
-                        {otherChangeMode === "is_other" && (
-                          <div className="animate-in fade-in slide-in-from-top-1 duration-150 pt-2 space-y-1">
-                            <label className="block text-[11px] font-semibold text-gray-800">
-                              Mô tả yêu cầu thay đổi <span className="text-red-500 font-bold">*</span>
-                            </label>
-                            <textarea
-                              rows={3}
-                              value={otherChangeDescription}
-                              onChange={(e) => {
-                                setOtherChangeDescription(e.target.value);
-                                if (formError) setFormError("");
-                              }}
-                              placeholder="Nhập mô tả chi tiết yêu cầu thay đổi của bạn (ví dụ: thay đổi kích thước theo bản vẽ riêng, mẫu khóa đặc thù, đắp hoa văn riêng...)"
-                              className={`w-full px-3 py-2 bg-white border rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs ${
-                                formError ? "border-red-500 ring-1 ring-red-400" : "border-emerald-300 focus:border-[#00594c]"
-                              }`}
-                            />
-                            {formError && (
-                              <p className="text-[11px] text-red-600 font-semibold">⚠️ {formError}</p>
-                            )}
-                          </div>
-                        )}
                       </div>
 
-                      {/* PHẦN 3: SỐ LƯỢNG & CHECKBOX YÊU CẦU THAY ĐỔI KHÁC */}
+                      {/* PHẦN 3: SỐ LƯỢNG & CHECKBOX YÊU CẦU THAY ĐỔI KHÁC (CHỈ HIỂN THỊ KHI LÀ 'KHÁC' HOẶC ĐƯỢC CẤU HÌNH CHO PHÉP THAY ĐỔI) */}
                       <div className="pt-2 border-t border-gray-100 space-y-3">
                         <div>
                           <label className="block text-[11px] font-semibold text-gray-700 mb-1">Số lượng</label>
@@ -1747,10 +1699,42 @@ export default function ProductDetailPage({ params }) {
                           />
                         </div>
 
-                        {/* QUY TẮC 2: CẤU HÌNH = KHÔNG ĐƯỢC PHÉP THAY ĐỔI -> ẨN NÚT CHECKBOX (otherChangeMode === 'hidden') */}
-                        {/* QUY TẮC 1: NẾU ĐÃ CHỌN KHÁC Ở DROPDOWN TRÊN -> ẨN NÚT CHECKBOX ĐỂ TRÁNH DƯ THỪA (otherChangeMode === 'is_other') */}
+                        {/* CASE 1: NẾU CHỌN YÊU CẦU THAY ĐỔI = 'KHÁC' -> HIỂN THỊ CHECKBOX VÀ Ô MÔ TẢ BẮT BUỘC */}
+                        {otherChangeMode === "is_other" && (
+                          <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                            <div className="flex items-center space-x-2.5 pt-1">
+                              <input
+                                type="checkbox"
+                                id="hasOtherChangeIsOther"
+                                checked={true}
+                                readOnly
+                                className="h-4 w-4 rounded border-gray-300 text-[#00594c] focus:ring-[#00594c] cursor-not-allowed"
+                              />
+                              <label htmlFor="hasOtherChangeIsOther" className="text-xs font-bold text-gray-800 flex items-center select-none cursor-default">
+                                Yêu cầu thay đổi khác <span className="text-red-500 ml-1 font-bold">*</span>
+                              </label>
+                            </div>
+                            <div className="space-y-1">
+                              <textarea
+                                rows={3}
+                                value={otherChangeDescription}
+                                onChange={(e) => {
+                                  setOtherChangeDescription(e.target.value);
+                                  if (formError) setFormError("");
+                                }}
+                                placeholder="Nhập mô tả chi tiết yêu cầu thay đổi của bạn (ví dụ: thay đổi kích thước theo bản vẽ riêng, mẫu khóa đặc thù, đắp hoa văn riêng...)"
+                                className={`w-full px-3 py-2 bg-white border rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs ${
+                                  formError ? "border-red-500 ring-1 ring-red-400" : "border-emerald-300 focus:border-[#00594c]"
+                                }`}
+                              />
+                              {formError && (
+                                <p className="text-[11px] text-red-600 font-semibold">⚠️ {formError}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
-                        {/* QUY TẮC 3: CẤU HÌNH = ĐƯỢC PHÉP THAY ĐỔI -> HIỂN THỊ NÚT CHECKBOX (KHÔNG BẮT BUỘC) */}
+                        {/* CASE 2: CẤU HÌNH = ĐƯỢC PHÉP THAY ĐỔI -> HIỂN THỊ NÚT CHECKBOX (KHÔNG BẮT BUỘC) */}
                         {otherChangeMode === "optional" && (
                           <div className="space-y-2">
                             <div className="flex items-center space-x-2.5 pt-1">
@@ -1784,7 +1768,7 @@ export default function ProductDetailPage({ params }) {
                           </div>
                         )}
 
-                        {/* QUY TẮC 4: CẤU HÌNH = BẮT BUỘC THAY ĐỔI -> HIỂN THỊ NÚT CHECKBOX (BẮT BUỘC) */}
+                        {/* CASE 3: CẤU HÌNH = BẮT BUỘC THAY ĐỔI -> HIỂN THỊ NÚT CHECKBOX (BẮT BUỘC) */}
                         {otherChangeMode === "required" && (
                           <div className="space-y-2">
                             <div className="flex items-center justify-between p-2.5 bg-amber-50/70 border border-amber-200 rounded-lg">
@@ -1828,6 +1812,8 @@ export default function ProductDetailPage({ params }) {
                             </div>
                           </div>
                         )}
+
+                        {/* CASE 4: 'Không thay đổi' HOẶC 'not_allowed' (ẨN NÚT CHECKBOX) -> Không render gì cả */}
                       </div>
 
                       {/* Row 6: Buttons Thêm vào danh sách & Thêm vào giỏ hàng */}

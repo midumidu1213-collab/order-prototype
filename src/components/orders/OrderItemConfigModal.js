@@ -371,15 +371,12 @@ export default function OrderItemConfigModal({
             </div>
           </div>
 
-          {/* PHẦN DƯỚI: YÊU CẦU THAY ĐỔI DUY NHẤT: DROPDOWN -> DROPDOWN / GHI CHÚ (TÙY VÀO CẤU HÌNH THAY ĐỔI) */}
+          {/* PHẦN DƯỚI: YÊU CẦU THAY ĐỔI DUY NHẤT: DROPDOWN -> DROPDOWN / GHI CHÚ */}
           <div className="pt-4 border-t border-gray-100 space-y-3">
             <div className="flex items-center space-x-2">
               <Sliders className="h-4 w-4 text-[#00594c]" />
               <span className="text-xs font-bold text-gray-900 uppercase tracking-wide">
                 Yêu cầu thay đổi
-              </span>
-              <span className="text-[11px] text-gray-500 font-normal">
-                (Tùy vào cấu hình thay đổi)
               </span>
             </div>
 
@@ -396,7 +393,7 @@ export default function OrderItemConfigModal({
                     onChange={(e) => handleTypeChange(e.target.value)}
                     className="w-full bg-white border border-gray-300 focus:border-[#00594c] rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 outline-none cursor-pointer shadow-2xs"
                   >
-                    <option value="none">-- Không thay đổi (Mặc định) --</option>
+                    <option value="none">-- Không thay đổi --</option>
                     {CHANGE_TYPES_CONFIG.map((c) => (
                       <option key={c.code} value={c.code}>
                         {c.code} — {c.name}

@@ -254,7 +254,7 @@ export const CHANGE_TYPES_CONFIG = [
     showClient: true,
     scope: "3 Nhóm KT",
     note: "Ảnh hưởng trực tiếp công đoạn mạ men & móc máy -> Đổi Drawing sang Version mới",
-    hasTextInput: false,
+    hasTextInput: true,
     hasCustomSelection: true,
     customFieldLabel: "Nhóm kỹ thuật",
     customOptions: [
@@ -280,7 +280,7 @@ export const CHANGE_TYPES_CONFIG = [
     hasCustomSelection: true,
     customFieldLabel: "Item phụ kiện",
     customOptions: ["Dây HTJ size 1.2mm", "Dây HTJ size 1.5mm"],
-    otherChangeConfig: "not_allowed" // Không được phép thay đổi -> Ẩn checkbox trên EC
+    otherChangeConfig: "optional" // Được phép thay đổi -> Hiện checkbox (không bắt buộc)
   },
   {
     stt: 6,
@@ -297,8 +297,8 @@ export const CHANGE_TYPES_CONFIG = [
     hasTextInput: false,
     hasCustomSelection: true,
     customFieldLabel: "Item phụ kiện khóa",
-    customOptions: ["Khóa càng cua inox", "Khóa mỏ vịt", "Khóa tròn lò xo", "Khóa hộp bấm vàng 18K"],
-    otherChangeConfig: "not_allowed" // Không được phép thay đổi -> Ẩn checkbox trên EC
+    customOptions: ["Khóa càng cua", "Khóa mỏ vịt", "Khóa tròn lò xo", "Khóa hộp bấm"],
+    otherChangeConfig: "optional" // Được phép thay đổi -> Hiện checkbox (không bắt buộc)
   },
   {
     stt: 7,
@@ -313,9 +313,9 @@ export const CHANGE_TYPES_CONFIG = [
     scope: "2 Nhóm KT • 2 Item Phụ kiện",
     note: "Thay cấu trúc ngọc trai sang bi kim loại -> Thay đổi hoàn toàn công nghệ lắp ráp",
     hasTextInput: true,
-    hasCustomSelection: true,
-    customFieldLabel: "Nhóm kỹ thuật bi kim loại",
-    customOptions: ["Bi vàng trơn bóng 4mm", "Bi vàng khía cạnh kim cương 5mm"],
+    hasCustomSelection: false,
+    customFieldLabel: "",
+    customOptions: [],
     otherChangeConfig: "required" // Bắt buộc thay đổi -> Hiện checkbox (bắt buộc)
   },
   {
