@@ -142,6 +142,16 @@ Một Drawing Version chỉ được phép xuất hiện trên giao diện E-Cat
 3. Khi rê chuột (Hover) vào Thumbnail, hiển thị **Tooltip nổi bật** giải thích: `[Mã Version] • [Tên phiên bản]` kèm dòng mô tả ngắn về sự thay đổi routing (ví dụ: *A01 • Đắp Lacquer men sứ - Đắp men sứ viền hoa văn*).
 4. Tại khu vực chọn kích thước cho từng món con trong Bộ: Hiển thị sóng đôi **Mã Drawing kỹ thuật** bên cạnh **Dropdown chọn Ni**, giữ nguyên **Trường Trọng lượng** ở góc phụ.
 
+#### Quy định 5: Cơ chế Cấu hình Thu thập Chi tiết Thay đổi trên Client (Form Admin QLSP)
+Tại Modal Cập nhật / Thêm mới loại thay đổi (`QLSP > Cấu hình loại thay đổi`), Admin cấu hình cách thức người dùng cung cấp thông tin chi tiết cho từng loại thay đổi:
+1. **Nhập chi tiết thay đổi (hasTextInput):**
+   * **Mục đích:** Dành cho các loại thay đổi không có danh mục cố định, cần người dùng tự gõ diễn giải chi tiết (ví dụ: `Cast` - khuôn đúc cần ghi rõ hạ chấu nhẫn 0.8mm hay đổi dáng chấu...).
+   * **Hiển thị trên Client:** Tự động mở trường bắt buộc **"Mô tả thay đổi *"** với ô văn bản (Textarea) *"Nhập mô tả thay đổi..."*.
+2. **Chọn chi tiết thay đổi (hasCustomSelection):**
+   * **Mục đích:** Dành cho các loại thay đổi đã có danh mục kỹ thuật định sẵn trong hệ thống (Nhóm kỹ thuật, Hiệu ứng, Item phụ kiện...).
+   * **Hiển thị trên Client:** Tự động mở trường chọn dạng **Dropdown list** (ví dụ: *"Nhóm kỹ thuật"*, *"Hiệu ứng"*, *"Item phụ kiện"*) để khách hàng chọn nhanh chuẩn xác.
+3. **Quy tắc phối hợp:** Loại thay đổi có thể kích hoạt đồng thời cả 2 trường nếu vừa cần chọn nhóm danh mục vừa cho phép ghi chú mô tả bổ sung.
+
 ---
 
 ### TAB 3: LỖI THƯỜNG GẶP & CÁCH XỬ LÝ (Troubleshooting)

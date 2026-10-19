@@ -20,6 +20,7 @@ import {
   X
 } from "lucide-react";
 import { JEWELRY_PRODUCTS } from "@/data/catalogueData";
+import { CHANGE_TYPES_CONFIG } from "@/data/productVersionConfigData";
 import { useCatalogueCart } from "@/context/CatalogueCartContext";
 import JewelryVisual from "@/components/catalogue/JewelryVisual";
 
@@ -82,6 +83,46 @@ export const CHANGE_REQUEST_CONFIGS = {
   }
 };
 
+// Cấu hình các tùy chọn cho Yêu cầu thay đổi E-Catalogue chuẩn (Dropdown -> Dropdown)
+export const EC_CHANGE_REQUEST_OPTIONS = {
+  "Không thay đổi": [],
+  "Khóa (khóa càng cua/mỏ vịt)": [
+    "Khóa càng cua",
+    "Khóa mỏ vịt",
+    "Khóa tròn lò xo",
+    "Khóa hộp bấm"
+  ],
+  "Tăng đơ (đổi/bỏ)": [
+    "Đổi loại tăng đơ chữ nhật",
+    "Đổi loại tăng đơ hình tim",
+    "Bỏ tăng đơ"
+  ],
+  "Kiểu bào ball": [
+    "CR - Cross 45",
+    "CS - Chữ S",
+    "MO - Moon",
+    "SL45 - Slash 45",
+    "TR - Trơn"
+  ],
+  "Thay kích thước dây HTJ (Tăng/giảm size)": [
+    "Tăng size (+0.2mm)",
+    "Giảm size (-0.2mm)",
+    "Dây HTJ 1.2mm",
+    "Dây HTJ 1.5mm"
+  ],
+  "Đắp lacquer - móc máy": [
+    "Nhóm 1 - Men sứ đơn sắc phủ nano",
+    "Nhóm 2 - Men sứ đa sắc viền kim",
+    "Nhóm 3 - Móc máy hoa văn nổi 3D"
+  ],
+  "Cast (khuôn đúc, ổ chấu)": [
+    "Cast ổ 6 chấu vương miện",
+    "Cast ổ 4 chấu hoa sen",
+    "Cast thân nhẫn dập nổi"
+  ],
+  "Khác": []
+};
+
 export default function ProductDetailPage({ params }) {
   const router = useRouter();
   const unwrappedParams = use(params);
@@ -92,23 +133,203 @@ export default function ProductDetailPage({ params }) {
 
   const { addToCart, addBatchToCart } = useCatalogueCart();
 
-  // State
+  // State cho 3 thuộc tính cơ bản
   const [goldColor, setGoldColor] = useState(product.defaultOptions?.goldColor || "Vàng");
-  const [mainStoneColor, setMainStoneColor] = useState(product.defaultOptions?.mainStoneColor || "Xám");
+  const [mainStoneColor, setMainStoneColor] = useState(product.defaultOptions?.mainStoneColor || "Trắng");
+  const [selectedSize, setSelectedSize] = useState(product.defaultOptions?.niSize || "15");
+
+  // =========================================================================
+  // ĐỒNG BỘ CẤU HÌNH LOẠI THAY ĐỔI TỪ QUẢN LÝ SẢN PHẨM (QLSP)
+  // =========================================================================
+  const [changeTypesList, setChangeTypesList] = useState(CHANGE_TYPES_CONFIG);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("SEVAGO_CHANGE_TYPES_CONFIG");
+      if (saved) {
+        setChangeTypesList(JSON.parse(saved));
+      }
+    } catch (e) {}
+
+    const handleUpdate = () => {
+      try {
+        const saved = localStorage.getItem("SEVAGO_CHANGE_TYPES_CONFIG");
+        if (saved) setChangeTypesList(JSON.parse(saved));
+      } catch (e) {}
+    };
+
+    window.addEventListener("changeTypesUpdated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("changeTypesUpdated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
+  // State Yêu cầu thay đổi E-Catalogue chuẩn: (dropdown) -> dropdown
+  const [ecChangeCategory, setEcChangeCategory] = useState("Không thay đổi");
+  const [ecChangeDetail, setEcChangeDetail] = useState("");
+  const [formError, setFormError] = useState("");
+
+  // Yêu cầu thay đổi khác: tick chọn -> hiện trường nhập mô tả thay đổi (thay thế trường ghi chú hiện tại)
+  const [hasOtherChange, setHasOtherChange] = useState(false);
+  const [otherChangeDescription, setOtherChangeDescription] = useState("");
+
+  // Tìm đối tượng cấu hình QLSP của loại thay đổi đang chọn
+  const currentChangeTypeConfig = useMemo(() => {
+    if (ecChangeCategory === "Không thay đổi" || ecChangeCategory === "Khác") {
+      return null;
+    }
+    return changeTypesList.find((ct) => {
+      const cat = ecChangeCategory.toLowerCase();
+      const name = ct.name.toLowerCase();
+      const code = ct.code.toLowerCase();
+      return (
+        cat === name ||
+        cat === code ||
+        cat.includes(name) ||
+        name.includes(cat) ||
+        (cat.includes("khóa") && code === "D") ||
+        (cat.includes("tăng đơ") && code === "T") ||
+        (cat.includes("bào ball") && code === "I") ||
+        (cat.includes("htj") && code === "G") ||
+        (cat.includes("lacquer") && code === "C") ||
+        (cat.includes("cast") && code === "B")
+      );
+    });
+  }, [ecChangeCategory, changeTypesList]);
+
+  // Xác định chế độ hiển thị của nút Checkbox "Yêu cầu thay đổi khác":
+  // 1. "is_other": Nếu chọn Yêu cầu thay đổi = Khác -> Hiển thị trực tiếp ô nhập mô tả (ẩn checkbox)
+  // 2. "hidden": Nếu cấu hình = không được phép thay đổi -> Ẩn nút checkbox
+  // 3. "optional": Nếu cấu hình = được phép thay đổi -> Hiển thị nút checkbox (không bắt buộc)
+  // 4. "required": Nếu cấu hình = bắt buộc thay đổi -> Hiển thị nút checkbox (bắt buộc)
+  const otherChangeMode = useMemo(() => {
+    if (ecChangeCategory === "Khác") {
+      return "is_other";
+    }
+    if (ecChangeCategory === "Không thay đổi") {
+      return "optional";
+    }
+    const cfg = currentChangeTypeConfig?.otherChangeConfig || "optional";
+    if (cfg === "not_allowed") return "hidden";
+    if (cfg === "required") return "required";
+    return "optional";
+  }, [ecChangeCategory, currentChangeTypeConfig]);
+
+  // Phản ứng tự động đồng bộ trạng thái hasOtherChange theo otherChangeMode
+  useEffect(() => {
+    if (otherChangeMode === "hidden") {
+      setHasOtherChange(false);
+      setOtherChangeDescription("");
+    } else if (otherChangeMode === "required" || otherChangeMode === "is_other") {
+      setHasOtherChange(true);
+    }
+  }, [otherChangeMode]);
+
+  const handleSelectEcChangeCategory = (cat) => {
+    setEcChangeCategory(cat);
+    setFormError("");
+    const subOpts = EC_CHANGE_REQUEST_OPTIONS[cat];
+    if (subOpts && subOpts.length > 0) {
+      setEcChangeDetail(subOpts[0]);
+    } else {
+      setEcChangeDetail("");
+    }
+  };
+
   const [changeRequest, setChangeRequest] = useState(product.defaultOptions?.changeRequest || "Không thay đổi");
   const [changeRequestDetail, setChangeRequestDetail] = useState(() => {
     const defaultCr = product.defaultOptions?.changeRequest;
     return CHANGE_REQUEST_CONFIGS[defaultCr]?.options?.[0] || "Cross 45";
   });
+  const [changeRequestText, setChangeRequestText] = useState("");
+  const [singleQty, setSingleQty] = useState(1);
+  const [addedToListSuccess, setAddedToListSuccess] = useState(false);
+
+  // Tìm cấu hình loại thay đổi từ Master Data QLSP
+  const matchedChangeTypeConfig = useMemo(() => {
+    return changeTypesList.find(
+      (ct) =>
+        ct.name.toLowerCase() === changeRequest.toLowerCase() ||
+        ct.code.toLowerCase() === changeRequest.toLowerCase() ||
+        changeRequest.toLowerCase().includes(ct.name.toLowerCase())
+    );
+  }, [changeRequest, changeTypesList]);
 
   const handleSelectChangeRequest = (val) => {
     setChangeRequest(val);
-    const config = CHANGE_REQUEST_CONFIGS[val];
-    if (config && config.options?.length > 0) {
-      setChangeRequestDetail(config.options[0]);
+    const matched = changeTypesList.find(
+      (ct) =>
+        ct.name.toLowerCase() === val.toLowerCase() ||
+        ct.code.toLowerCase() === val.toLowerCase() ||
+        val.toLowerCase().includes(ct.name.toLowerCase())
+    );
+    if (matched && matched.customOptions && matched.customOptions.length > 0) {
+      setChangeRequestDetail(matched.customOptions[0]);
     } else {
-      setChangeRequestDetail("");
+      const config = CHANGE_REQUEST_CONFIGS[val];
+      if (config && config.options?.length > 0) {
+        setChangeRequestDetail(config.options[0]);
+      } else {
+        setChangeRequestDetail("");
+      }
     }
+  };
+
+  const handleAddStandardSingleToCart = () => {
+    // 1. Kiểm tra validation theo quy tắc nghiệp vụ
+    if (ecChangeCategory === "Khác" && !otherChangeDescription.trim()) {
+      setFormError("Vui lòng nhập mô tả yêu cầu thay đổi!");
+      return;
+    }
+    if (otherChangeMode === "required" && !otherChangeDescription.trim()) {
+      setFormError("Vui lòng nhập mô tả yêu cầu thay đổi khác (bắt buộc)!");
+      return;
+    }
+    setFormError("");
+
+    // Tổng hợp các thuộc tính đã tùy biến trên E-Catalogue
+    const customList = [];
+    if (ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && ecChangeDetail) {
+      customList.push(`${ecChangeCategory}: ${ecChangeDetail}`);
+    }
+    if (ecChangeCategory === "Khác" && otherChangeDescription.trim()) {
+      customList.push(`Yêu cầu thay đổi khác: ${otherChangeDescription.trim()}`);
+    } else if (hasOtherChange && otherChangeDescription.trim()) {
+      customList.push(`Khác: ${otherChangeDescription.trim()}`);
+    }
+
+    const changeRequestSummary = customList.length > 0 ? customList.join(" • ") : "Chuẩn";
+
+    addToCart({
+      id: `${product.id}-${goldColor}-${mainStoneColor}-${selectedSize}-${Date.now()}`,
+      productCode: product.productCode,
+      productName: product.productName,
+      categoryName: product.categoryName,
+      goldColor,
+      mainStoneColor,
+      size: selectedSize,
+      changeCategory: ecChangeCategory !== "Không thay đổi" ? ecChangeCategory : "",
+      changeDetail: ecChangeDetail,
+      hasOtherChange: hasOtherChange || ecChangeCategory === "Khác",
+      otherChangeDescription: otherChangeDescription,
+      changeRequest: changeRequestSummary,
+      // Trường note được thay thế bằng mô tả thay đổi khác khi tick chọn
+      note: otherChangeDescription,
+      qty: Number(singleQty) || 1,
+      wagePrice: product.wagePrice,
+      totalWage: (product.wagePrice || 205000) * (Number(singleQty) || 1),
+      weight: product.goldWeight || "0.4500g",
+      imageType: product.imageType
+    });
+    setAddedSuccess(true);
+    setTimeout(() => setAddedSuccess(false), 2500);
+  };
+
+  const handleAddToDraftList = () => {
+    setAddedToListSuccess(true);
+    setTimeout(() => setAddedToListSuccess(false), 2500);
   };
 
   const [note, setNote] = useState(product.defaultOptions?.note || "");
@@ -903,7 +1124,7 @@ export default function ProductDetailPage({ params }) {
                           ? (product.productName?.replace(/^Cặp\s+/i, "Nhẫn cưới ") || "Nhẫn cưới (2 chiếc)")
                           : product.isSet 
                           ? `Bộ (${product.components?.length || 4} món)` 
-                          : product.productName}
+                          : (product.productName?.replace(/viền bi hạt tròn/gi, "").trim() || product.productName)}
                       </span>
                     </div>
                   </div>
@@ -1335,89 +1556,414 @@ export default function ProductDetailPage({ params }) {
                 
                 <div className="space-y-4">
                   {/* =============================================================== */}
-                  {/* CASE B: SẢN PHẨM ĐƠN LẺ (SINGLE ITEM) CONFIGURATOR              */}
+                  {/* CASE B1: SẢN PHẨM ĐƠN LẺ CHUẨN ẢNH 2 & 3 (GYORG000143...)       */}
                   {/* =============================================================== */}
-                  {/* Specs Bar (2 cột: Trọng lượng theo Lượng & Giá công làm tròn 5000đ) */}
-                  <div className="grid grid-cols-2 gap-3 py-3 px-6 bg-[#f4f9f7] rounded-2xl border border-emerald-100 text-center items-center">
-                    <div>
-                      <div className="text-[11px] text-gray-500 font-medium">Trọng lượng</div>
-                      <div className="text-base font-bold text-gray-900 mt-0.5 font-mono">
-                        {Number(product.weight || 0).toFixed(4)} <span className="text-xs font-normal text-gray-500">Lượng</span>
-                      </div>
-                    </div>
-                    <div className="border-l border-emerald-200/60">
-                      <div className="text-[11px] text-gray-500 font-medium">Giá công</div>
-                      <div className="text-base font-bold text-[#00594c] mt-0.5 font-mono">
-                        {roundUp5k((product.wagePrice || 0) + (GOLD_COLOR_DELTAS[goldColor] || 0)).toLocaleString()}đ
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Cấu hình chung: Màu xi & Yêu cầu thay đổi */}
-                  <div className="bg-[#f8faf9] p-3.5 rounded-2xl border border-gray-200/70 space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {/* Màu xi */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-gray-700 mb-1">Màu xi:</label>
-                        <select
-                          value={goldColor}
-                          onChange={(e) => setGoldColor(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
-                        >
-                          {product.availableGoldColors.map((color) => {
-                            const delta = GOLD_COLOR_DELTAS[color] || 0;
-                            return (
-                              <option key={color} value={color}>
-                                {color} {delta > 0 ? `(+${(delta / 1000).toLocaleString()}k)` : ""}
-                              </option>
-                            );
-                          })}
-                        </select>
+                  {product.isStandardSingle ? (
+                    <div className="space-y-4 bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs">
+                      {/* Specs Bar (3 cột: Trọng lượng quy đổi, Loại SP, Giá công - Bỏ cột Trọng lượng theo ảnh) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-3 px-4 bg-[#f4f9f7] rounded-xl border border-emerald-100 text-left items-center">
+                        <div>
+                          <div className="text-[11px] text-gray-500 font-medium">Trọng lượng quy đổi</div>
+                          <div className="text-sm font-bold text-[#00594c] mt-0.5 font-mono">
+                            {product.specs?.convertedWeight || "0.4500g"}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[11px] text-gray-500 font-medium">Loại SP</div>
+                          <div className="text-sm font-bold text-[#00594c] mt-0.5">
+                            {product.specs?.productType || product.categoryName || "Nhẫn nữ"}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[11px] text-gray-500 font-medium">Giá công</div>
+                          <div className="text-sm font-bold text-[#00594c] mt-0.5 font-mono">
+                            {product.specs?.wage || "205,000đ"}
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Yêu cầu thay đổi */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-gray-700 mb-1">Yêu cầu thay đổi:</label>
-                        <select
-                          value={changeRequest}
-                          onChange={(e) => handleSelectChangeRequest(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
+                      {/* PHẦN 1: 3 THUỘC TÍNH CƠ BẢN (Màu xi, Màu đá chính, Kích thước) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {/* 1. Màu xi */}
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">Màu xi</label>
+                          <select
+                            value={goldColor}
+                            onChange={(e) => setGoldColor(e.target.value)}
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
+                          >
+                            {(product.availableGoldColors || ["Vàng", "Trắng", "Hồng", "Hai màu"]).map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* 2. Màu đá chính */}
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">Màu đá chính</label>
+                          <select
+                            value={mainStoneColor}
+                            onChange={(e) => setMainStoneColor(e.target.value)}
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
+                          >
+                            {["Trắng", "Đỏ", "Xanh", "Tím", "Vàng", "Hồng", "Đen", "Không đá"].map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* 3. Kích thước */}
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">Kích thước</label>
+                          <select
+                            value={selectedSize}
+                            onChange={(e) => setSelectedSize(e.target.value)}
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
+                          >
+                            {(product.availableNiSizes || ["14", "15", "16", "17", "18"]).map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* PHẦN 2: YÊU CẦU THAY ĐỔI CHUẨN: LIÊN KẾT ĐỘNG VỚI CẤU HÌNH QLSP */}
+                      <div className="pt-2 border-t border-gray-100 space-y-2">
+                        <div className={`grid gap-3.5 ${ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+                          {/* Dropdown 1: Yêu cầu thay đổi */}
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                              Yêu cầu thay đổi
+                            </label>
+                            <select
+                              value={ecChangeCategory}
+                              onChange={(e) => handleSelectEcChangeCategory(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer shadow-2xs"
+                            >
+                              <option value="Không thay đổi">Không thay đổi</option>
+                              <option value="Khóa (khóa càng cua/mỏ vịt)">Khóa (khóa càng cua/mỏ vịt)</option>
+                              <option value="Tăng đơ (đổi/bỏ)">Tăng đơ (đổi/bỏ)</option>
+                              <option value="Kiểu bào ball">Kiểu bào ball</option>
+                              <option value="Thay kích thước dây HTJ (Tăng/giảm size)">Thay kích thước dây HTJ (Tăng/giảm size)</option>
+                              <option value="Đắp lacquer - móc máy">Đắp lacquer - móc máy</option>
+                              <option value="Cast (khuôn đúc, ổ chấu)">Cast (khuôn đúc, ổ chấu)</option>
+                              <option value="Khác">Khác (Yêu cầu riêng)</option>
+                            </select>
+
+                            {/* Ghi chú phản ánh trạng thái cấu hình QLSP theo yêu cầu của Chị đẹp */}
+                            {ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (
+                              <div className="mt-1 text-[10px] leading-tight">
+                                {otherChangeMode === "hidden" && (
+                                  <span className="text-gray-500 font-medium flex items-center">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1 shrink-0" />
+                                    Cấu hình QLSP: <b className="ml-1 text-gray-700">Không được phép thay đổi</b> (Ẩn nút checkbox)
+                                  </span>
+                                )}
+                                {otherChangeMode === "optional" && (
+                                  <span className="text-blue-700 font-medium flex items-center">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1 shrink-0" />
+                                    Cấu hình QLSP: <b className="ml-1 text-blue-900">Được phép thay đổi</b> (Hiện checkbox không bắt buộc)
+                                  </span>
+                                )}
+                                {otherChangeMode === "required" && (
+                                  <span className="text-amber-800 font-medium flex items-center">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 shrink-0 animate-pulse" />
+                                    Cấu hình QLSP: <b className="ml-1 text-amber-950">Bắt buộc thay đổi</b> (Hiện checkbox bắt buộc)
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Dropdown 2: Dropdown con chi tiết xuất hiện khi chọn Loại thay đổi có tùy biến (không phải Khác) */}
+                          {ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (
+                            <div className="animate-in fade-in slide-in-from-left-1 duration-150">
+                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                                {ecChangeCategory.includes("Khóa") 
+                                  ? "Chi tiết khóa *" 
+                                  : ecChangeCategory.includes("Tăng đơ") 
+                                  ? "Chi tiết tăng đơ *" 
+                                  : ecChangeCategory.includes("Kiểu bào") 
+                                  ? "Chi tiết kiểu bào *" 
+                                  : ecChangeCategory.includes("lacquer")
+                                  ? "Chi tiết kỹ thuật mạ men *"
+                                  : ecChangeCategory.includes("Cast")
+                                  ? "Chi tiết khuôn đúc/ổ chấu *"
+                                  : "Chi tiết kích thước dây HTJ *"}
+                              </label>
+                              <select
+                                value={ecChangeDetail}
+                                onChange={(e) => setEcChangeDetail(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs font-semibold text-emerald-900 outline-none cursor-pointer shadow-2xs"
+                              >
+                                {(EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).map((opt) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* QUY TẮC 1: NẾU CHỌN YÊU CẦU THAY ĐỔI = KHÁC -> HIỂN THỊ Ô NHẬP MÔ TẢ YÊU CẦU THAY ĐỔI */}
+                        {otherChangeMode === "is_other" && (
+                          <div className="animate-in fade-in slide-in-from-top-1 duration-150 pt-2 space-y-1">
+                            <label className="block text-[11px] font-semibold text-gray-800">
+                              Mô tả yêu cầu thay đổi <span className="text-red-500 font-bold">*</span>
+                            </label>
+                            <textarea
+                              rows={3}
+                              value={otherChangeDescription}
+                              onChange={(e) => {
+                                setOtherChangeDescription(e.target.value);
+                                if (formError) setFormError("");
+                              }}
+                              placeholder="Nhập mô tả chi tiết yêu cầu thay đổi của bạn (ví dụ: thay đổi kích thước theo bản vẽ riêng, mẫu khóa đặc thù, đắp hoa văn riêng...)"
+                              className={`w-full px-3 py-2 bg-white border rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs ${
+                                formError ? "border-red-500 ring-1 ring-red-400" : "border-emerald-300 focus:border-[#00594c]"
+                              }`}
+                            />
+                            {formError && (
+                              <p className="text-[11px] text-red-600 font-semibold">⚠️ {formError}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* PHẦN 3: SỐ LƯỢNG & CHECKBOX YÊU CẦU THAY ĐỔI KHÁC */}
+                      <div className="pt-2 border-t border-gray-100 space-y-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">Số lượng</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={singleQty}
+                            onChange={(e) => setSingleQty(Math.max(1, parseInt(e.target.value) || 1))}
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none font-bold"
+                          />
+                        </div>
+
+                        {/* QUY TẮC 2: CẤU HÌNH = KHÔNG ĐƯỢC PHÉP THAY ĐỔI -> ẨN NÚT CHECKBOX (otherChangeMode === 'hidden') */}
+                        {/* QUY TẮC 1: NẾU ĐÃ CHỌN KHÁC Ở DROPDOWN TRÊN -> ẨN NÚT CHECKBOX ĐỂ TRÁNH DƯ THỪA (otherChangeMode === 'is_other') */}
+
+                        {/* QUY TẮC 3: CẤU HÌNH = ĐƯỢC PHÉP THAY ĐỔI -> HIỂN THỊ NÚT CHECKBOX (KHÔNG BẮT BUỘC) */}
+                        {otherChangeMode === "optional" && (
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2.5 pt-1">
+                              <input
+                                type="checkbox"
+                                id="hasOtherChangeSingle"
+                                checked={hasOtherChange}
+                                onChange={(e) => setHasOtherChange(e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-[#00594c] focus:ring-[#00594c] cursor-pointer"
+                              />
+                              <label htmlFor="hasOtherChangeSingle" className="text-xs font-bold text-gray-800 cursor-pointer select-none">
+                                Yêu cầu thay đổi khác
+                              </label>
+                            </div>
+
+                            {/* KHI TICK CHỌN: HIỂN THỊ TRƯỜNG NHẬP MÔ TẢ THAY ĐỔI */}
+                            {hasOtherChange && (
+                              <div className="animate-in fade-in slide-in-from-top-1 duration-150 space-y-1">
+                                <label className="block text-[11px] font-semibold text-gray-700">
+                                  Mô tả thay đổi khác <span className="text-red-500 font-bold">*</span>
+                                </label>
+                                <textarea
+                                  rows={3}
+                                  value={otherChangeDescription}
+                                  onChange={(e) => setOtherChangeDescription(e.target.value)}
+                                  placeholder="Nhập mô tả chi tiết yêu cầu thay đổi khác (ví dụ: thay cast, đắp lacquer, thay màu dây, yêu cầu đặc biệt...)"
+                                  className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* QUY TẮC 4: CẤU HÌNH = BẮT BUỘC THAY ĐỔI -> HIỂN THỊ NÚT CHECKBOX (BẮT BUỘC) */}
+                        {otherChangeMode === "required" && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between p-2.5 bg-amber-50/70 border border-amber-200 rounded-lg">
+                              <div className="flex items-center space-x-2.5">
+                                <input
+                                  type="checkbox"
+                                  id="hasOtherChangeSingleRequired"
+                                  checked={true}
+                                  readOnly
+                                  className="h-4 w-4 rounded border-amber-400 text-[#00594c] focus:ring-[#00594c] cursor-not-allowed"
+                                />
+                                <label htmlFor="hasOtherChangeSingleRequired" className="text-xs font-bold text-amber-950 flex items-center select-none cursor-default">
+                                  Yêu cầu thay đổi khác <span className="text-red-500 ml-1 font-bold">*</span>
+                                </label>
+                              </div>
+                              <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                                Bắt buộc
+                              </span>
+                            </div>
+
+                            {/* Ô MÔ TẢ LUÔN HIỂN THỊ VÀ BẮT BUỘC NHẬP */}
+                            <div className="animate-in fade-in slide-in-from-top-1 duration-150 space-y-1">
+                              <label className="block text-[11px] font-semibold text-gray-700">
+                                Mô tả thay đổi khác <span className="text-red-500 font-bold">*</span>
+                              </label>
+                              <textarea
+                                rows={3}
+                                value={otherChangeDescription}
+                                onChange={(e) => {
+                                  setOtherChangeDescription(e.target.value);
+                                  if (formError) setFormError("");
+                                }}
+                                placeholder="Nhập mô tả chi tiết yêu cầu thay đổi khác bắt buộc cho loại thay đổi này..."
+                                className={`w-full px-3 py-2 bg-white border rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs ${
+                                  formError ? "border-red-500 ring-1 ring-red-400" : "border-amber-300 focus:border-[#00594c]"
+                                }`}
+                              />
+                              {formError && (
+                                <p className="text-[11px] text-red-600 font-semibold">⚠️ {formError}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 6: Buttons Thêm vào danh sách & Thêm vào giỏ hàng */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <button
+                          type="button"
+                          onClick={handleAddToDraftList}
+                          className="w-full py-2.5 px-4 border border-[#00594c] text-[#00594c] hover:bg-emerald-50 rounded-lg text-xs font-bold transition-colors cursor-pointer text-center"
                         >
-                          {(product.availableChangeRequests || [
-                            "Không thay đổi",
-                            "Thay kiểu bào ball",
-                            "Đổi sang đá tấm CZ loại 1",
-                            "Đổi tuổi vàng 10K lên 18K",
-                            "Khắc laser chữ/ký hiệu riêng"
-                          ]).map((req) => (
-                            <option key={req} value={req}>
-                              {req !== "Không thay đổi" ? `💎 ${req}` : req}
-                            </option>
-                          ))}
-                        </select>
+                          {addedToListSuccess ? "✓ Đã thêm vào danh sách!" : "Thêm vào danh sách"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAddStandardSingleToCart}
+                          className="w-full py-2.5 px-4 bg-[#00594c] hover:bg-[#004737] text-white rounded-lg text-xs font-bold transition-colors shadow-xs cursor-pointer text-center"
+                        >
+                          {addedSuccess ? "✓ Đã thêm vào giỏ!" : "Thêm vào giỏ hàng"}
+                        </button>
                       </div>
                     </div>
-
-                    {/* Chi tiết thay đổi tương ứng xổ ra khi chọn */}
-                    {CHANGE_REQUEST_CONFIGS[changeRequest] && (
-                      <div className="p-3 bg-[#f0f9f6] rounded-xl border border-emerald-200/90 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <label className="block text-[11px] font-semibold text-[#00594c] mb-1.5">
-                          {CHANGE_REQUEST_CONFIGS[changeRequest].subLabel}
-                        </label>
-                        <select
-                          value={changeRequestDetail}
-                          onChange={(e) => setChangeRequestDetail(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-xs cursor-pointer"
-                        >
-                          {CHANGE_REQUEST_CONFIGS[changeRequest].options.map((opt) => (
-                            <option key={opt} value={opt}>
-                              💎 {opt}
-                            </option>
-                          ))}
-                        </select>
+                  ) : (
+                    /* CASE B2: SẢN PHẨM ĐƠN LẺ PHÂN BỔ DẢI NI */
+                    <>
+                      {/* Specs Bar (2 cột: Trọng lượng theo Lượng & Giá công làm tròn 5000đ) */}
+                      <div className="grid grid-cols-2 gap-3 py-3 px-6 bg-[#f4f9f7] rounded-2xl border border-emerald-100 text-center items-center">
+                        <div>
+                          <div className="text-[11px] text-gray-500 font-medium">Trọng lượng</div>
+                          <div className="text-base font-bold text-gray-900 mt-0.5 font-mono">
+                            {Number(product.weight || 0).toFixed(4)} <span className="text-xs font-normal text-gray-500">Lượng</span>
+                          </div>
+                        </div>
+                        <div className="border-l border-emerald-200/60">
+                          <div className="text-[11px] text-gray-500 font-medium">Giá công</div>
+                          <div className="text-base font-bold text-[#00594c] mt-0.5 font-mono">
+                            {roundUp5k((product.wagePrice || 0) + (GOLD_COLOR_DELTAS[goldColor] || 0)).toLocaleString()}đ
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
+
+                      {/* Cấu hình chung: Màu xi & Yêu cầu thay đổi */}
+                      <div className="bg-[#f8faf9] p-3.5 rounded-2xl border border-gray-200/70 space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          {/* Màu xi */}
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-700 mb-1">Màu xi:</label>
+                            <select
+                              value={goldColor}
+                              onChange={(e) => setGoldColor(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
+                            >
+                              {product.availableGoldColors.map((color) => {
+                                const delta = GOLD_COLOR_DELTAS[color] || 0;
+                                return (
+                                  <option key={color} value={color}>
+                                    {color} {delta > 0 ? `(+${(delta / 1000).toLocaleString()}k)` : ""}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+
+                          {/* Yêu cầu thay đổi */}
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-700 mb-1">Yêu cầu thay đổi:</label>
+                            <select
+                              value={changeRequest}
+                              onChange={(e) => handleSelectChangeRequest(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-2xs cursor-pointer"
+                            >
+                              {(product.availableChangeRequests || [
+                                "Không thay đổi",
+                                "Cast",
+                                "Đắp lacquer - móc máy",
+                                "Thay kiểu bào ball",
+                                "Thay Khóa"
+                              ]).map((req) => (
+                                <option key={req} value={req}>
+                                  {req !== "Không thay đổi" ? `💎 ${req}` : req}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Nếu loại thay đổi có cấu hình Nhập chi tiết thay đổi */}
+                        {matchedChangeTypeConfig?.hasTextInput && (
+                          <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200/80 animate-in fade-in slide-in-from-top-1 duration-150">
+                            <label className="block text-[11px] font-semibold text-blue-900 mb-1.5">
+                              Mô tả thay đổi <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={changeRequestText}
+                              onChange={(e) => setChangeRequestText(e.target.value)}
+                              placeholder="Nhập mô tả thay đổi..."
+                              className="w-full px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-600 outline-none shadow-xs"
+                            />
+                          </div>
+                        )}
+
+                        {/* Nếu loại thay đổi có cấu hình Chọn chi tiết thay đổi */}
+                        {matchedChangeTypeConfig?.hasCustomSelection && (
+                          <div className="p-3 bg-[#f0f9f6] rounded-xl border border-emerald-200/90 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <label className="block text-[11px] font-semibold text-[#00594c] mb-1.5">
+                              {matchedChangeTypeConfig.customFieldLabel || "Nhóm kỹ thuật"}
+                            </label>
+                            <select
+                              value={changeRequestDetail}
+                              onChange={(e) => setChangeRequestDetail(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-xs cursor-pointer"
+                            >
+                              <option value="">Chọn {matchedChangeTypeConfig.customFieldLabel || "nhóm kỹ thuật"}</option>
+                              {(matchedChangeTypeConfig.customOptions || []).map((opt) => (
+                                <option key={opt} value={opt}>
+                                  💎 {opt}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        {/* Fallback legacy config */}
+                        {!matchedChangeTypeConfig && CHANGE_REQUEST_CONFIGS[changeRequest] && (
+                          <div className="p-3 bg-[#f0f9f6] rounded-xl border border-emerald-200/90 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <label className="block text-[11px] font-semibold text-[#00594c] mb-1.5">
+                              {CHANGE_REQUEST_CONFIGS[changeRequest].subLabel}
+                            </label>
+                            <select
+                              value={changeRequestDetail}
+                              onChange={(e) => setChangeRequestDetail(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-lg text-xs font-bold text-gray-800 focus:ring-2 focus:ring-[#00594c] outline-none shadow-xs cursor-pointer"
+                            >
+                              {CHANGE_REQUEST_CONFIGS[changeRequest].options.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  💎 {opt}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
 
                   {/* Phân bổ theo Màu đá & Dải Ni */}
                   <div className="space-y-3">
@@ -1453,7 +1999,7 @@ export default function ProductDetailPage({ params }) {
                                   onChange={(e) => changeRowColor(row.id, e.target.value)}
                                   className="px-2.5 py-1 bg-emerald-50/60 border border-emerald-300 rounded-lg text-xs font-bold text-[#00594c] outline-none"
                                 >
-                                  {product.availableStoneColors.map((color) => {
+                                  {(product.availableStoneColors || ["Trắng"]).map((color) => {
                                     const d = STONE_COLOR_DELTAS[color] || 0;
                                     return (
                                       <option key={color} value={color}>
@@ -1543,7 +2089,7 @@ export default function ProductDetailPage({ params }) {
                             {/* Ni Sizes Grid */}
                             <div>
                               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                                {product.availableNiSizes.map((size) => {
+                                {(product.availableNiSizes || []).map((size) => {
                                   const currentQty = row.quantities[size] || 0;
                                   const sizeDelta = getSizeDelta(size);
                                   return (
@@ -1682,8 +2228,10 @@ export default function ProductDetailPage({ params }) {
                       )}
                     </button>
                   </div>
-                </div>
+                </>
               )}
+            </div>
+          )}
 
             </div>
 
@@ -1694,56 +2242,58 @@ export default function ProductDetailPage({ params }) {
       {/* ================================================================= */}
       {/* STICKY QUICK-ORDER BAR (TỐI ƯU TRẢI NGHIỆM IPAD & MOBILE)        */}
       {/* ================================================================= */}
-      <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] py-3 px-4 sm:px-6 lg:hidden">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center space-x-2 text-xs">
-              <span className="font-bold text-gray-900 truncate">
+      {!product.isStandardSingle && (
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] py-3 px-4 sm:px-6 lg:hidden">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center space-x-2 text-xs">
+                <span className="font-bold text-gray-900 truncate">
+                  {product.isSet 
+                    ? (product.isPair 
+                        ? `${totalSetOrderQty} Cặp (${totalSetItemCount} chiếc)` 
+                        : `${totalSetOrderQty} Bộ (${totalSetItemCount} món)`)
+                    : `${totalWholesaleQty} Sản phẩm`}
+                </span>
+                <span className="text-gray-300">|</span>
+                <span className="font-mono text-gray-600 font-semibold truncate">
+                  {product.isSet 
+                    ? `${totalSetWeight.toFixed(4)} lượng` 
+                    : `${totalWholesaleWeight.toFixed(4)} lượng`}
+                </span>
+              </div>
+              <div className="text-sm font-black text-[#00594c] font-mono leading-tight mt-0.5">
                 {product.isSet 
-                  ? (product.isPair 
-                      ? `${totalSetOrderQty} Cặp (${totalSetItemCount} chiếc)` 
-                      : `${totalSetOrderQty} Bộ (${totalSetItemCount} món)`)
-                  : `${totalWholesaleQty} Sản phẩm`}
-              </span>
-              <span className="text-gray-300">|</span>
-              <span className="font-mono text-gray-600 font-semibold truncate">
-                {product.isSet 
-                  ? `${totalSetWeight.toFixed(4)} lượng` 
-                  : `${totalWholesaleWeight.toFixed(4)} lượng`}
-              </span>
+                  ? `${roundUp5k(totalSetWage).toLocaleString()}đ` 
+                  : `${roundUp5k(totalWholesaleWage).toLocaleString()}đ`}
+              </div>
             </div>
-            <div className="text-sm font-black text-[#00594c] font-mono leading-tight mt-0.5">
-              {product.isSet 
-                ? `${roundUp5k(totalSetWage).toLocaleString()}đ` 
-                : `${roundUp5k(totalWholesaleWage).toLocaleString()}đ`}
-            </div>
-          </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={product.isSet ? totalSetOrderQty === 0 : totalWholesaleQty === 0}
-            className={`px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center space-x-2 shrink-0 transition-all shadow-md active:scale-95 cursor-pointer ${
-              addedSuccess
-                ? "bg-emerald-600 text-white"
-                : (product.isSet ? totalSetOrderQty === 0 : totalWholesaleQty === 0)
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-[#00594c] hover:bg-[#004737] text-white"
-            }`}
-          >
-            {addedSuccess ? (
-              <>
-                <Check className="h-4 w-4" />
-                <span>Đã thêm!</span>
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="h-4 w-4" />
-                <span>Thêm vào giỏ</span>
-              </>
-            )}
-          </button>
+            <button
+              onClick={handleAddToCart}
+              disabled={product.isSet ? totalSetOrderQty === 0 : totalWholesaleQty === 0}
+              className={`px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center space-x-2 shrink-0 transition-all shadow-md active:scale-95 cursor-pointer ${
+                addedSuccess
+                  ? "bg-emerald-600 text-white"
+                  : (product.isSet ? totalSetOrderQty === 0 : totalWholesaleQty === 0)
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-[#00594c] hover:bg-[#004737] text-white"
+              }`}
+            >
+              {addedSuccess ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  <span>Đã thêm!</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="h-4 w-4" />
+                  <span>Thêm vào giỏ</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ================================================================= */}
       {/* LIGHTBOX MODAL: Xem ảnh kích thước đầy đủ                        */}

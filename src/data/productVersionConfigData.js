@@ -19,7 +19,12 @@ export const CHANGE_TYPES_CONFIG = [
     showAdmin: true,
     showClient: false,
     scope: "---",
-    note: "Không ảnh hưởng công nghệ sản xuất, giữ nguyên Drawing gốc"
+    note: "Không ảnh hưởng công nghệ sản xuất, giữ nguyên Drawing gốc",
+    hasTextInput: true,
+    hasCustomSelection: false,
+    customFieldLabel: "",
+    customOptions: [],
+    otherChangeConfig: "not_allowed" // Không được phép thay đổi -> Ẩn checkbox trên EC
   },
   {
     stt: 2,
@@ -32,7 +37,12 @@ export const CHANGE_TYPES_CONFIG = [
     showAdmin: true,
     showClient: false,
     scope: "---",
-    note: "Chỉ đổi thuộc tính màu sắc dây, không đổi Drawing"
+    note: "Chỉ đổi thuộc tính màu sắc dây, không đổi Drawing",
+    hasTextInput: false,
+    hasCustomSelection: true,
+    customFieldLabel: "Màu dây",
+    customOptions: ["Dây đỏ may mắn", "Dây đen chỉ dù", "Dây ngũ sắc Tây Tạng", "Dây hồng pastel"],
+    otherChangeConfig: "not_allowed" // Không được phép thay đổi -> Ẩn checkbox trên EC
   },
   {
     stt: 3,
@@ -45,7 +55,20 @@ export const CHANGE_TYPES_CONFIG = [
     showAdmin: true,
     showClient: true,
     scope: "7 Hiệu ứng",
-    note: "Thay đổi hiệu ứng bề mặt ball"
+    note: "Thay đổi hiệu ứng bề mặt ball",
+    hasTextInput: false,
+    hasCustomSelection: true,
+    customFieldLabel: "Hiệu ứng bào",
+    customOptions: [
+      "CR - Cross 45 + Slash 90",
+      "CR45 - Cross 45",
+      "CS - Chữ S",
+      "MO - Moon",
+      "SL45 - Slash45",
+      "SL90 - Slash90",
+      "TR - Trơn"
+    ],
+    otherChangeConfig: "optional" // Được phép thay đổi -> Hiện checkbox (không bắt buộc)
   },
   {
     stt: 4,
@@ -58,7 +81,16 @@ export const CHANGE_TYPES_CONFIG = [
     showAdmin: true,
     showClient: true,
     scope: "3 Nhóm KT",
-    note: "Ảnh hưởng trực tiếp công đoạn mạ men & móc máy -> Đổi Drawing sang Version mới"
+    note: "Ảnh hưởng trực tiếp công đoạn mạ men & móc máy -> Đổi Drawing sang Version mới",
+    hasTextInput: false,
+    hasCustomSelection: true,
+    customFieldLabel: "Nhóm kỹ thuật",
+    customOptions: [
+      "Nhóm 1 - Men sứ đơn sắc phủ nano",
+      "Nhóm 2 - Men sứ đa sắc viền kim",
+      "Nhóm 3 - Móc máy hoa văn nổi 3D"
+    ],
+    otherChangeConfig: "required" // Bắt buộc thay đổi -> Hiện checkbox (bắt buộc)
   },
   {
     stt: 5,
@@ -71,7 +103,12 @@ export const CHANGE_TYPES_CONFIG = [
     showAdmin: true,
     showClient: true,
     scope: "2 Item Phụ kiện",
-    note: "Thay cỡ dây chuẩn phụ kiện, không đổi Drawing chính"
+    note: "Thay cỡ dây chuẩn phụ kiện, không đổi Drawing chính",
+    hasTextInput: false,
+    hasCustomSelection: true,
+    customFieldLabel: "Item phụ kiện",
+    customOptions: ["Dây HTJ size 1.2mm", "Dây HTJ size 1.5mm"],
+    otherChangeConfig: "not_allowed" // Không được phép thay đổi -> Ẩn checkbox trên EC
   },
   {
     stt: 6,
@@ -84,7 +121,12 @@ export const CHANGE_TYPES_CONFIG = [
     showAdmin: true,
     showClient: true,
     scope: "3 Item Phụ kiện",
-    note: "Đổi loại khóa bấm/móc càng cua, không tạo Drawing Version"
+    note: "Đổi loại khóa bấm/móc càng cua, không tạo Drawing Version",
+    hasTextInput: false,
+    hasCustomSelection: true,
+    customFieldLabel: "Item phụ kiện khóa",
+    customOptions: ["Khóa càng cua inox", "Khóa mỏ vịt", "Khóa tròn lò xo", "Khóa hộp bấm vàng 18K"],
+    otherChangeConfig: "not_allowed" // Không được phép thay đổi -> Ẩn checkbox trên EC
   },
   {
     stt: 7,
@@ -97,12 +139,17 @@ export const CHANGE_TYPES_CONFIG = [
     showAdmin: true,
     showClient: false,
     scope: "2 Nhóm KT • 2 Item Phụ kiện",
-    note: "Thay cấu trúc ngọc trai sang bi kim loại -> Thay đổi hoàn toàn công nghệ lắp ráp"
+    note: "Thay cấu trúc ngọc trai sang bi kim loại -> Thay đổi hoàn toàn công nghệ lắp ráp",
+    hasTextInput: true,
+    hasCustomSelection: true,
+    customFieldLabel: "Nhóm kỹ thuật bi kim loại",
+    customOptions: ["Bi vàng trơn bóng 4mm", "Bi vàng khía cạnh kim cương 5mm"],
+    otherChangeConfig: "required" // Bắt buộc thay đổi -> Hiện checkbox (bắt buộc)
   },
   {
     stt: 8,
     code: "B",
-    name: "Cast",
+    name: "Cast (khuôn đúc, ổ chấu)",
     productType: "Vòng tay, Nhẫn nữ, Nhẫn Nam, Mặt dây...",
     design: true,
     bom: true,
@@ -110,7 +157,88 @@ export const CHANGE_TYPES_CONFIG = [
     showAdmin: true,
     showClient: true,
     scope: "---",
-    note: "Thay đổi khuôn đúc ổ chấu/thân nhẫn -> Bắt buộc ban hành Drawing Version mới"
+    note: "Thay đổi khuôn đúc ổ chấu/thân nhẫn -> Bắt buộc ban hành Drawing Version mới",
+    hasTextInput: true,
+    hasCustomSelection: false,
+    customFieldLabel: "",
+    customOptions: [],
+    otherChangeConfig: "required" // Bắt buộc thay đổi -> Hiện checkbox (bắt buộc)
+  },
+  {
+    stt: 9,
+    code: "T",
+    name: "Thay Tăng đơ (đổi/bỏ)",
+    productType: "Dây chuyền nữ, Lắc tay nữ, Lắc chân...",
+    design: false,
+    bom: true,
+    routing: false,
+    showAdmin: true,
+    showClient: true,
+    scope: "3 Tùy chọn",
+    note: "Đổi loại tăng đơ hoặc bỏ tăng đơ",
+    hasTextInput: false,
+    hasCustomSelection: true,
+    customFieldLabel: "Tùy chọn tăng đơ",
+    customOptions: ["Đổi loại tăng đơ chữ nhật", "Đổi loại tăng đơ hình tim", "Bỏ tăng đơ"],
+    otherChangeConfig: "optional" // Được phép thay đổi -> Hiện checkbox (không bắt buộc)
+  },
+  {
+    stt: 10,
+    code: "S",
+    name: "Thay đá phụ",
+    productType: "Nhẫn nữ, Nhẫn nam, Dây chuyền...",
+    design: true,
+    bom: true,
+    routing: false,
+    showAdmin: true,
+    showClient: false,
+    scope: "---",
+    note: "Thay đổi loại hoặc cách kết đá phụ",
+    hasTextInput: true,
+    hasCustomSelection: false,
+    customFieldLabel: "",
+    customOptions: [],
+    otherChangeConfig: "optional" // Được phép thay đổi -> Hiện checkbox (không bắt buộc)
+  },
+  {
+    stt: 11,
+    code: "O",
+    name: "Yêu cầu thay đổi khác",
+    productType: "Tất cả sản phẩm",
+    design: true,
+    bom: true,
+    routing: false,
+    showAdmin: true,
+    showClient: true,
+    scope: "---",
+    note: "Yêu cầu kỹ thuật gia công đặc biệt khác",
+    hasTextInput: true,
+    hasCustomSelection: false,
+    customFieldLabel: "",
+    customOptions: [],
+    otherChangeConfig: "required" // Bắt buộc thay đổi
+  },
+  {
+    stt: 12,
+    code: "CD",
+    name: "Đắp lacquer & Thay khóa",
+    productType: "Dây chuyền nam, Dây chuyền nữ, Lắc tay...",
+    design: true,
+    bom: true,
+    routing: true,
+    showAdmin: true,
+    showClient: false,
+    scope: "Kết hợp",
+    note: "Yêu cầu thay đổi kết hợp nhiều loại: Mạ men sứ & Đổi phụ kiện khóa",
+    hasTextInput: true,
+    hasCustomSelection: true,
+    customFieldLabel: "Phụ kiện khóa & Men",
+    customOptions: [
+      "Khóa càng cua + Men nano",
+      "Khóa mỏ vịt + Men viền kim",
+      "Khóa tròn lò xo + Móc máy 3D"
+    ],
+    otherChangeConfig: "required"
   }
 ];
 

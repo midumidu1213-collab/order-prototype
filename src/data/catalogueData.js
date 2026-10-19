@@ -117,6 +117,52 @@ export const JEWELRY_CATEGORIES = [
 
 export const JEWELRY_PRODUCTS = [
   // =========================================================================
+  // SẢN PHẨM MẪU CHUẨN ẢNH 2 & 3: NHẪN NỮ GYORG000143A00A00000000000015
+  // =========================================================================
+  {
+    id: "GYORG000143A00A00000000000015",
+    isSet: false,
+    isStandardSingle: true,
+    productCode: "GYORG000143A00A00000000000015",
+    productName: "Nhẫn nữ",
+    drawingCode: "RG000143A00",
+    categoryId: "nhan-nu",
+    categoryName: "Nhẫn nữ",
+    weight: 0.4500,
+    goldWeight: "0.4500g",
+    convertedWeight: "0.4500g",
+    wagePrice: 205000,
+    priceDisplay: "205,000đ",
+    rawPrice: 205000,
+    soldCount: 42,
+    imageType: "ring-solitaire",
+    specs: {
+      weight: "0.4500g",
+      convertedWeight: "0.4500g",
+      productType: "Nhẫn nữ",
+      wage: "205,000đ"
+    },
+    defaultOptions: {
+      goldColor: "Vàng",
+      niSize: "15",
+      changeRequest: "Cast",
+      changeDescription: "",
+      quantity: 1,
+      note: ""
+    },
+    availableGoldColors: ["Vàng", "Trắng", "Hồng"],
+    availableNiSizes: ["14", "15", "16", "17", "18"],
+    availableStoneColors: ["Trắng"],
+    availableChangeRequests: [
+      "Không thay đổi",
+      "Cast",
+      "Đắp lacquer - móc máy",
+      "Thay kiểu bào ball",
+      "Thay Khóa",
+      "Thay kích thước ball"
+    ]
+  },
+  // =========================================================================
   // SẢN PHẨM BỘ (JEWELRY SUITES / SETS)
   // =========================================================================
   {

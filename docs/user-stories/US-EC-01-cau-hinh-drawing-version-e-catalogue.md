@@ -76,6 +76,18 @@ sequenceDiagram
 
 ---
 
+### 3.2. Quy Tắc Liên Kết Giữa "Yêu Cầu Thay Đổi" và "Yêu Cầu Thay Đổi Khác" Trên E-Catalogue
+
+| Trường hợp lựa chọn trên E-Catalogue | Cấu hình tại Quản lý sản phẩm (`otherChangeConfig`) | Hành vi nút Checkbox "Yêu cầu thay đổi khác" | Hành vi ô nhập mô tả (Textarea) |
+| :--- | :--- | :--- | :--- |
+| **Yêu cầu thay đổi = "Khác"** | Áp dụng trực tiếp cho option Khác | **ẨN nút checkbox** (tránh dư thừa vì bản thân lựa chọn đã là Khác) | **HIỂN THỊ TRỰC TIẾP** ô "Mô tả yêu cầu thay đổi *" (Bắt buộc nhập trước khi Thêm vào giỏ). |
+| **Yêu cầu thay đổi = Loại thay đổi A** | Cấu hình = `Không được phép thay đổi` | **ẨN HOÀN TOÀN nút checkbox** | **ẨN** ô nhập mô tả. |
+| **Yêu cầu thay đổi = Loại thay đổi B** | Cấu hình = `Được phép thay đổi` | **HIỂN THỊ nút checkbox** (Trạng thái tùy chọn / không bắt buộc) | Chỉ hiển thị khi người dùng tích chọn checkbox. |
+| **Yêu cầu thay đổi = Loại thay đổi C** | Cấu hình = `Bắt buộc thay đổi` | **HIỂN THỊ nút checkbox** (Trạng thái BẮT BUỘC: tự động tích, có dấu `*` và badge `Bắt buộc`) | **LUÔN HIỂN THỊ** và BẮT BUỘC nhập mô tả trước khi Thêm vào giỏ. |
+| **Yêu cầu thay đổi = "Không thay đổi"** | Mặc định hệ thống | **HIỂN THỊ nút checkbox** (Không bắt buộc) | Hiển thị khi người dùng tích chọn checkbox. |
+
+---
+
 ## 4. Đặc Tả Giao Diện & Dữ Liệu (Field Specifications)
 
 ### 4.1. Màn hình 1: Quản lý sản phẩm > Cấu hình loại thay đổi
@@ -87,12 +99,15 @@ sequenceDiagram
 | 2 | **Mã loại** | Chuỗi (1 ký tự) | Có | Mã định danh phân loại: `B`, `C`, `D`, `F`, `G`, `H`, `I`, `N`... |
 | 3 | **Tên loại thay đổi** | Chuỗi | Có | Tên mô tả: `Cast`, `Đắp lacquer - móc máy`, `Thay Khóa`, `Thay kiểu bào ball`... |
 | 4 | **Loại sản phẩm** | Chuỗi | Có | Phạm vi chủng loại áp dụng (Vòng tay, Lắc tay, Nhẫn, Dây chuyền...). |
-| 5 | **Thiết kế** | Boolean (Icon) | Có | Đánh dấu yêu cầu có cần phòng Thiết kế can thiệp hay không. |
-| 6 | **BOM** | Boolean (Icon) | Có | Đánh dấu yêu cầu có làm thay đổi định mức nguyên vật liệu BOM. |
-| 7 | **Routing (Trọng yếu)** | Boolean (Icon/Cờ) | Có | **Cờ quyết định cốt lõi:**<br>• `Tích xanh (TRUE)`: Thay đổi ảnh hưởng quy trình công nghệ ➔ BẮT BUỘC đổi mã Drawing và làm nguồn sinh Version trên EC.<br>• `--- (FALSE)`: Không ảnh hưởng Routing ➔ Không đổi mã Drawing. |
-| 8 | **Hiện Admin / Hiện Client** | Boolean | Có | Quy định quyền xem trên giao diện nội bộ và khách hàng. |
-| 9 | **Phạm vi mở rộng** | Chuỗi | Không | Ghi chú số nhóm kỹ thuật hoặc số Item phụ kiện liên quan. |
-| 10 | **Thao tác** | Hành động | Có | Icon Sửa ✏️, Xóa 🗑️. |
+| 5 | **Nhập chi tiết thay đổi** | Boolean (Checkbox) | Tùy chọn | Bật trường nhập tự do "Mô tả thay đổi *" cho loại thay đổi. |
+| 6 | **Chọn chi tiết thay đổi** | Boolean (Checkbox) | Tùy chọn | Bật dropdown chọn tùy biến (Nhóm kỹ thuật, Hiệu ứng bào, Phụ kiện...). |
+| 7 | **Cấu hình thay đổi khác (EC)** *(Mới)* | Radio (3 tùy chọn) | Có | **Quy định hành vi checkbox trên E-Catalogue:**<br>• `Không được phép thay đổi` $\rightarrow$ Ẩn nút checkbox trên EC.<br>• `Được phép thay đổi` $\rightarrow$ Hiện nút checkbox (không bắt buộc).<br>• `Bắt buộc thay đổi` $\rightarrow$ Hiện nút checkbox (bắt buộc tích & nhập mô tả). |
+| 8 | **Thiết kế** | Boolean (Icon) | Có | Đánh dấu yêu cầu có cần phòng Thiết kế can thiệp hay không. |
+| 9 | **BOM** | Boolean (Icon) | Có | Đánh dấu yêu cầu có làm thay đổi định mức nguyên vật liệu BOM. |
+| 10 | **Routing (Trọng yếu)** | Boolean (Icon/Cờ) | Có | **Cờ quyết định cốt lõi:**<br>• `Tích xanh (TRUE)`: Thay đổi ảnh hưởng quy trình công nghệ ➔ BẮT BUỘC đổi mã Drawing và làm nguồn sinh Version trên EC.<br>• `--- (FALSE)`: Không ảnh hưởng Routing ➔ Không đổi mã Drawing. |
+| 11 | **Hiện Admin / Hiện Client** | Boolean | Có | Quy định quyền xem trên giao diện nội bộ và khách hàng. |
+| 12 | **Phạm vi mở rộng** | Chuỗi | Không | Ghi chú số nhóm kỹ thuật hoặc số Item phụ kiện liên quan. |
+| 13 | **Thao tác** | Hành động | Có | Icon Sửa ✏️ (Mở Modal Cập nhật loại thay đổi), Xóa 🗑️. |
 
 ---
 
@@ -211,6 +226,26 @@ sequenceDiagram
 *   **When:** Admin bỏ tích toàn bộ các checkbox của tất cả version thuộc sản phẩm đó và bấm `Cập nhật`.
 *   **Then:** Hệ thống hiển thị modal cảnh báo xác nhận: *"Cảnh báo: Sản phẩm này sẽ bị ẩn hoàn toàn khỏi E-Catalogue chào hàng. Bạn có chắc chắn muốn tiếp tục?"*.
 *   **And:** Chỉ khi Admin bấm "Xác nhận ẩn", sản phẩm mới ngừng hiển thị trên E-Catalogue.
+
+---
+
+### AC 7: Cấu hình "Nhập chi tiết thay đổi" và hiển thị ô mô tả trên Client (Text Input Mode)
+*   **Given:** Admin mở Modal "Cập nhật loại thay đổi" cho loại thay đổi `B - Cast` tại màn hình `/product-management/change-types`.
+*   **When:** Admin tích chọn trường **"Nhập chi tiết thay đổi"** (`hasTextInput = true`) và lưu cấu hình.
+*   **Then:** Trên giao diện E-Catalogue / Đặt hàng (`/catalogue/product/[id]`), khi khách hàng hoặc Sale chọn "Yêu cầu thay đổi" là `Cast`:
+    *   Hệ thống hiển thị trường bắt buộc **"Mô tả thay đổi *"** với ô văn bản (Textarea) có placeholder *"Nhập mô tả thay đổi..."*.
+    *   Khách hàng có thể nhập yêu cầu chi tiết tự do (ví dụ: *"Hạ chấu nhẫn 0.8mm"*).
+    *   Thông tin mô tả này được lưu trữ và đính kèm vào Item đơn hàng khi thêm vào danh sách / giỏ hàng.
+
+---
+
+### AC 8: Cấu hình "Chọn chi tiết thay đổi" và hiển thị dropdown danh mục tùy biến trên Client (Custom Selection Mode)
+*   **Given:** Admin mở Modal "Cập nhật loại thay đổi" cho loại thay đổi `C - Đắp lacquer - móc máy` tại `/product-management/change-types`.
+*   **When:** Admin tích chọn trường **"Chọn chi tiết thay đổi"** (`hasCustomSelection = true`) và gắn danh mục (ví dụ: Nhóm kỹ thuật).
+*   **Then:** Trên giao diện E-Catalogue / Đặt hàng (`/catalogue/product/[id]`), khi chọn "Yêu cầu thay đổi" là `Đắp lacquer - móc máy`:
+    *   Hệ thống hiển thị trường chọn dạng Dropdown với nhãn tương ứng (ví dụ: **"Nhóm kỹ thuật"**).
+    *   Dropdown hiển thị đúng danh mục tùy biến đã cấu hình trong phạm vi áp dụng (ví dụ: *"Nhóm 1 - Men sứ đơn sắc nano"*, *"Nhóm 2 - Men sứ đa sắc viền kim"*, *"Nhóm 3 - Móc máy hoa văn nổi 3D"*).
+    *   Khi khách hàng chọn một giá trị tùy biến, giá trị này được ghi nhận trực tiếp vào chi tiết yêu cầu kỹ thuật của Item đơn hàng.
 
 ---
 
