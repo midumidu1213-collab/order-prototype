@@ -21,7 +21,18 @@ import { PRODUCT_CATALOGUE_CONFIG_LIST } from "@/data/productVersionConfigData";
 export default function ConfigProductPage() {
   const [products, setProducts] = useState(PRODUCT_CATALOGUE_CONFIG_LIST);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all"); // 'all' | 'base' | 'routing'
   const [selectedIds, setSelectedIds] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("SEVAGO_PUBLISHED_PRODUCT_IDS");
+      if (saved) {
+        try {
+          return new Set(JSON.parse(saved));
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
     // Mặc định chọn các item đang được cấu hình hiển thị trên EC
     return new Set(
       PRODUCT_CATALOGUE_CONFIG_LIST.filter(p => p.isPublishedToEC).map(p => p.id)
@@ -35,11 +46,20 @@ export default function ConfigProductPage() {
   // Modal Chi tiết sản phẩm chuẩn Video frame 12
   const [detailModalItem, setDetailModalItem] = useState(null);
 
-  // Xử lý tìm kiếm đa trường
+  // Xử lý tìm kiếm và lọc đa trường
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products;
+    let result = products;
+
+    // Lọc theo tab
+    if (activeTab === "base") {
+      result = result.filter(item => item.isBase !== false && !item.affectsRouting);
+    } else if (activeTab === "routing") {
+      result = result.filter(item => item.affectsRouting === true || item.isBase === false);
+    }
+
+    if (!searchQuery.trim()) return result;
     const q = searchQuery.toLowerCase().trim();
-    return products.filter((item) => {
+    return result.filter((item) => {
       const matchItemCode = item.itemCode?.toLowerCase().includes(q);
       const matchOldCode = item.oldItemCode?.toLowerCase().includes(q);
       const matchDrawing = item.drawingCode?.toLowerCase().includes(q);
@@ -47,9 +67,10 @@ export default function ConfigProductPage() {
       const matchType = item.productType?.toLowerCase().includes(q);
       const matchCreator = item.creator?.toLowerCase().includes(q);
       const matchStatus = item.status?.toLowerCase().includes(q);
-      return matchItemCode || matchOldCode || matchDrawing || matchNotes || matchType || matchCreator || matchStatus;
+      const matchVersion = item.versionLabel?.toLowerCase().includes(q) || item.changeTypeName?.toLowerCase().includes(q);
+      return matchItemCode || matchOldCode || matchDrawing || matchNotes || matchType || matchCreator || matchStatus || matchVersion;
     });
-  }, [products, searchQuery]);
+  }, [products, searchQuery, activeTab]);
 
   // Xử lý chọn / bỏ chọn từng dòng
   const handleToggleSelect = (id) => {
@@ -87,6 +108,10 @@ export default function ConfigProductPage() {
         isPublishedToEC: selectedIds.has(item.id)
       }))
     );
+    if (typeof window !== "undefined") {
+      localStorage.setItem("SEVAGO_PUBLISHED_PRODUCT_IDS", JSON.stringify(Array.from(selectedIds)));
+      window.dispatchEvent(new Event("storage"));
+    }
     const count = selectedIds.size;
     setToastMessage(`Đã cập nhật danh sách hiển thị trên E-Catalogue thành công (${count} sản phẩm/phiên bản).`);
     setTimeout(() => setToastMessage(""), 4000);
@@ -127,6 +152,54 @@ export default function ConfigProductPage() {
           </h1>
         </div>
 
+        {/* Tab lọc nhanh: Tất cả / Bản vẽ chuẩn / Version từ Routing */}
+        <div className="px-5 pt-1 flex items-center space-x-2 border-b border-gray-100 text-xs font-medium">
+          <button
+            type="button"
+            onClick={() => setActiveTab("all")}
+            className={`pb-2.5 px-3 border-b-2 font-semibold transition-colors cursor-pointer flex items-center space-x-1.5 ${
+              activeTab === "all"
+                ? "border-emerald-700 text-emerald-800"
+                : "border-transparent text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            <span>Tất cả</span>
+            <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded-full text-gray-600">
+              {products.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("base")}
+            className={`pb-2.5 px-3 border-b-2 font-semibold transition-colors cursor-pointer flex items-center space-x-1.5 ${
+              activeTab === "base"
+                ? "border-emerald-700 text-emerald-800"
+                : "border-transparent text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            <span>Bản vẽ chuẩn A00 (Gốc)</span>
+            <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded-full text-gray-600">
+              {products.filter(p => !p.affectsRouting).length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("routing")}
+            className={`pb-2.5 px-3 border-b-2 font-semibold transition-colors cursor-pointer flex items-center space-x-1.5 ${
+              activeTab === "routing"
+                ? "border-purple-700 text-purple-800"
+                : "border-transparent text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            <span>Version từ Routing (Bán tiếp)</span>
+            <span className="text-[10px] bg-purple-100 text-purple-700 font-bold px-1.5 py-0.5 rounded-full">
+              {products.filter(p => p.affectsRouting).length}
+            </span>
+          </button>
+        </div>
+
         {/* Thanh công cụ: Search bên trái, Cập nhật + Lọc bên phải */}
         <div className="px-5 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-gray-100">
           <div className="relative flex-1 w-full max-w-md">
@@ -135,7 +208,7 @@ export default function ConfigProductPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm theo Mã item / Mã Drawing"
+              placeholder="Tìm kiếm theo Mã item / Mã Drawing / Tên version"
               className="w-full pl-9 pr-4 py-2 bg-gray-50/60 border border-gray-300 rounded-lg text-xs focus:bg-white focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 placeholder:text-gray-400 transition-all"
             />
           </div>
@@ -252,12 +325,36 @@ export default function ConfigProductPage() {
 
                       {/* 3. Mã item (30 ký tự) */}
                       <td className="px-3 py-3 font-mono text-[11px] font-medium text-gray-900 break-all">
-                        {p.itemCode}
+                        <div>{p.itemCode}</div>
+                        {p.notes && (
+                          <div className="text-[10px] text-gray-400 font-sans mt-0.5 line-clamp-1" title={p.notes}>
+                            {p.notes}
+                          </div>
+                        )}
                       </td>
 
-                      {/* 4. Mã drawing */}
-                      <td className="px-3 py-3 font-mono text-xs font-semibold text-gray-800">
-                        {p.drawingCode}
+                      {/* 4. Mã drawing & Badge Version */}
+                      <td className="px-3 py-3">
+                        <div className="font-mono text-xs font-semibold text-gray-800">
+                          {p.drawingCode}
+                        </div>
+                        {p.affectsRouting ? (
+                          <div className="mt-1">
+                            <span 
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-800 border border-purple-200" 
+                              title="Version sinh ra từ Routing kỹ thuật, bán tiếp trên E-C (Khóa tùy biến)"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-600 animate-pulse"></span>
+                              {p.changeTypeName || p.versionLabel || "Version Routing"}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                              Bản vẽ gốc A00
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* 5. Hình render */}

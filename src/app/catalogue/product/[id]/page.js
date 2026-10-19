@@ -277,7 +277,43 @@ export default function ProductDetailPage({ params }) {
   };
 
   const handleAddStandardSingleToCart = () => {
-    // 1. Kiểm tra validation theo quy tắc nghiệp vụ
+    // 1. NẾU LÀ VERSION PHÁI SINH CỐ ĐỊNH (KHÓA TÙY BIẾN)
+    if (activeVersion && !activeVersion.isBase) {
+      setFormError("");
+      const wage = activeVersion.wagePrice || product.wagePrice || 205000;
+      addToCart({
+        id: `${product.id}-${activeVersion.id}-${Date.now()}`,
+        productCode: activeVersion.productCode || product.productCode,
+        drawingCode: activeVersion.drawingCode || product.drawingCode,
+        productName: `${product.productName} (${activeVersion.name})`,
+        categoryName: product.categoryName,
+        goldColor: product.defaultOptions?.goldColor || "Vàng",
+        mainStoneColor: product.defaultOptions?.stoneColor || "Trắng",
+        size: product.defaultOptions?.niSize || "15",
+        changeCategory: activeVersion.name,
+        changeDetail: `Phiên bản Routing: ${activeVersion.code}`,
+        hasOtherChange: false,
+        otherChangeDescription: "",
+        changeRequest: `Phiên bản: ${activeVersion.name} (${activeVersion.code})`,
+        isFixedVersion: true,
+        versionCode: activeVersion.code,
+        versionName: activeVersion.name,
+        isCustomOrOther: false,
+        isPricePending: false,
+        priceDisplay: activeVersion.priceDisplay || `${wage.toLocaleString()}đ`,
+        note: `Đơn mua tiếp Version ${activeVersion.code}: ${activeVersion.name}`,
+        qty: Number(singleQty) || 1,
+        wagePrice: wage,
+        totalWage: wage * (Number(singleQty) || 1),
+        weight: product.goldWeight || "0.4500g",
+        imageType: activeVersion.imageType || product.imageType
+      });
+      setAddedSuccess(true);
+      setTimeout(() => setAddedSuccess(false), 2500);
+      return;
+    }
+
+    // 2. NẾU LÀ BẢN VẼ CHUẨN GỐC (CHO PHÉP TÙY BIẾN TOÀN DIỆN)
     if (ecChangeCategory === "Khác" && !otherChangeDescription.trim()) {
       setFormError("Vui lòng nhập mô tả yêu cầu thay đổi!");
       return;
@@ -989,122 +1025,120 @@ export default function ProductDetailPage({ params }) {
                 </div>
               </div>
 
-              {/* Component Gallery (Pair) OR Drawing Versions (Bộ trang sức) */}
-              {product.isSet && (
+              {/* Component Gallery (Pair) OR Drawing Versions (Bộ trang sức hoặc Sản phẩm có Version bán tiếp) */}
+              {product.isSet && product.isPair ? (
                 <div className="w-full mt-3.5 space-y-2.5">
-                  {product.isPair ? (
-                    <>
-                      <div className="text-xs font-semibold text-gray-500 text-center">
-                        Xem chi tiết cặp nhẫn:
-                      </div>
-                      <div className="grid grid-cols-3 gap-1.5 max-w-xs mx-auto">
-                        <button
-                          onClick={() => setActivePreviewType(product.imageType)}
-                          className={`p-1.5 sm:p-2 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center cursor-pointer ${
-                            activePreviewType === product.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm bg-emerald-50/20" : "border-gray-200 opacity-70 hover:opacity-100"
-                          }`}
-                        >
-                          <div className="text-sm sm:text-base">💍</div>
-                          <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">Cả cặp</span>
-                        </button>
-                        {product.components.map((comp) => (
-                          <button
-                            key={comp.id}
-                            onClick={() => setActivePreviewType(comp.imageType || product.imageType)}
-                            className={`p-1.5 sm:p-2 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center cursor-pointer ${
-                              activePreviewType === comp.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm bg-emerald-50/20" : "border-gray-200 opacity-70 hover:opacity-100"
-                            }`}
-                          >
-                            <div className="text-sm sm:text-base">{comp.icon}</div>
-                            <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">
-                              {comp.id === "ring-1" ? "Nhẫn Nam" : "Nhẫn Nữ"}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    /* BỘ TRANG SỨC: CÁC VERSION THAY ĐỔI ẢNH HƯỞNG ĐẾN DRAWING (DẠNG HÌNH ẢNH & HOVER TOOLTIP) */
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs pb-0.5">
-                        <span className="font-bold text-gray-800 flex items-center">
-                          <Layers className="h-3.5 w-3.5 mr-1.5 text-[#00594c]" />
-                          Phiên bản thiết kế (Drawing Version):
+                  <div className="text-xs font-semibold text-gray-500 text-center">
+                    Xem chi tiết cặp nhẫn:
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 max-w-xs mx-auto">
+                    <button
+                      onClick={() => setActivePreviewType(product.imageType)}
+                      className={`p-1.5 sm:p-2 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center cursor-pointer ${
+                        activePreviewType === product.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm bg-emerald-50/20" : "border-gray-200 opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <div className="text-sm sm:text-base">💍</div>
+                      <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">Cả cặp</span>
+                    </button>
+                    {product.components.map((comp) => (
+                      <button
+                        key={comp.id}
+                        onClick={() => setActivePreviewType(comp.imageType || product.imageType)}
+                        className={`p-1.5 sm:p-2 rounded-xl border-2 bg-gray-50 transition-all flex flex-col items-center justify-center cursor-pointer ${
+                          activePreviewType === comp.imageType ? "border-[#00594c] ring-2 ring-emerald-500/20 shadow-sm bg-emerald-50/20" : "border-gray-200 opacity-70 hover:opacity-100"
+                        }`}
+                      >
+                        <div className="text-sm sm:text-base">{comp.icon}</div>
+                        <span className="text-[10px] font-bold text-gray-700 mt-0.5 truncate">
+                          {comp.id === "ring-1" ? "Nhẫn Nam" : "Nhẫn Nữ"}
                         </span>
-                        <span className="text-[10px] text-gray-400 italic hidden sm:inline">
-                          Rê chuột để xem tên phiên bản
-                        </span>
-                      </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (drawingVersions && drawingVersions.length > 1) ? (
+                /* PHIÊN BẢN THIẾT KẾ (DRAWING VERSIONS) BÁN TIẾP - DẠNG HÌNH ẢNH & TÊN LOẠI THAY ĐỔI */
+                <div className="w-full mt-3.5 space-y-2.5">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs pb-0.5">
+                      <span className="font-bold text-gray-800 flex items-center">
+                        <Layers className="h-3.5 w-3.5 mr-1.5 text-[#00594c]" />
+                        Phiên bản thiết kế (Version bán tiếp):
+                      </span>
+                      <span className="text-[10px] text-gray-400 italic hidden sm:inline">
+                        Chọn version để mua tiếp
+                      </span>
+                    </div>
 
-                      {/* 4 Thumbnail hình ảnh của từng phiên bản */}
-                      <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
-                        {drawingVersions.map((ver) => {
-                          const isSelected = selectedVersionId === ver.id;
-                          return (
-                            <div key={ver.id} className="relative group">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedVersionId(ver.id);
-                                  if (ver.imageType) setActivePreviewType(ver.imageType);
-                                }}
-                                className={`w-full aspect-square p-1 sm:p-1.5 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden bg-white flex flex-col items-center justify-center ${
-                                  isSelected
-                                    ? "border-[#00594c] ring-2 ring-emerald-500/25 shadow-md scale-[1.02]"
-                                    : "border-gray-200 hover:border-emerald-400 hover:shadow-xs opacity-85 hover:opacity-100"
-                                }`}
-                              >
-                                {/* Ảnh visual của phiên bản */}
-                                <div className="w-full h-full flex items-center justify-center pointer-events-none p-0.5">
-                                  <JewelryVisual type={ver.imageType || product.imageType} className="w-full h-full object-contain" />
-                                </div>
-
-                                {/* Badge mã Drawing Version ở góc */}
-                                <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold leading-none ${
-                                  isSelected ? "bg-[#00594c] text-white" : "bg-black/60 text-white backdrop-blur-xs"
-                                }`}>
-                                  {ver.code}
-                                </div>
-
-                                {/* Checkmark khi được chọn */}
-                                {isSelected && (
-                                  <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#00594c] text-white flex items-center justify-center shadow-xs">
-                                    <Check className="h-2.5 w-2.5 stroke-[3]" />
-                                  </div>
-                                )}
-                              </button>
-
-                              {/* Tooltip khi rê chuột vào (Hover) */}
-                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center z-40 pointer-events-none whitespace-nowrap animate-fadeIn">
-                                <div className="bg-gray-900/95 backdrop-blur-xs text-white px-2.5 py-1.5 rounded-xl shadow-xl text-center space-y-0.5 border border-gray-700/50">
-                                  <div className="text-[11px] font-bold text-amber-300 flex items-center justify-center space-x-1">
-                                    <span className="font-mono">{ver.code}</span>
-                                    <span>•</span>
-                                    <span>{ver.name}</span>
-                                  </div>
-                                  <div className="text-[10px] text-gray-300 font-normal">
-                                    {ver.desc}
-                                  </div>
-                                </div>
-                                <div className="w-2 h-2 bg-gray-900/95 rotate-45 -mt-1" />
+                    {/* Thumbnail hình ảnh của từng phiên bản */}
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                      {drawingVersions.map((ver) => {
+                        const isSelected = selectedVersionId === ver.id;
+                        return (
+                          <div key={ver.id} className="relative group">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedVersionId(ver.id);
+                                if (ver.imageType) setActivePreviewType(ver.imageType);
+                              }}
+                              className={`w-full aspect-square p-1 sm:p-1.5 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden bg-white flex flex-col items-center justify-center ${
+                                isSelected
+                                  ? "border-[#00594c] ring-2 ring-emerald-500/25 shadow-md scale-[1.02]"
+                                  : "border-gray-200 hover:border-emerald-400 hover:shadow-xs opacity-85 hover:opacity-100"
+                              }`}
+                            >
+                              {/* Ảnh visual của phiên bản */}
+                              <div className="w-full h-full flex items-center justify-center pointer-events-none p-0.5">
+                                <JewelryVisual type={ver.imageType || product.imageType} className="w-full h-full object-contain" />
                               </div>
 
-                              {/* Nhãn phiên bản bên dưới */}
-                              <div className="text-center mt-1">
-                                <div className={`text-[10px] sm:text-[11px] font-bold truncate ${
-                                  isSelected ? "text-[#00594c]" : "text-gray-700"
-                                }`}>
-                                  {ver.tag}
+                              {/* Badge mã Drawing Version ở góc */}
+                              <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold leading-none ${
+                                isSelected ? "bg-[#00594c] text-white" : "bg-black/60 text-white backdrop-blur-xs"
+                              }`}>
+                                {ver.code}
+                              </div>
+
+                              {/* Checkmark khi được chọn */}
+                              {isSelected && (
+                                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#00594c] text-white flex items-center justify-center shadow-xs">
+                                  <Check className="h-2.5 w-2.5 stroke-[3]" />
                                 </div>
+                              )}
+                            </button>
+
+                            {/* Tooltip khi rê chuột vào (Hover) */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center z-40 pointer-events-none whitespace-nowrap animate-fadeIn">
+                              <div className="bg-gray-900/95 backdrop-blur-xs text-white px-2.5 py-1.5 rounded-xl shadow-xl text-center space-y-0.5 border border-gray-700/50">
+                                <div className="text-[11px] font-bold text-amber-300 flex items-center justify-center space-x-1">
+                                  <span className="font-mono">{ver.code}</span>
+                                  <span>•</span>
+                                  <span>{ver.name}</span>
+                                </div>
+                                <div className="text-[10px] text-gray-300 font-normal">
+                                  {ver.desc}
+                                </div>
+                              </div>
+                              <div className="w-2 h-2 bg-gray-900/95 rotate-45 -mt-1" />
+                            </div>
+
+                            {/* Nhãn phiên bản bên dưới */}
+                            <div className="text-center mt-1">
+                              <div className={`text-[10px] sm:text-[11px] font-bold truncate ${
+                                isSelected ? "text-[#00594c]" : "text-gray-700"
+                              }`}>
+                                {ver.name || ver.tag}
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
+                  </div>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* ================================================================= */}
@@ -1586,107 +1620,150 @@ export default function ProductDetailPage({ params }) {
                             </div>
                           ) : (
                             <div className="text-sm font-bold text-[#00594c] mt-0.5 font-mono">
-                              {product.specs?.wage || "205,000đ"}
+                              {activeVersion && !activeVersion.isBase
+                                ? (activeVersion.priceDisplay || `${(activeVersion.wagePrice || 205000).toLocaleString()}đ`)
+                                : (product.specs?.wage || "205,000đ")}
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {/* PHẦN 1: 3 THUỘC TÍNH CƠ BẢN (Màu xi, Màu đá chính, Kích thước) */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {/* 1. Màu xi */}
-                        <div>
-                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">Màu xi</label>
-                          <select
-                            value={goldColor}
-                            onChange={(e) => setGoldColor(e.target.value)}
-                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
-                          >
-                            {(product.availableGoldColors || ["Vàng", "Trắng", "Hồng", "Hai màu"]).map((c) => (
-                              <option key={c} value={c}>{c}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {/* 2. Màu đá chính */}
-                        <div>
-                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">Màu đá chính</label>
-                          <select
-                            value={mainStoneColor}
-                            onChange={(e) => setMainStoneColor(e.target.value)}
-                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
-                          >
-                            {["Trắng", "Đỏ", "Xanh", "Tím", "Vàng", "Hồng", "Đen", "Không đá"].map((c) => (
-                              <option key={c} value={c}>{c}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {/* 3. Kích thước */}
-                        <div>
-                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">Kích thước</label>
-                          <select
-                            value={selectedSize}
-                            onChange={(e) => setSelectedSize(e.target.value)}
-                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
-                          >
-                            {(product.availableNiSizes || ["14", "15", "16", "17", "18"]).map((s) => (
-                              <option key={s} value={s}>{s}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* PHẦN 2: YÊU CẦU THAY ĐỔI CHUẨN: CHỈ HIỂN THỊ CÁC THUỘC TÍNH CÓ TÍCH CHỌN TRONG BẢNG + 'KHÁC' */}
-                      <div className="pt-2 border-t border-gray-100 space-y-2">
-                        <div className={`grid gap-3.5 ${ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
-                          {/* Dropdown 1: Yêu cầu thay đổi */}
-                          <div>
-                            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                              Yêu cầu thay đổi
-                            </label>
-                            <select
-                              value={ecChangeCategory}
-                              onChange={(e) => handleSelectEcChangeCategory(e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer shadow-2xs"
-                            >
-                              {EC_ALLOWED_CHANGE_REQUESTS.map((req) => (
-                                <option key={req} value={req}>{req}</option>
-                              ))}
-                            </select>
+                      {/* QUY TẮC NGHIỆP VỤ: NẾU CHỌN VERSION PHÁI SINH (KHÔNG ĐƯỢC TÙY BIẾN) */}
+                      {activeVersion && !activeVersion.isBase ? (
+                        <div className="p-4 bg-emerald-50/80 border border-emerald-200/90 rounded-2xl space-y-3 animate-in fade-in duration-150">
+                          <div className="flex items-start space-x-3">
+                            <div className="w-9 h-9 rounded-xl bg-[#00594c] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                              <Layers className="h-5 w-5" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-[#00594c] text-white px-2 py-0.5 rounded">
+                                  Version {activeVersion.code}
+                                </span>
+                                <h4 className="text-xs font-bold text-gray-900">
+                                  {activeVersion.name}
+                                </h4>
+                              </div>
+                              <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
+                                Phiên bản này được sản xuất chuẩn xác theo Bản vẽ Drawing <strong className="font-mono text-gray-800">{activeVersion.drawingCode}</strong> và Routing kỹ thuật đã phê duyệt. <strong>Không áp dụng tùy biến</strong> thông số kỹ thuật.
+                              </p>
+                            </div>
                           </div>
 
-                          {/* Dropdown 2: Dropdown con chi tiết xuất hiện khi chọn Loại thay đổi có tùy biến (không phải Khác) */}
-                          {ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (
-                            <div className="animate-in fade-in slide-in-from-left-1 duration-150">
-                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                                {ecChangeCategory.includes("Khóa") 
-                                  ? "Chi tiết khóa *" 
-                                  : ecChangeCategory.includes("Tăng đơ") 
-                                  ? "Chi tiết tăng đơ *" 
-                                  : ecChangeCategory.includes("Kiểu bào") 
-                                  ? "Chi tiết kiểu bào *" 
-                                  : ecChangeCategory.includes("lacquer")
-                                  ? "Chi tiết kỹ thuật mạ men *"
-                                  : ecChangeCategory.includes("Cast")
-                                  ? "Chi tiết khuôn đúc/ổ chấu *"
-                                  : "Chi tiết kích thước dây HTJ *"}
-                              </label>
+                          <div className="pt-2.5 border-t border-emerald-200/70 flex items-center justify-between text-xs">
+                            <span className="text-gray-500 text-[11px]">Khách muốn tùy biến theo yêu cầu riêng khác?</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const baseVer = drawingVersions.find((v) => v.isBase) || drawingVersions[0];
+                                setSelectedVersionId(baseVer.id);
+                              }}
+                              className="font-bold text-[#00594c] hover:underline cursor-pointer flex items-center text-xs"
+                            >
+                              👉 Chọn lại Bản vẽ gốc để tùy biến
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* NẾU LÀ BẢN VẼ CHUẨN GỐC (CHO PHÉP TÙY BIẾN TỰ DO) */
+                        <>
+                          {/* PHẦN 1: 3 THUỘC TÍNH CƠ BẢN (Màu xi, Màu đá chính, Kích thước) */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {/* 1. Màu xi */}
+                            <div>
+                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">Màu xi</label>
                               <select
-                                value={ecChangeDetail}
-                                onChange={(e) => setEcChangeDetail(e.target.value)}
-                                className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs font-semibold text-emerald-900 outline-none cursor-pointer shadow-2xs"
+                                value={goldColor}
+                                onChange={(e) => setGoldColor(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
                               >
-                                {(EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).map((opt) => (
-                                  <option key={opt} value={opt}>{opt}</option>
+                                {(product.availableGoldColors || ["Vàng", "Trắng", "Hồng", "Hai màu"]).map((c) => (
+                                  <option key={c} value={c}>{c}</option>
                                 ))}
                               </select>
                             </div>
-                          )}
-                        </div>
-                      </div>
 
-                      {/* PHẦN 3: SỐ LƯỢNG & CHECKBOX YÊU CẦU THAY ĐỔI KHÁC (CHỈ HIỂN THỊ KHI LÀ 'KHÁC' HOẶC ĐƯỢC CẤU HÌNH CHO PHÉP THAY ĐỔI) */}
+                            {/* 2. Màu đá chính */}
+                            <div>
+                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">Màu đá chính</label>
+                              <select
+                                value={mainStoneColor}
+                                onChange={(e) => setMainStoneColor(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
+                              >
+                                {["Trắng", "Đỏ", "Xanh", "Tím", "Vàng", "Hồng", "Đen", "Không đá"].map((c) => (
+                                  <option key={c} value={c}>{c}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* 3. Kích thước */}
+                            <div>
+                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">Kích thước</label>
+                              <select
+                                value={selectedSize}
+                                onChange={(e) => setSelectedSize(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
+                              >
+                                {(product.availableNiSizes || ["14", "15", "16", "17", "18"]).map((s) => (
+                                  <option key={s} value={s}>{s}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* PHẦN 2: YÊU CẦU THAY ĐỔI CHUẨN: CHỈ HIỂN THỊ CÁC THUỘC TÍNH CÓ TÍCH CHỌN TRONG BẢNG + 'KHÁC' */}
+                          <div className="pt-2 border-t border-gray-100 space-y-2">
+                            <div className={`grid gap-3.5 ${ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+                              {/* Dropdown 1: Yêu cầu thay đổi */}
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                                  Yêu cầu thay đổi
+                                </label>
+                                <select
+                                  value={ecChangeCategory}
+                                  onChange={(e) => handleSelectEcChangeCategory(e.target.value)}
+                                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer shadow-2xs"
+                                >
+                                  {EC_ALLOWED_CHANGE_REQUESTS.map((req) => (
+                                    <option key={req} value={req}>{req}</option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* Dropdown 2: Dropdown con chi tiết xuất hiện khi chọn Loại thay đổi có tùy biến (không phải Khác) */}
+                              {ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (
+                                <div className="animate-in fade-in slide-in-from-left-1 duration-150">
+                                  <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                                    {ecChangeCategory.includes("Khóa") 
+                                      ? "Chi tiết khóa *" 
+                                      : ecChangeCategory.includes("Tăng đơ") 
+                                      ? "Chi tiết tăng đơ *" 
+                                      : ecChangeCategory.includes("Kiểu bào") 
+                                      ? "Chi tiết kiểu bào *" 
+                                      : ecChangeCategory.includes("lacquer")
+                                      ? "Chi tiết kỹ thuật mạ men *"
+                                      : ecChangeCategory.includes("Cast")
+                                      ? "Chi tiết khuôn đúc/ổ chấu *"
+                                      : "Chi tiết kích thước dây HTJ *"}
+                                  </label>
+                                  <select
+                                    value={ecChangeDetail}
+                                    onChange={(e) => setEcChangeDetail(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs font-semibold text-emerald-900 outline-none cursor-pointer shadow-2xs"
+                                  >
+                                    {(EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).map((opt) => (
+                                      <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* PHẦN 3: SỐ LƯỢNG & CHECKBOX YÊU CẦU THAY ĐỔI KHÁC */}
                       <div className="pt-2 border-t border-gray-100 space-y-3">
                         <div>
                           <label className="block text-[11px] font-semibold text-gray-700 mb-1">Số lượng</label>
@@ -1699,118 +1776,123 @@ export default function ProductDetailPage({ params }) {
                           />
                         </div>
 
-                        {/* CASE 1: NẾU CHỌN YÊU CẦU THAY ĐỔI = 'KHÁC' -> HIỂN THỊ CHECKBOX VÀ Ô MÔ TẢ BẮT BUỘC */}
-                        {otherChangeMode === "is_other" && (
-                          <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
-                            <div className="flex items-center space-x-2.5 pt-1">
-                              <input
-                                type="checkbox"
-                                id="hasOtherChangeIsOther"
-                                checked={true}
-                                readOnly
-                                className="h-4 w-4 rounded border-gray-300 text-[#00594c] focus:ring-[#00594c] cursor-not-allowed"
-                              />
-                              <label htmlFor="hasOtherChangeIsOther" className="text-xs font-bold text-gray-800 flex items-center select-none cursor-default">
-                                Yêu cầu thay đổi khác <span className="text-red-500 ml-1 font-bold">*</span>
-                              </label>
-                            </div>
-                            <div className="space-y-1">
-                              <textarea
-                                rows={3}
-                                value={otherChangeDescription}
-                                onChange={(e) => {
-                                  setOtherChangeDescription(e.target.value);
-                                  if (formError) setFormError("");
-                                }}
-                                placeholder="Nhập mô tả chi tiết yêu cầu thay đổi của bạn (ví dụ: thay đổi kích thước theo bản vẽ riêng, mẫu khóa đặc thù, đắp hoa văn riêng...)"
-                                className={`w-full px-3 py-2 bg-white border rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs ${
-                                  formError ? "border-red-500 ring-1 ring-red-400" : "border-emerald-300 focus:border-[#00594c]"
-                                }`}
-                              />
-                              {formError && (
-                                <p className="text-[11px] text-red-600 font-semibold">⚠️ {formError}</p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* CASE 2: CẤU HÌNH = ĐƯỢC PHÉP THAY ĐỔI -> HIỂN THỊ NÚT CHECKBOX (KHÔNG BẮT BUỘC) */}
-                        {otherChangeMode === "optional" && (
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2.5 pt-1">
-                              <input
-                                type="checkbox"
-                                id="hasOtherChangeSingle"
-                                checked={hasOtherChange}
-                                onChange={(e) => setHasOtherChange(e.target.checked)}
-                                className="h-4 w-4 rounded border-gray-300 text-[#00594c] focus:ring-[#00594c] cursor-pointer"
-                              />
-                              <label htmlFor="hasOtherChangeSingle" className="text-xs font-bold text-gray-800 cursor-pointer select-none">
-                                Yêu cầu thay đổi khác
-                              </label>
-                            </div>
-
-                            {/* KHI TICK CHỌN: HIỂN THỊ TRƯỜNG NHẬP MÔ TẢ THAY ĐỔI */}
-                            {hasOtherChange && (
-                              <div className="animate-in fade-in slide-in-from-top-1 duration-150 space-y-1">
-                                <label className="block text-[11px] font-semibold text-gray-700">
-                                  Mô tả thay đổi khác <span className="text-red-500 font-bold">*</span>
-                                </label>
-                                <textarea
-                                  rows={3}
-                                  value={otherChangeDescription}
-                                  onChange={(e) => setOtherChangeDescription(e.target.value)}
-                                  placeholder="Nhập mô tả chi tiết yêu cầu thay đổi khác (ví dụ: thay cast, đắp lacquer, thay màu dây, yêu cầu đặc biệt...)"
-                                  className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs"
-                                />
+                        {/* CHỈ HIỂN THỊ CÁC TÙY CHỌN THAY ĐỔI KHÁC KHI Ở BẢN VẼ GỐC */}
+                        {(!activeVersion || activeVersion.isBase) && (
+                          <>
+                            {/* CASE 1: NẾU CHỌN YÊU CẦU THAY ĐỔI = 'KHÁC' -> HIỂN THỊ CHECKBOX VÀ Ô MÔ TẢ BẮT BUỘC */}
+                            {otherChangeMode === "is_other" && (
+                              <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                                <div className="flex items-center space-x-2.5 pt-1">
+                                  <input
+                                    type="checkbox"
+                                    id="hasOtherChangeIsOther"
+                                    checked={true}
+                                    readOnly
+                                    className="h-4 w-4 rounded border-gray-300 text-[#00594c] focus:ring-[#00594c] cursor-not-allowed"
+                                  />
+                                  <label htmlFor="hasOtherChangeIsOther" className="text-xs font-bold text-gray-800 flex items-center select-none cursor-default">
+                                    Yêu cầu thay đổi khác <span className="text-red-500 ml-1 font-bold">*</span>
+                                  </label>
+                                </div>
+                                <div className="space-y-1">
+                                  <textarea
+                                    rows={3}
+                                    value={otherChangeDescription}
+                                    onChange={(e) => {
+                                      setOtherChangeDescription(e.target.value);
+                                      if (formError) setFormError("");
+                                    }}
+                                    placeholder="Nhập mô tả chi tiết yêu cầu thay đổi của bạn (ví dụ: thay đổi kích thước theo bản vẽ riêng, mẫu khóa đặc thù, đắp hoa văn riêng...)"
+                                    className={`w-full px-3 py-2 bg-white border rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs ${
+                                      formError ? "border-red-500 ring-1 ring-red-400" : "border-emerald-300 focus:border-[#00594c]"
+                                    }`}
+                                  />
+                                  {formError && (
+                                    <p className="text-[11px] text-red-600 font-semibold">⚠️ {formError}</p>
+                                  )}
+                                </div>
                               </div>
                             )}
-                          </div>
-                        )}
 
-                        {/* CASE 3: CẤU HÌNH = BẮT BUỘC THAY ĐỔI -> HIỂN THỊ NÚT CHECKBOX (BẮT BUỘC) */}
-                        {otherChangeMode === "required" && (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between p-2.5 bg-amber-50/70 border border-amber-200 rounded-lg">
-                              <div className="flex items-center space-x-2.5">
-                                <input
-                                  type="checkbox"
-                                  id="hasOtherChangeSingleRequired"
-                                  checked={true}
-                                  readOnly
-                                  className="h-4 w-4 rounded border-amber-400 text-[#00594c] focus:ring-[#00594c] cursor-not-allowed"
-                                />
-                                <label htmlFor="hasOtherChangeSingleRequired" className="text-xs font-bold text-amber-950 flex items-center select-none cursor-default">
-                                  Yêu cầu thay đổi khác <span className="text-red-500 ml-1 font-bold">*</span>
-                                </label>
+                            {/* CASE 2: CẤU HÌNH = ĐƯỢC PHÉP THAY ĐỔI -> HIỂN THỊ NÚT CHECKBOX (KHÔNG BẮT BUỘC) */}
+                            {otherChangeMode === "optional" && (
+                              <div className="space-y-2">
+                                <div className="flex items-center space-x-2.5 pt-1">
+                                  <input
+                                    type="checkbox"
+                                    id="hasOtherChangeSingle"
+                                    checked={hasOtherChange}
+                                    onChange={(e) => setHasOtherChange(e.target.checked)}
+                                    className="h-4 w-4 rounded border-gray-300 text-[#00594c] focus:ring-[#00594c] cursor-pointer"
+                                  />
+                                  <label htmlFor="hasOtherChangeSingle" className="text-xs font-bold text-gray-800 cursor-pointer select-none">
+                                    Yêu cầu thay đổi khác
+                                  </label>
+                                </div>
+
+                                {/* KHI TICK CHỌN: HIỂN THỊ TRƯỜNG NHẬP MÔ TẢ THAY ĐỔI */}
+                                {hasOtherChange && (
+                                  <div className="animate-in fade-in slide-in-from-top-1 duration-150 space-y-1">
+                                    <label className="block text-[11px] font-semibold text-gray-700">
+                                      Mô tả thay đổi khác <span className="text-red-500 font-bold">*</span>
+                                    </label>
+                                    <textarea
+                                      rows={3}
+                                      value={otherChangeDescription}
+                                      onChange={(e) => setOtherChangeDescription(e.target.value)}
+                                      placeholder="Nhập mô tả chi tiết yêu cầu thay đổi khác (ví dụ: thay cast, đắp lacquer, thay màu dây, yêu cầu đặc biệt...)"
+                                      className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs"
+                                    />
+                                  </div>
+                                )}
                               </div>
-                              <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
-                                Bắt buộc
-                              </span>
-                            </div>
+                            )}
 
-                            {/* Ô MÔ TẢ LUÔN HIỂN THỊ VÀ BẮT BUỘC NHẬP */}
-                            <div className="animate-in fade-in slide-in-from-top-1 duration-150 space-y-1">
-                              <label className="block text-[11px] font-semibold text-gray-700">
-                                Mô tả thay đổi khác <span className="text-red-500 font-bold">*</span>
-                              </label>
-                              <textarea
-                                rows={3}
-                                value={otherChangeDescription}
-                                onChange={(e) => {
-                                  setOtherChangeDescription(e.target.value);
-                                  if (formError) setFormError("");
-                                }}
-                                placeholder="Nhập mô tả chi tiết yêu cầu thay đổi khác bắt buộc cho loại thay đổi này..."
-                                className={`w-full px-3 py-2 bg-white border rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs ${
-                                  formError ? "border-red-500 ring-1 ring-red-400" : "border-amber-300 focus:border-[#00594c]"
-                                }`}
-                              />
-                              {formError && (
-                                <p className="text-[11px] text-red-600 font-semibold">⚠️ {formError}</p>
-                              )}
-                            </div>
-                          </div>
+                            {/* CASE 3: CẤU HÌNH = BẮT BUỘC THAY ĐỔI -> HIỂN THỊ NÚT CHECKBOX (BẮT BUỘC) */}
+                            {otherChangeMode === "required" && (
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between p-2.5 bg-amber-50/70 border border-amber-200 rounded-lg">
+                                  <div className="flex items-center space-x-2.5">
+                                    <input
+                                      type="checkbox"
+                                      id="hasOtherChangeSingleRequired"
+                                      checked={true}
+                                      readOnly
+                                      className="h-4 w-4 rounded border-amber-400 text-[#00594c] focus:ring-[#00594c] cursor-not-allowed"
+                                    />
+                                    <label htmlFor="hasOtherChangeSingleRequired" className="text-xs font-bold text-amber-950 flex items-center select-none cursor-default">
+                                      Yêu cầu thay đổi khác <span className="text-red-500 ml-1 font-bold">*</span>
+                                    </label>
+                                  </div>
+                                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                                    Bắt buộc
+                                  </span>
+                                </div>
+
+                                {/* Ô MÔ TẢ LUÔN HIỂN THỊ VÀ BẮT BUỘC NHẬP */}
+                                <div className="animate-in fade-in slide-in-from-top-1 duration-150 space-y-1">
+                                  <label className="block text-[11px] font-semibold text-gray-700">
+                                    Mô tả thay đổi khác <span className="text-red-500 font-bold">*</span>
+                                  </label>
+                                  <textarea
+                                    rows={3}
+                                    value={otherChangeDescription}
+                                    onChange={(e) => {
+                                      setOtherChangeDescription(e.target.value);
+                                      if (formError) setFormError("");
+                                    }}
+                                    placeholder="Nhập mô tả chi tiết yêu cầu thay đổi khác bắt buộc cho loại thay đổi này..."
+                                    className={`w-full px-3 py-2 bg-white border rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs ${
+                                      formError ? "border-red-500 ring-1 ring-red-400" : "border-amber-300 focus:border-[#00594c]"
+                                    }`}
+                                  />
+                                  {formError && (
+                                    <p className="text-[11px] text-red-600 font-semibold">⚠️ {formError}</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </>
                         )}
 
                         {/* CASE 4: 'Không thay đổi' HOẶC 'not_allowed' (ẨN NÚT CHECKBOX) -> Không render gì cả */}

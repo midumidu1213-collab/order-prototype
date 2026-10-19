@@ -160,6 +160,52 @@ export const JEWELRY_PRODUCTS = [
       "Thay kiểu bào ball",
       "Thay Khóa",
       "Thay kích thước ball"
+    ],
+    // Danh sách Version phát sinh từ Yêu cầu thay đổi ảnh hưởng Routing đã được duyệt trên QLĐH
+    drawingVersions: [
+      {
+        id: "v-std",
+        code: "A00",
+        drawingCode: "RG000143A00",
+        productCode: "GYORG000143A00A00000000000015",
+        name: "Bản vẽ chuẩn (Gốc)",
+        changeTypeName: "Bản vẽ chuẩn",
+        tag: "Bản vẽ gốc",
+        desc: "Thiết kế gốc tiêu chuẩn - Cho phép tùy biến thông số tự do",
+        badge: "Gốc",
+        imageType: "ring-solitaire",
+        isBase: true
+      },
+      {
+        id: "v-lacquer",
+        code: "A01",
+        drawingCode: "RG000143A01",
+        productCode: "GYORG000143A01A00000000000015",
+        name: "Đắp lacquer - móc máy",
+        changeTypeName: "Đắp lacquer - móc máy",
+        tag: "Đắp lacquer",
+        desc: "Phiên bản mạ men sứ viền hoa văn đã phê duyệt công nghệ",
+        badge: "Version A01",
+        imageType: "ring-solitaire",
+        isBase: false,
+        wagePrice: 245000,
+        priceDisplay: "245,000đ"
+      },
+      {
+        id: "v-cast",
+        code: "B00",
+        drawingCode: "RG000143B00",
+        productCode: "GYORG000143B00A00000000000015",
+        name: "Thay Cast (ổ chấu)",
+        changeTypeName: "Cast (khuôn đúc, ổ chấu)",
+        tag: "Thay Cast",
+        desc: "Phiên bản khuôn đúc ổ chấu cao cấp nâng hạ đã đổi Drawing",
+        badge: "Version B00",
+        imageType: "ring-snake",
+        isBase: false,
+        wagePrice: 235000,
+        priceDisplay: "235,000đ"
+      }
     ]
   },
   // =========================================================================
