@@ -438,6 +438,24 @@ export default function ProductDetailPage({ params }) {
   const activeVersion = drawingVersions.find(v => v.id === selectedVersionId) || drawingVersions[0];
   const displayProductCode = activeVersion?.productCode || product.productCode;
   const displayDrawingCode = activeVersion?.drawingCode || product.drawingCode;
+  const isFixedVersion = Boolean(activeVersion && !activeVersion.isBase);
+
+  // Tự động fill thuộc tính của biến thể khi Sale chọn version
+  useEffect(() => {
+    if (activeVersion && !activeVersion.isBase && activeVersion.attributes) {
+      if (activeVersion.attributes.goldColor) setGoldColor(activeVersion.attributes.goldColor);
+      if (activeVersion.attributes.mainStoneColor) setMainStoneColor(activeVersion.attributes.mainStoneColor);
+      if (activeVersion.attributes.size) setSelectedSize(activeVersion.attributes.size);
+      if (activeVersion.attributes.changeRequest) setEcChangeCategory(activeVersion.attributes.changeRequest);
+      if (activeVersion.attributes.changeDetail) setEcChangeDetail(activeVersion.attributes.changeDetail);
+    } else if (activeVersion && activeVersion.isBase) {
+      // Khi chọn lại bản vẽ gốc
+      setEcChangeCategory("Không thay đổi");
+      setEcChangeDetail("");
+      setHasOtherChange(false);
+      setOtherChangeDescription("");
+    }
+  }, [selectedVersionId, activeVersion]);
 
   // Set / Pair-specific state: Nhóm kích thước và số lượng từng Bộ/Cặp
   const getDefaultCompModels = () => {
@@ -1064,10 +1082,7 @@ export default function ProductDetailPage({ params }) {
                     <div className="flex items-center justify-between text-xs pb-0.5">
                       <span className="font-bold text-gray-800 flex items-center">
                         <Layers className="h-3.5 w-3.5 mr-1.5 text-[#00594c]" />
-                        Phiên bản thiết kế (Version bán tiếp):
-                      </span>
-                      <span className="text-[10px] text-gray-400 italic hidden sm:inline">
-                        Chọn version để mua tiếp
+                        Các phiên bản
                       </span>
                     </div>
 
@@ -1628,8 +1643,8 @@ export default function ProductDetailPage({ params }) {
                         </div>
                       </div>
 
-                      {/* QUY TẮC NGHIỆP VỤ: NẾU CHỌN VERSION PHÁI SINH (KHÔNG ĐƯỢC TÙY BIẾN) */}
-                      {activeVersion && !activeVersion.isBase ? (
+                      {/* QUY TẮC NGHIỆP VỤ: NẾU CHỌN VERSION PHÁI SINH (KHÓA TÙY BIẾN, CHỈ CHỌN SỐ LƯỢNG) */}
+                      {isFixedVersion && (
                         <div className="p-4 bg-emerald-50/80 border border-emerald-200/90 rounded-2xl space-y-3 animate-in fade-in duration-150">
                           <div className="flex items-start space-x-3">
                             <div className="w-9 h-9 rounded-xl bg-[#00594c] text-white flex items-center justify-center shrink-0 shadow-2xs">
@@ -1664,103 +1679,137 @@ export default function ProductDetailPage({ params }) {
                             </button>
                           </div>
                         </div>
-                      ) : (
-                        /* NẾU LÀ BẢN VẼ CHUẨN GỐC (CHO PHÉP TÙY BIẾN TỰ DO) */
-                        <>
-                          {/* PHẦN 1: 3 THUỘC TÍNH CƠ BẢN (Màu xi, Màu đá chính, Kích thước) */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {/* 1. Màu xi */}
-                            <div>
-                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">Màu xi</label>
-                              <select
-                                value={goldColor}
-                                onChange={(e) => setGoldColor(e.target.value)}
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
-                              >
-                                {(product.availableGoldColors || ["Vàng", "Trắng", "Hồng", "Hai màu"]).map((c) => (
-                                  <option key={c} value={c}>{c}</option>
-                                ))}
-                              </select>
-                            </div>
+                      )}
 
-                            {/* 2. Màu đá chính */}
-                            <div>
-                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">Màu đá chính</label>
-                              <select
-                                value={mainStoneColor}
-                                onChange={(e) => setMainStoneColor(e.target.value)}
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
-                              >
-                                {["Trắng", "Đỏ", "Xanh", "Tím", "Vàng", "Hồng", "Đen", "Không đá"].map((c) => (
-                                  <option key={c} value={c}>{c}</option>
-                                ))}
-                              </select>
-                            </div>
+                      {/* PHẦN 1: 3 THUỘC TÍNH CƠ BẢN (Màu xi, Màu đá chính, Kích thước) - Disabled khi chọn version */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {/* 1. Màu xi */}
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                            Màu xi {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định)</span>}
+                          </label>
+                          <select
+                            disabled={isFixedVersion}
+                            value={goldColor}
+                            onChange={(e) => setGoldColor(e.target.value)}
+                            className={`w-full px-3 py-2 rounded-lg text-xs font-medium outline-none ${
+                              isFixedVersion
+                                ? "bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed select-none"
+                                : "bg-white text-gray-800 border border-gray-300 focus:ring-1 focus:ring-[#00594c] cursor-pointer"
+                            }`}
+                          >
+                            {(product.availableGoldColors || ["Vàng", "Trắng", "Hồng", "Hai màu"]).map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        </div>
 
-                            {/* 3. Kích thước */}
-                            <div>
-                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">Kích thước</label>
-                              <select
-                                value={selectedSize}
-                                onChange={(e) => setSelectedSize(e.target.value)}
-                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer"
-                              >
-                                {(product.availableNiSizes || ["14", "15", "16", "17", "18"]).map((s) => (
-                                  <option key={s} value={s}>{s}</option>
-                                ))}
-                              </select>
-                            </div>
+                        {/* 2. Màu đá chính */}
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                            Màu đá chính {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định)</span>}
+                          </label>
+                          <select
+                            disabled={isFixedVersion}
+                            value={mainStoneColor}
+                            onChange={(e) => setMainStoneColor(e.target.value)}
+                            className={`w-full px-3 py-2 rounded-lg text-xs font-medium outline-none ${
+                              isFixedVersion
+                                ? "bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed select-none"
+                                : "bg-white text-gray-800 border border-gray-300 focus:ring-1 focus:ring-[#00594c] cursor-pointer"
+                            }`}
+                          >
+                            {["Trắng", "Đỏ", "Xanh", "Tím", "Vàng", "Hồng", "Đen", "Không đá"].map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* 3. Kích thước */}
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                            Kích thước {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định)</span>}
+                          </label>
+                          <select
+                            disabled={isFixedVersion}
+                            value={selectedSize}
+                            onChange={(e) => setSelectedSize(e.target.value)}
+                            className={`w-full px-3 py-2 rounded-lg text-xs font-medium outline-none ${
+                              isFixedVersion
+                                ? "bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed select-none"
+                                : "bg-white text-gray-800 border border-gray-300 focus:ring-1 focus:ring-[#00594c] cursor-pointer"
+                            }`}
+                          >
+                            {(product.availableNiSizes || ["14", "15", "16", "17", "18"]).map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* PHẦN 2: YÊU CẦU THAY ĐỔI */}
+                      {isFixedVersion ? (
+                        <div className="pt-2 border-t border-gray-100 space-y-2">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                              Yêu cầu thay đổi <span className="text-gray-400 font-normal">(Cố định theo phiên bản)</span>
+                            </label>
+                            <input
+                              type="text"
+                              disabled
+                              value={activeVersion.changeTypeName || activeVersion.name}
+                              className="w-full px-3 py-2 bg-gray-100 text-gray-500 border border-gray-200 rounded-lg text-xs font-semibold cursor-not-allowed select-none"
+                            />
                           </div>
+                        </div>
+                      ) : (
+                        <div className="pt-2 border-t border-gray-100 space-y-2">
+                          <div className={`grid gap-3.5 ${ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+                            {/* Dropdown 1: Yêu cầu thay đổi */}
+                            <div>
+                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                                Yêu cầu thay đổi
+                              </label>
+                              <select
+                                value={ecChangeCategory}
+                                onChange={(e) => handleSelectEcChangeCategory(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer shadow-2xs"
+                              >
+                                {EC_ALLOWED_CHANGE_REQUESTS.map((req) => (
+                                  <option key={req} value={req}>{req}</option>
+                                ))}
+                              </select>
+                            </div>
 
-                          {/* PHẦN 2: YÊU CẦU THAY ĐỔI CHUẨN: CHỈ HIỂN THỊ CÁC THUỘC TÍNH CÓ TÍCH CHỌN TRONG BẢNG + 'KHÁC' */}
-                          <div className="pt-2 border-t border-gray-100 space-y-2">
-                            <div className={`grid gap-3.5 ${ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
-                              {/* Dropdown 1: Yêu cầu thay đổi */}
-                              <div>
+                            {/* Dropdown 2: Chi tiết */}
+                            {ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (
+                              <div className="animate-in fade-in slide-in-from-left-1 duration-150">
                                 <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                                  Yêu cầu thay đổi
+                                  {ecChangeCategory.includes("Khóa") 
+                                    ? "Chi tiết khóa *" 
+                                    : ecChangeCategory.includes("Tăng đơ") 
+                                    ? "Chi tiết tăng đơ *" 
+                                    : ecChangeCategory.includes("Kiểu bào") 
+                                    ? "Chi tiết kiểu bào *" 
+                                    : ecChangeCategory.includes("lacquer")
+                                    ? "Chi tiết kỹ thuật mạ men *"
+                                    : ecChangeCategory.includes("Cast")
+                                    ? "Chi tiết khuôn đúc/ổ chấu *"
+                                    : "Chi tiết kích thước dây HTJ *"}
                                 </label>
                                 <select
-                                  value={ecChangeCategory}
-                                  onChange={(e) => handleSelectEcChangeCategory(e.target.value)}
-                                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none cursor-pointer shadow-2xs"
+                                  value={ecChangeDetail}
+                                  onChange={(e) => setEcChangeDetail(e.target.value)}
+                                  className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs font-semibold text-emerald-900 outline-none cursor-pointer shadow-2xs"
                                 >
-                                  {EC_ALLOWED_CHANGE_REQUESTS.map((req) => (
-                                    <option key={req} value={req}>{req}</option>
+                                  {(EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).map((opt) => (
+                                    <option key={opt} value={opt}>{opt}</option>
                                   ))}
                                 </select>
                               </div>
-
-                              {/* Dropdown 2: Dropdown con chi tiết xuất hiện khi chọn Loại thay đổi có tùy biến (không phải Khác) */}
-                              {ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (
-                                <div className="animate-in fade-in slide-in-from-left-1 duration-150">
-                                  <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                                    {ecChangeCategory.includes("Khóa") 
-                                      ? "Chi tiết khóa *" 
-                                      : ecChangeCategory.includes("Tăng đơ") 
-                                      ? "Chi tiết tăng đơ *" 
-                                      : ecChangeCategory.includes("Kiểu bào") 
-                                      ? "Chi tiết kiểu bào *" 
-                                      : ecChangeCategory.includes("lacquer")
-                                      ? "Chi tiết kỹ thuật mạ men *"
-                                      : ecChangeCategory.includes("Cast")
-                                      ? "Chi tiết khuôn đúc/ổ chấu *"
-                                      : "Chi tiết kích thước dây HTJ *"}
-                                  </label>
-                                  <select
-                                    value={ecChangeDetail}
-                                    onChange={(e) => setEcChangeDetail(e.target.value)}
-                                    className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs font-semibold text-emerald-900 outline-none cursor-pointer shadow-2xs"
-                                  >
-                                    {(EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).map((opt) => (
-                                      <option key={opt} value={opt}>{opt}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-                            </div>
+                            )}
                           </div>
-                        </>
+                        </div>
                       )}
 
                       {/* PHẦN 3: SỐ LƯỢNG & CHECKBOX YÊU CẦU THAY ĐỔI KHÁC */}

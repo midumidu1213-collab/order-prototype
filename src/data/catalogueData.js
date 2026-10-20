@@ -174,7 +174,14 @@ export const JEWELRY_PRODUCTS = [
         desc: "Thiết kế gốc tiêu chuẩn - Cho phép tùy biến thông số tự do",
         badge: "Gốc",
         imageType: "ring-solitaire",
-        isBase: true
+        isBase: true,
+        attributes: {
+          goldColor: "Vàng",
+          mainStoneColor: "Trắng",
+          size: "15",
+          changeRequest: "Không thay đổi",
+          changeDetail: "Tiêu chuẩn kỹ thuật gốc"
+        }
       },
       {
         id: "v-lacquer",
@@ -189,7 +196,14 @@ export const JEWELRY_PRODUCTS = [
         imageType: "ring-solitaire",
         isBase: false,
         wagePrice: 245000,
-        priceDisplay: "245,000đ"
+        priceDisplay: "245,000đ",
+        attributes: {
+          goldColor: "Vàng",
+          mainStoneColor: "Trắng",
+          size: "15",
+          changeRequest: "Đắp lacquer - móc máy",
+          changeDetail: "Móc máy mạ men sứ viền hoa văn"
+        }
       },
       {
         id: "v-cast",
@@ -204,7 +218,14 @@ export const JEWELRY_PRODUCTS = [
         imageType: "ring-snake",
         isBase: false,
         wagePrice: 235000,
-        priceDisplay: "235,000đ"
+        priceDisplay: "235,000đ",
+        attributes: {
+          goldColor: "Trắng",
+          mainStoneColor: "Trắng",
+          size: "16",
+          changeRequest: "Cast (khuôn đúc, ổ chấu)",
+          changeDetail: "Ổ chấu đúc cao chấu 6"
+        }
       }
     ]
   },
