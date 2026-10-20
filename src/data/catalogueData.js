@@ -224,7 +224,7 @@ export const JEWELRY_PRODUCTS = [
           mainStoneColor: "Trắng",
           size: "16",
           changeRequest: "Cast (khuôn đúc, ổ chấu)",
-          changeDetail: "Ổ chấu đúc cao chấu 6"
+          changeDetail: ""
         }
       }
     ]

@@ -586,29 +586,33 @@ export default function ConfigProductPage() {
                   </div>
                 </th>
 
-                {/* CỘT 6: LOẠI THAY ĐỔI (theo đánh dấu số 6 trong ảnh của Chị đẹp - ví dụ: Khóa) */}
-                <th 
-                  onClick={() => handleSort("changeType")}
-                  className="px-3 py-3 min-w-[130px] cursor-pointer hover:bg-gray-100 group"
-                  title="Nhấp để sắp xếp theo Loại thay đổi"
-                >
-                  <div className="inline-flex items-center gap-1">
-                    <span>Loại thay đổi</span>
-                    {renderSortIcon("changeType")}
-                  </div>
-                </th>
+                {/* CỘT 6: LOẠI THAY ĐỔI (Ẩn khi ở Tab Bản vẽ chuẩn A00 gốc theo yêu cầu của Chị đẹp) */}
+                {activeTab !== "base" && (
+                  <th 
+                    onClick={() => handleSort("changeType")}
+                    className="px-3 py-3 min-w-[130px] cursor-pointer hover:bg-gray-100 group"
+                    title="Nhấp để sắp xếp theo Loại thay đổi"
+                  >
+                    <div className="inline-flex items-center gap-1">
+                      <span>Loại thay đổi</span>
+                      {renderSortIcon("changeType")}
+                    </div>
+                  </th>
+                )}
 
-                {/* CỘT 7: CHI TIẾT THAY ĐỔI (theo đánh dấu số 7 trong ảnh của Chị đẹp - ví dụ: Khóa càng cua) */}
-                <th 
-                  onClick={() => handleSort("changeDetail")}
-                  className="px-3 py-3 min-w-[160px] cursor-pointer hover:bg-gray-100 group"
-                  title="Nhấp để sắp xếp theo Chi tiết thay đổi"
-                >
-                  <div className="inline-flex items-center gap-1">
-                    <span>Chi tiết thay đổi</span>
-                    {renderSortIcon("changeDetail")}
-                  </div>
-                </th>
+                {/* CỘT 7: CHI TIẾT THAY ĐỔI (Ẩn khi ở Tab Bản vẽ chuẩn A00 gốc theo yêu cầu của Chị đẹp) */}
+                {activeTab !== "base" && (
+                  <th 
+                    onClick={() => handleSort("changeDetail")}
+                    className="px-3 py-3 min-w-[160px] cursor-pointer hover:bg-gray-100 group"
+                    title="Nhấp để sắp xếp theo Chi tiết thay đổi"
+                  >
+                    <div className="inline-flex items-center gap-1">
+                      <span>Chi tiết thay đổi</span>
+                      {renderSortIcon("changeDetail")}
+                    </div>
+                  </th>
+                )}
 
                 {/* TRỌNG LƯỢNG VÀNG */}
                 <th 
@@ -663,7 +667,7 @@ export default function ConfigProductPage() {
             <tbody className="divide-y divide-gray-100">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={19} className="py-12 text-center text-gray-400 text-xs">
+                  <td colSpan={activeTab === "base" ? 17 : 19} className="py-12 text-center text-gray-400 text-xs">
                     Không tìm thấy sản phẩm hoặc phiên bản nào khớp với bộ lọc và từ khóa tìm kiếm
                   </td>
                 </tr>
@@ -748,12 +752,12 @@ export default function ConfigProductPage() {
                         {p.itemCode}
                       </td>
 
-                      {/* CỘT 5: MÃ DRAWING & BADGE VERSION NẾU CÓ */}
+                      {/* CỘT 5: MÃ DRAWING & BADGE VERSION NẾU CÓ (Đã bỏ badge Bản vẽ gốc A00 theo yêu cầu Chị đẹp) */}
                       <td className="px-3 py-3">
                         <div className="font-mono text-xs font-semibold text-gray-800">
                           {p.drawingCode}
                         </div>
-                        {p.affectsRouting ? (
+                        {p.affectsRouting && (
                           <div className="mt-1">
                             <span 
                               className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-800 border border-purple-200" 
@@ -763,36 +767,34 @@ export default function ConfigProductPage() {
                               {p.changeTypeName || p.versionLabel || "Phiên bản Routing"}
                             </span>
                           </div>
-                        ) : (
-                          <div className="mt-1">
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                              Bản vẽ gốc A00
+                        )}
+                      </td>
+
+                      {/* CỘT 6: LOẠI THAY ĐỔI (Ẩn khi ở Tab Bản vẽ chuẩn A00 gốc theo yêu cầu Chị đẹp) */}
+                      {activeTab !== "base" && (
+                        <td className="px-3 py-3">
+                          {p.changeType && p.changeType !== "---" ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                              {p.changeType}
                             </span>
-                          </div>
-                        )}
-                      </td>
+                          ) : (
+                            <span className="text-gray-400 font-mono text-xs">---</span>
+                          )}
+                        </td>
+                      )}
 
-                      {/* CỘT 6: LOẠI THAY ĐỔI (ví dụ: Khóa, Đắp lacquer, Thay Cast) */}
-                      <td className="px-3 py-3">
-                        {p.changeType && p.changeType !== "---" ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                            {p.changeType}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 font-mono text-xs">---</span>
-                        )}
-                      </td>
-
-                      {/* CỘT 7: CHI TIẾT THAY ĐỔI (ví dụ: Khóa càng cua, Móc máy viền men đỏ) */}
-                      <td className="px-3 py-3">
-                        {p.changeDetail && p.changeDetail !== "---" ? (
-                          <span className="text-gray-800 font-medium text-xs">
-                            {p.changeDetail}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 font-mono text-xs">---</span>
-                        )}
-                      </td>
+                      {/* CỘT 7: CHI TIẾT THAY ĐỔI (Ẩn khi ở Tab Bản vẽ chuẩn A00 gốc theo yêu cầu Chị đẹp) */}
+                      {activeTab !== "base" && (
+                        <td className="px-3 py-3">
+                          {p.changeDetail && p.changeDetail !== "---" ? (
+                            <span className="text-gray-800 font-medium text-xs">
+                              {p.changeDetail}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 font-mono text-xs">---</span>
+                          )}
+                        </td>
+                      )}
 
                       {/* TRỌNG LƯỢNG VÀNG */}
                       <td className="px-3 py-3 text-right font-mono text-gray-800 font-medium">

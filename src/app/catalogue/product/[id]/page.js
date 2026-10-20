@@ -93,12 +93,7 @@ export const EC_CHANGE_REQUEST_OPTIONS = {
     "Đắp men trắng viền bóng",
     "Móc máy viền men đen"
   ],
-  "Thay Cast (ổ chấu)": [
-    "Ổ chấu cao 6 chấu",
-    "Ổ chấu 4 chấu trái tim",
-    "Ổ chấu lùn viền halo",
-    "Thay Cast khuôn vương miện"
-  ],
+  "Thay Cast (ổ chấu)": [],
   "Khóa (khóa càng cua/mỏ vịt)": [
     "Khóa càng cua",
     "Khóa mỏ vịt",
@@ -1724,78 +1719,92 @@ export default function ProductDetailPage({ params }) {
                       {/* PHẦN 2: YÊU CẦU THAY ĐỔI & MÔ TẢ (HIỂN THỊ ĐỦ TRƯỜNG CHỌN VÀ TRƯỜNG MÔ TẢ) */}
                       <div className="pt-2 border-t border-gray-100 space-y-3">
                         {/* Hàng chọn Yêu cầu thay đổi & Chi tiết thay đổi */}
-                        <div className={`grid gap-3.5 ${((isFixedVersion && (activeVersion.attributes?.changeDetail || activeVersion.desc)) || (ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác")) ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
-                          {/* Trường chọn Yêu cầu thay đổi */}
-                          <div>
-                            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                              Yêu cầu thay đổi {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định theo phiên bản)</span>}
-                            </label>
-                            <select
-                              disabled={isFixedVersion}
-                              value={isFixedVersion ? (activeVersion.changeTypeName || activeVersion.name || "Đắp lacquer - móc máy") : ecChangeCategory}
-                              onChange={(e) => handleSelectEcChangeCategory(e.target.value)}
-                              className={`w-full px-3 py-2 rounded-lg text-xs font-medium outline-none shadow-2xs ${
-                                isFixedVersion
-                                  ? "bg-gray-100 text-gray-600 border border-gray-200 cursor-not-allowed select-none"
-                                  : "bg-white text-gray-800 border border-gray-300 focus:ring-1 focus:ring-[#00594c] cursor-pointer"
-                              }`}
-                            >
-                              {isFixedVersion && (
-                                <option value={activeVersion.changeTypeName || activeVersion.name || "Đắp lacquer - móc máy"}>
-                                  {activeVersion.changeTypeName || activeVersion.name || "Đắp lacquer - móc máy"}
-                                </option>
+                        {(() => {
+                          const isCast = (isFixedVersion && (
+                            activeVersion?.code?.startsWith("B") || 
+                            activeVersion?.changeTypeName?.toLowerCase().includes("cast") || 
+                            activeVersion?.name?.toLowerCase().includes("cast")
+                          )) || (!isFixedVersion && ecChangeCategory.toLowerCase().includes("cast"));
+
+                          const hasDetail = !isCast && (
+                            isFixedVersion 
+                              ? Boolean(activeVersion?.attributes?.changeDetail) 
+                              : Boolean(ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).length > 0)
+                          );
+
+                          return (
+                            <div className={`grid gap-3.5 ${hasDetail ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+                              {/* Trường chọn Yêu cầu thay đổi */}
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                                  Yêu cầu thay đổi {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định theo phiên bản)</span>}
+                                </label>
+                                <select
+                                  disabled={isFixedVersion}
+                                  value={isFixedVersion ? (activeVersion.changeTypeName || activeVersion.name || "Đắp lacquer - móc máy") : ecChangeCategory}
+                                  onChange={(e) => handleSelectEcChangeCategory(e.target.value)}
+                                  className={`w-full px-3 py-2 rounded-lg text-xs font-medium outline-none shadow-2xs ${
+                                    isFixedVersion
+                                      ? "bg-gray-100 text-gray-600 border border-gray-200 cursor-not-allowed select-none"
+                                      : "bg-white text-gray-800 border border-gray-300 focus:ring-1 focus:ring-[#00594c] cursor-pointer"
+                                  }`}
+                                >
+                                  {isFixedVersion && (
+                                    <option value={activeVersion.changeTypeName || activeVersion.name || "Đắp lacquer - móc máy"}>
+                                      {activeVersion.changeTypeName || activeVersion.name || "Đắp lacquer - móc máy"}
+                                    </option>
+                                  )}
+                                  {!isFixedVersion && EC_ALLOWED_CHANGE_REQUESTS.map((req) => (
+                                    <option key={req} value={req}>{req}</option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* Trường chọn Chi tiết thay đổi (Dropdown con) - ẨN HOÀN TOÀN KHI LÀ CAST */}
+                              {hasDetail && isFixedVersion && (
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                                    Chi tiết thay đổi <span className="text-gray-400 font-normal">(Cố định)</span>
+                                  </label>
+                                  <select
+                                    disabled={true}
+                                    value={activeVersion.attributes?.changeDetail || activeVersion.desc || "Móc máy viền men xanh ngọc"}
+                                    className="w-full px-3 py-2 bg-gray-100 text-gray-600 border border-gray-200 rounded-lg text-xs font-medium cursor-not-allowed select-none shadow-2xs"
+                                  >
+                                    <option value={activeVersion.attributes?.changeDetail || activeVersion.desc || "Móc máy viền men xanh ngọc"}>
+                                      {activeVersion.attributes?.changeDetail || activeVersion.desc || "Móc máy viền men xanh ngọc"}
+                                    </option>
+                                  </select>
+                                </div>
                               )}
-                              {!isFixedVersion && EC_ALLOWED_CHANGE_REQUESTS.map((req) => (
-                                <option key={req} value={req}>{req}</option>
-                              ))}
-                            </select>
-                          </div>
 
-                          {/* Trường chọn Chi tiết thay đổi (Dropdown con) */}
-                          {isFixedVersion && (
-                            <div>
-                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                                Chi tiết thay đổi <span className="text-gray-400 font-normal">(Cố định)</span>
-                              </label>
-                              <select
-                                disabled={true}
-                                value={activeVersion.attributes?.changeDetail || activeVersion.desc || "Móc máy viền men xanh ngọc"}
-                                className="w-full px-3 py-2 bg-gray-100 text-gray-600 border border-gray-200 rounded-lg text-xs font-medium cursor-not-allowed select-none shadow-2xs"
-                              >
-                                <option value={activeVersion.attributes?.changeDetail || activeVersion.desc || "Móc máy viền men xanh ngọc"}>
-                                  {activeVersion.attributes?.changeDetail || activeVersion.desc || "Móc máy viền men xanh ngọc"}
-                                </option>
-                              </select>
+                              {hasDetail && !isFixedVersion && (
+                                <div className="animate-in fade-in slide-in-from-left-1 duration-150">
+                                  <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                                    {ecChangeCategory.includes("Khóa") 
+                                      ? "Chi tiết khóa *" 
+                                      : ecChangeCategory.includes("Tăng đơ") 
+                                      ? "Chi tiết tăng đơ *" 
+                                      : ecChangeCategory.includes("Kiểu bào") 
+                                      ? "Chi tiết kiểu bào *" 
+                                      : ecChangeCategory.includes("lacquer")
+                                      ? "Chi tiết kỹ thuật mạ men *"
+                                      : "Chi tiết thay đổi *"}
+                                  </label>
+                                  <select
+                                    value={ecChangeDetail}
+                                    onChange={(e) => setEcChangeDetail(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs font-semibold text-emerald-900 outline-none cursor-pointer shadow-2xs"
+                                  >
+                                    {(EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).map((opt) => (
+                                      <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
                             </div>
-                          )}
-
-                          {!isFixedVersion && ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (
-                            <div className="animate-in fade-in slide-in-from-left-1 duration-150">
-                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                                {ecChangeCategory.includes("Khóa") 
-                                  ? "Chi tiết khóa *" 
-                                  : ecChangeCategory.includes("Tăng đơ") 
-                                  ? "Chi tiết tăng đơ *" 
-                                  : ecChangeCategory.includes("Kiểu bào") 
-                                  ? "Chi tiết kiểu bào *" 
-                                  : ecChangeCategory.includes("lacquer")
-                                  ? "Chi tiết kỹ thuật mạ men *"
-                                  : ecChangeCategory.includes("Cast")
-                                  ? "Chi tiết khuôn đúc/ổ chấu *"
-                                  : "Chi tiết thay đổi *"}
-                              </label>
-                              <select
-                                value={ecChangeDetail}
-                                onChange={(e) => setEcChangeDetail(e.target.value)}
-                                className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs font-semibold text-emerald-900 outline-none cursor-pointer shadow-2xs"
-                              >
-                                {(EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).map((opt) => (
-                                  <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                              </select>
-                            </div>
-                          )}
-                        </div>
+                          );
+                        })()}
 
                         {/* Trường Mô tả cho Yêu cầu thay đổi */}
                         <div>
