@@ -540,7 +540,17 @@ export default function ConfigProductPage() {
                   </div>
                 </th>
 
-                {/* CỘT 1: LOẠI SẢN PHẨM (theo đánh dấu số 1 trong ảnh của Chị đẹp) */}
+                {/* HÌNH RENDER */}
+                <th className="w-20 px-2 py-3 text-center">
+                  Hình render
+                </th>
+
+                {/* HÌNH 4VIEW */}
+                <th className="w-20 px-2 py-3 text-center">
+                  Hình 4view
+                </th>
+
+                {/* LOẠI SẢN PHẨM (Di chuyển lên sau cột Hình 4view theo yêu cầu Chị đẹp) */}
                 <th 
                   onClick={() => handleSort("productType")}
                   className="px-3 py-3 min-w-[120px] cursor-pointer hover:bg-gray-100 group"
@@ -550,16 +560,6 @@ export default function ConfigProductPage() {
                     <span>Loại sản phẩm</span>
                     {renderSortIcon("productType")}
                   </div>
-                </th>
-
-                {/* CỘT 2: HÌNH RENDER (theo đánh dấu số 2 trong ảnh của Chị đẹp) */}
-                <th className="w-20 px-2 py-3 text-center">
-                  Hình render
-                </th>
-
-                {/* CỘT 3: HÌNH 4VIEW (theo đánh dấu số 3 trong ảnh của Chị đẹp) */}
-                <th className="w-20 px-2 py-3 text-center">
-                  Hình 4view
                 </th>
 
                 {/* CỘT 4: MÃ ITEM (theo đánh dấu số 4 trong ảnh của Chị đẹp) */}
@@ -701,12 +701,7 @@ export default function ConfigProductPage() {
                         {idx + 1}
                       </td>
 
-                      {/* CỘT 1: LOẠI SẢN PHẨM */}
-                      <td className="px-3 py-3 text-gray-800 font-semibold">
-                        {p.productType}
-                      </td>
-
-                      {/* CỘT 2: HÌNH RENDER */}
+                      {/* HÌNH RENDER */}
                       <td className="px-2 py-2 text-center">
                         <div
                           onClick={() => setDetailModalItem(p)}
@@ -725,7 +720,7 @@ export default function ConfigProductPage() {
                         </div>
                       </td>
 
-                      {/* CỘT 3: HÌNH 4VIEW */}
+                      {/* HÌNH 4VIEW */}
                       <td className="px-2 py-2 text-center">
                         <div
                           onClick={() => setView4ModalItem(p)}
@@ -747,27 +742,19 @@ export default function ConfigProductPage() {
                         </div>
                       </td>
 
-                      {/* CỘT 4: MÃ ITEM (CHỈ HIỂN THỊ MÃ ITEM, BỎ CHỮ NHỎ THEO GHI CHÚ ĐỎ CỦA CHỊ ĐẸP) */}
+                      {/* LOẠI SẢN PHẨM (Di chuyển lên sau cột Hình 4view theo yêu cầu Chị đẹp) */}
+                      <td className="px-3 py-3 text-gray-800 font-semibold">
+                        {p.productType}
+                      </td>
+
+                      {/* MÃ ITEM (CHỈ HIỂN THỊ MÃ ITEM, BỎ CHỮ NHỎ THEO GHI CHÚ ĐỎ CỦA CHỊ ĐẸP) */}
                       <td className="px-3 py-3 font-mono text-[11px] font-semibold text-gray-900 break-all">
                         {p.itemCode}
                       </td>
 
-                      {/* CỘT 5: MÃ DRAWING & BADGE VERSION NẾU CÓ (Đã bỏ badge Bản vẽ gốc A00 theo yêu cầu Chị đẹp) */}
-                      <td className="px-3 py-3">
-                        <div className="font-mono text-xs font-semibold text-gray-800">
-                          {p.drawingCode}
-                        </div>
-                        {p.affectsRouting && (
-                          <div className="mt-1">
-                            <span 
-                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-800 border border-purple-200" 
-                              title="Phiên bản phát sinh từ Routing kỹ thuật, bán tiếp trên E-C (Khóa tùy biến)"
-                            >
-                              <span className="w-1.5 h-1.5 rounded-full bg-purple-600 animate-pulse"></span>
-                              {p.changeTypeName || p.versionLabel || "Phiên bản Routing"}
-                            </span>
-                          </div>
-                        )}
+                      {/* MÃ DRAWING (Đã bỏ toàn bộ badge theo yêu cầu Chị đẹp) */}
+                      <td className="px-3 py-3 font-mono text-xs font-semibold text-gray-800">
+                        {p.drawingCode}
                       </td>
 
                       {/* CỘT 6: LOẠI THAY ĐỔI (Ẩn khi ở Tab Bản vẽ chuẩn A00 gốc theo yêu cầu Chị đẹp) */}
