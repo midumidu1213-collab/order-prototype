@@ -166,6 +166,8 @@ export const ATTRIBUTE_CHANGE_CONFIGS = [
 // Danh sách các tùy chọn hiển thị trên E-Catalogue (Chỉ các mục có showEC = true + Khác)
 export const EC_ALLOWED_CHANGE_REQUESTS = [
   "Không thay đổi",
+  "Đắp lacquer - móc máy",
+  "Thay Cast (ổ chấu)",
   "Khóa (khóa càng cua/mỏ vịt)",
   "Tăng đơ (đổi/bỏ)",
   "Kiểu bào ball",
