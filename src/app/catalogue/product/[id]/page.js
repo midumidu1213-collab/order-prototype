@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   ChevronRight, 
+  ChevronLeft,
   Copy, 
   Check, 
   ArrowLeft, 
@@ -446,6 +447,33 @@ export default function ProductDetailPage({ params }) {
   const displayProductCode = activeVersion?.productCode || product.productCode;
   const displayDrawingCode = activeVersion?.drawingCode || product.drawingCode;
   const isFixedVersion = Boolean(activeVersion && !activeVersion.isBase);
+
+  // Quản lý hiển thị các phiên bản theo trang (tránh hiển thị tràn lan khi số lượng phiên bản nhiều)
+  const VERSIONS_PER_PAGE = 3;
+  const [versionPage, setVersionPage] = useState(0);
+  const totalVersionPages = Math.ceil(drawingVersions.length / VERSIONS_PER_PAGE);
+
+  // Tự động chuyển đến trang chứa version đang được chọn
+  useEffect(() => {
+    const idx = drawingVersions.findIndex(v => v.id === selectedVersionId);
+    if (idx !== -1) {
+      const pageIndex = Math.floor(idx / VERSIONS_PER_PAGE);
+      setVersionPage(pageIndex);
+    }
+  }, [selectedVersionId, drawingVersions]);
+
+  const visibleVersions = useMemo(() => {
+    const start = versionPage * VERSIONS_PER_PAGE;
+    return drawingVersions.slice(start, start + VERSIONS_PER_PAGE);
+  }, [drawingVersions, versionPage]);
+
+  const handlePrevVersionPage = () => {
+    setVersionPage((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleNextVersionPage = () => {
+    setVersionPage((prev) => Math.min(totalVersionPages - 1, prev + 1));
+  };
 
   // Tự động fill thuộc tính của biến thể khi Sale chọn version
   useEffect(() => {
@@ -1086,16 +1114,60 @@ export default function ProductDetailPage({ params }) {
                 /* PHIÊN BẢN THIẾT KẾ (DRAWING VERSIONS) BÁN TIẾP - DẠNG HÌNH ẢNH & TÊN LOẠI THAY ĐỔI */
                 <div className="w-full mt-3.5 space-y-2.5">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs pb-0.5">
-                      <span className="font-bold text-gray-800 flex items-center">
-                        <Layers className="h-3.5 w-3.5 mr-1.5 text-[#00594c]" />
-                        Các phiên bản
-                      </span>
+                    {/* Header với phân trang Tiếp theo / Trước đó khi số lượng phiên bản nhiều */}
+                    <div className="flex items-center justify-between text-xs pb-1 border-b border-gray-100">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-gray-800 flex items-center">
+                          <Layers className="h-3.5 w-3.5 mr-1.5 text-[#00594c]" />
+                          Các phiên bản
+                        </span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#00594c] border border-emerald-200">
+                          {drawingVersions.length}
+                        </span>
+                      </div>
+
+                      {/* Phân trang: Nhấp Tiếp theo để xem các phiên bản khác khi số lượng nhiều, tránh tràn lan */}
+                      {totalVersionPages > 1 && (
+                        <div className="flex items-center gap-1 text-[11px] font-medium text-gray-500">
+                          <span className="text-[10px] text-gray-400 font-mono">
+                            {versionPage + 1}/{totalVersionPages}
+                          </span>
+                          <div className="flex items-center gap-1 ml-1">
+                            <button
+                              type="button"
+                              onClick={handlePrevVersionPage}
+                              disabled={versionPage === 0}
+                              className={`p-1 rounded-md transition-all cursor-pointer flex items-center justify-center ${
+                                versionPage === 0
+                                  ? "text-gray-300 cursor-not-allowed bg-gray-50"
+                                  : "text-gray-600 hover:text-[#00594c] hover:bg-emerald-50 border border-gray-200"
+                              }`}
+                              title="Xem các phiên bản trước"
+                            >
+                              <ChevronLeft className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleNextVersionPage}
+                              disabled={versionPage >= totalVersionPages - 1}
+                              className={`px-2 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 text-[10px] font-semibold ${
+                                versionPage >= totalVersionPages - 1
+                                  ? "text-gray-300 cursor-not-allowed bg-gray-50 border border-transparent"
+                                  : "text-[#00594c] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 shadow-2xs"
+                              }`}
+                              title="Xem các phiên bản tiếp theo"
+                            >
+                              <span>Tiếp theo</span>
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Thumbnail hình ảnh của từng phiên bản */}
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-2.5">
-                      {drawingVersions.map((ver) => {
+                    {/* Thumbnail hình ảnh của từng phiên bản (Tối đa 3 phiên bản / view để giao diện gọn gàng) */}
+                    <div className="grid grid-cols-3 gap-2 sm:gap-2.5 min-h-[110px] animate-in fade-in duration-150">
+                      {visibleVersions.map((ver) => {
                         const isSelected = selectedVersionId === ver.id;
                         return (
                           <div key={ver.id} className="relative group">
@@ -1158,6 +1230,25 @@ export default function ProductDetailPage({ params }) {
                         );
                       })}
                     </div>
+
+                    {/* Dải Dots chỉ báo trang bên dưới */}
+                    {totalVersionPages > 1 && (
+                      <div className="flex items-center justify-center gap-1.5 pt-1">
+                        {Array.from({ length: totalVersionPages }).map((_, pIdx) => (
+                          <button
+                            key={pIdx}
+                            type="button"
+                            onClick={() => setVersionPage(pIdx)}
+                            className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                              versionPage === pIdx
+                                ? "w-4 bg-[#00594c]"
+                                : "w-1.5 bg-gray-200 hover:bg-gray-400"
+                            }`}
+                            title={`Xem trang ${pIdx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : null}

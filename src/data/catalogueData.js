@@ -226,6 +226,72 @@ export const JEWELRY_PRODUCTS = [
           changeRequest: "Cast (khuôn đúc, ổ chấu)",
           changeDetail: ""
         }
+      },
+      {
+        id: "v-ball",
+        code: "A02",
+        drawingCode: "RG000143A02",
+        productCode: "GYORG000143A02A00000000000015",
+        name: "Bào Ball viền Moon",
+        changeTypeName: "Kiểu bào ball",
+        tag: "Bào Ball",
+        desc: "Phiên bản họa tiết khắc bào bóng viền Moon theo Routing kỹ thuật",
+        badge: "Version A02",
+        imageType: "ring-solitaire",
+        isBase: false,
+        wagePrice: 240000,
+        priceDisplay: "240,000đ",
+        attributes: {
+          goldColor: "Vàng",
+          mainStoneColor: "Trắng",
+          size: "15",
+          changeRequest: "Kiểu bào ball",
+          changeDetail: "MO - Moon"
+        }
+      },
+      {
+        id: "v-cast-crown",
+        code: "B01",
+        drawingCode: "RG000143B01",
+        productCode: "GYORG000143B01A00000000000015",
+        name: "Cast chấu vương miện",
+        changeTypeName: "Cast (khuôn đúc, ổ chấu)",
+        tag: "Cast Vương Miện",
+        desc: "Phiên bản khuôn đúc ổ chấu kiểu vương miện nâng hạ đổi Drawing",
+        badge: "Version B01",
+        imageType: "ring-snake",
+        isBase: false,
+        wagePrice: 250000,
+        priceDisplay: "250,000đ",
+        attributes: {
+          goldColor: "Trắng",
+          mainStoneColor: "Trắng",
+          size: "16",
+          changeRequest: "Cast (khuôn đúc, ổ chấu)",
+          changeDetail: ""
+        }
+      },
+      {
+        id: "v-lacquer-red",
+        code: "A03",
+        drawingCode: "RG000143A03",
+        productCode: "GYORG000143A03A00000000000015",
+        name: "Móc máy viền men đỏ",
+        changeTypeName: "Đắp lacquer - móc máy",
+        tag: "Men đỏ",
+        desc: "Phiên bản mạ men sứ sắc đỏ hoàng gia cao cấp đã duyệt Routing",
+        badge: "Version A03",
+        imageType: "ring-solitaire",
+        isBase: false,
+        wagePrice: 245000,
+        priceDisplay: "245,000đ",
+        attributes: {
+          goldColor: "Vàng",
+          mainStoneColor: "Trắng",
+          size: "15",
+          changeRequest: "Đắp lacquer - móc máy",
+          changeDetail: "Móc máy viền men đỏ"
+        }
       }
     ]
   },
