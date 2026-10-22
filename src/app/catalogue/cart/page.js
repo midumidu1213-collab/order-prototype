@@ -23,7 +23,11 @@ import {
   Printer,
   Download,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Search,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { useCatalogueCart } from "@/context/CatalogueCartContext";
 import QuotationExportModal from "@/components/catalogue/QuotationExportModal";
@@ -34,7 +38,7 @@ export default function CatalogueCartPage() {
     cartItems, 
     orderInfo, 
     removeFromCart, 
-    removeSetComponent,
+    removeSetComponent, 
     updateCartItem, 
     clearCart,
     totalQuantity, 
@@ -48,6 +52,66 @@ export default function CatalogueCartPage() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
   const [isQuotationModalOpen, setIsQuotationModalOpen] = useState(false);
+
+  // Search & Sort state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState(null);
+  const [sortDirection, setSortDirection] = useState("asc");
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      if (sortDirection === "asc") setSortDirection("desc");
+      else {
+        setSortField(null);
+        setSortDirection("asc");
+      }
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 text-gray-400 opacity-60 inline ml-1" />;
+    return sortDirection === "asc" ? (
+      <ArrowUp className="w-3 h-3 text-[#00594c] inline ml-1 font-bold" />
+    ) : (
+      <ArrowDown className="w-3 h-3 text-[#00594c] inline ml-1 font-bold" />
+    );
+  };
+
+  // Lọc sản phẩm
+  const filteredCartItems = cartItems.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (item.productCode && item.productCode.toLowerCase().includes(q)) ||
+      (item.productName && item.productName.toLowerCase().includes(q)) ||
+      (item.goldColor && item.goldColor.toLowerCase().includes(q)) ||
+      (item.mainStoneColor && item.mainStoneColor.toLowerCase().includes(q)) ||
+      (item.size && String(item.size).toLowerCase().includes(q)) ||
+      (item.niSize && String(item.niSize).toLowerCase().includes(q)) ||
+      (item.changeRequest && item.changeRequest.toLowerCase().includes(q)) ||
+      (item.yckh && item.yckh.toLowerCase().includes(q)) ||
+      (item.note && item.note.toLowerCase().includes(q))
+    );
+  });
+
+  // Sắp xếp sản phẩm
+  const sortedCartItems = [...filteredCartItems].sort((a, b) => {
+    if (!sortField) return 0;
+    let valA = a[sortField];
+    let valB = b[sortField];
+    if (sortField === "size") {
+      valA = a.size || a.niSize || "";
+      valB = b.size || b.niSize || "";
+    }
+    if (typeof valA === "string") valA = valA.toLowerCase();
+    if (typeof valB === "string") valB = valB.toLowerCase();
+    if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+    if (valA > valB) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
 
   // Phân loại các sản phẩm trong giỏ hàng để thực hiện quy tắc Tự Động Tách Đơn của Chị đẹp
   const customItems = cartItems.filter(
@@ -258,17 +322,31 @@ export default function CatalogueCartPage() {
         </div>
 
         {/* ========================================================================= */}
-        {/* PRODUCT LIST TABLE WITH TREE HIERARCHY FOR SETS                           */}
+        {/* PRODUCT LIST TABLE WITH TREE HIERARCHY FOR SETS & 10 STANDARDIZED COLUMNS */}
         {/* ========================================================================= */}
         <div className="bg-white rounded-2xl shadow-xs border border-gray-200/90 overflow-hidden">
-          <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between">
+          <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center space-x-2">
               <h3 className="font-bold text-base text-gray-900">Danh sách sản phẩm chào hàng</h3>
               <span className="bg-emerald-100 text-[#00594c] text-xs px-2.5 py-0.5 rounded-full font-bold">
                 {totalQuantity} món thành phẩm
               </span>
             </div>
-            <span className="text-xs text-gray-500">{cartItems.length} mục đơn hàng</span>
+            
+            {/* Search Input Filter for Cart Items */}
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Tìm theo mã, màu xi, đá, size..."
+                  className="pl-8 pr-3 py-1.5 text-xs bg-gray-50 hover:bg-white focus:bg-white border border-gray-200 focus:border-[#00594c] rounded-xl outline-none w-56 sm:w-64 transition-all"
+                />
+              </div>
+              <span className="text-xs text-gray-500 font-medium">{sortedCartItems.length} mục</span>
+            </div>
           </div>
 
           {cartItems.length === 0 ? (
@@ -287,19 +365,57 @@ export default function CatalogueCartPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-xs sm:text-sm">
-                <thead className="bg-[#f2f7f5] text-gray-700 font-semibold border-b border-gray-200">
+                <thead className="bg-[#f2f7f5] text-gray-700 font-semibold border-b border-gray-200 text-xs">
                   <tr>
-                    <th className="py-3.5 px-4">Mã sản phẩm / Tên món</th>
-                    <th className="py-3.5 px-3">Màu đá chính</th>
-                    <th className="py-3.5 px-3">YCKH</th>
-                    <th className="py-3.5 px-3">Quy cách / Size</th>
-                    <th className="py-3.5 px-3 text-center">Số lượng</th>
-                    <th className="py-3.5 px-3 text-right">Trọng lượng</th>
-                    <th className="py-3.5 px-4 text-center">Thao tác</th>
+                    <th className="py-3.5 px-4 cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" onClick={() => handleSort("productCode")}>
+                      <div className="flex items-center space-x-1">
+                        <span>Mã sản phẩm / Tên món</span>
+                        <SortIcon field="productCode" />
+                      </div>
+                    </th>
+                    <th className="py-3.5 px-3 cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" onClick={() => handleSort("goldColor")}>
+                      <div className="flex items-center space-x-1">
+                        <span>Màu xi</span>
+                        <SortIcon field="goldColor" />
+                      </div>
+                    </th>
+                    <th className="py-3.5 px-3 cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" onClick={() => handleSort("mainStoneColor")}>
+                      <div className="flex items-center space-x-1">
+                        <span>Màu đá</span>
+                        <SortIcon field="mainStoneColor" />
+                      </div>
+                    </th>
+                    <th className="py-3.5 px-3 cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" onClick={() => handleSort("size")}>
+                      <div className="flex items-center space-x-1">
+                        <span>Kích thước / Ni</span>
+                        <SortIcon field="size" />
+                      </div>
+                    </th>
+                    <th className="py-3.5 px-3 whitespace-nowrap">Yêu cầu khách hàng</th>
+                    <th className="py-3.5 px-3 cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" onClick={() => handleSort("wagePrice")}>
+                      <div className="flex items-center space-x-1">
+                        <span>Tiền công</span>
+                        <SortIcon field="wagePrice" />
+                      </div>
+                    </th>
+                    <th className="py-3.5 px-3 text-center cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" onClick={() => handleSort("quantity")}>
+                      <div className="flex items-center justify-center space-x-1">
+                        <span>Số lượng</span>
+                        <SortIcon field="quantity" />
+                      </div>
+                    </th>
+                    <th className="py-3.5 px-3 text-right cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" onClick={() => handleSort("weight")}>
+                      <div className="flex items-center justify-end space-x-1">
+                        <span>Trọng lượng</span>
+                        <SortIcon field="weight" />
+                      </div>
+                    </th>
+                    <th className="py-3.5 px-3 whitespace-nowrap">Ghi chú</th>
+                    <th className="py-3.5 px-4 text-center whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-gray-700 font-medium">
-                  {cartItems.map((item) => {
+                  {sortedCartItems.map((item) => {
                     
                     // RENDER CASE 1: SẢN PHẨM BỘ (PARENT + CHILD ROWS)
                     if (item.isSet) {
@@ -319,33 +435,53 @@ export default function CatalogueCartPage() {
                                     <span className="text-[#00594c] font-black">{item.productCode}</span>
                                     <button
                                       onClick={() => handleCopy(item.id, item.productCode)}
-                                      className="text-gray-400 hover:text-[#00594c] transition-colors p-0.5"
+                                      className="text-gray-400 hover:text-[#00594c] transition-colors p-0.5 cursor-pointer"
                                       title="Sao chép mã bộ"
                                     >
                                       {copiedId === item.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                                     </button>
                                   </div>
                                   <div className="text-[11px] text-gray-600 font-sans font-normal mt-0.5">
-                                    {item.productName} &bull; <span className="text-gray-400">{item.goldAge} &bull; {item.goldColor}</span>
+                                    {item.productName} &bull; <span className="text-gray-400">{item.goldAge}</span>
                                   </div>
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3.5 px-3 text-xs text-emerald-950 font-semibold">{item.mainStoneColor}</td>
-                            <td className="py-3.5 px-3 text-xs text-gray-500">{item.note || "Hộp Cưới VIP"}</td>
+                            {/* Màu xi */}
+                            <td className="py-3.5 px-3 text-xs text-gray-800 font-semibold">{item.goldColor || "Trắng"}</td>
+                            {/* Màu đá */}
+                            <td className="py-3.5 px-3 text-xs text-emerald-950 font-semibold">{item.mainStoneColor || "—"}</td>
+                            {/* Kích thước / Ni */}
                             <td className="py-3.5 px-3 text-xs text-emerald-800 font-bold">
                               {item.components?.length || 0} Món thành phần
                             </td>
+                            {/* YCKH */}
+                            <td className="py-3.5 px-3 text-xs text-gray-600 font-medium">
+                              {item.changeRequest && item.changeRequest !== "—" ? (
+                                <span className="text-[#00594c] font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                  {item.changeRequest}
+                                </span>
+                              ) : "—"}
+                            </td>
+                            {/* Tiền công */}
+                            <td className="py-3.5 px-3 font-mono font-bold text-emerald-700 text-xs">
+                              {item.wagePrice ? `${Number(item.wagePrice).toLocaleString()}đ` : "—"}
+                            </td>
+                            {/* Số lượng */}
                             <td className="py-3.5 px-3 text-center text-xs font-mono font-black text-[#00594c]">
                               {setQty} Bộ
                             </td>
-                            <td className="py-3.5 px-3 text-right font-mono font-black text-emerald-900">
-                              {(item.weight || 0).toFixed(3)}
+                            {/* Trọng lượng */}
+                            <td className="py-3.5 px-3 text-right font-mono font-black text-gray-900 text-xs">
+                              {item.weight ? `${Number(item.weight).toFixed(4)}g` : "—"}
                             </td>
+                            {/* Ghi chú */}
+                            <td className="py-3.5 px-3 text-xs text-gray-500">{item.note || "Hộp Cưới VIP"}</td>
+                            {/* Thao tác */}
                             <td className="py-3.5 px-4 text-center">
                               <button
                                 onClick={() => removeFromCart(item.id)}
-                                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                                 title="Xóa toàn bộ set"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -353,8 +489,8 @@ export default function CatalogueCartPage() {
                             </td>
                           </tr>
 
-                          {/* Child Component Rows (Món con trong bộ - Đồng bộ hiển thị Mã SKU) */}
-                          {item.components?.map((comp, cIdx) => (
+                          {/* Child Component Rows (Món con trong bộ) */}
+                          {item.components?.map((comp) => (
                             <tr key={comp.id} className="bg-white hover:bg-gray-50/90 transition-colors border-l-4 border-l-emerald-500">
                               <td className="py-2.5 px-4 pl-8 sm:pl-10 text-xs">
                                 <div className="flex items-start space-x-2">
@@ -365,7 +501,7 @@ export default function CatalogueCartPage() {
                                       <span>{comp.sku}</span>
                                       <button
                                         onClick={() => handleCopy(comp.id, comp.sku)}
-                                        className="text-gray-400 hover:text-[#00594c] transition-colors p-0.5"
+                                        className="text-gray-400 hover:text-[#00594c] transition-colors p-0.5 cursor-pointer"
                                         title="Sao chép mã món con"
                                       >
                                         {copiedId === comp.id ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
@@ -377,7 +513,15 @@ export default function CatalogueCartPage() {
                                   </div>
                                 </div>
                               </td>
+                              {/* Màu xi theo bộ */}
                               <td className="py-2.5 px-3 text-xs text-gray-400 font-medium">Theo bộ</td>
+                              {/* Màu đá theo bộ */}
+                              <td className="py-2.5 px-3 text-xs text-gray-400 font-medium">Theo bộ</td>
+                              {/* Kích thước / Ni */}
+                              <td className="py-2.5 px-3 text-xs font-bold text-[#00594c] font-mono">
+                                {comp.selectedOption || "—"}
+                              </td>
+                              {/* YCKH */}
                               <td className="py-2.5 px-3 text-xs text-gray-600 font-medium">
                                 {comp.changeRequest && comp.changeRequest !== "Chọn loại thay đổi" && comp.changeRequest !== "—" ? (
                                   <span className="text-[#00594c] font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
@@ -385,19 +529,25 @@ export default function CatalogueCartPage() {
                                   </span>
                                 ) : "—"}
                               </td>
-                              <td className="py-2.5 px-3 text-xs font-bold text-[#00594c] text-center font-mono">
-                                {comp.selectedOption || "—"}
+                              {/* Tiền công */}
+                              <td className="py-2.5 px-3 font-mono text-xs text-emerald-700 font-medium">
+                                {comp.wagePrice ? `${Number(comp.wagePrice).toLocaleString()}đ` : "—"}
                               </td>
+                              {/* Số lượng */}
                               <td className="py-2.5 px-3 text-center text-xs font-mono text-gray-700 font-bold">
                                 {setQty}
                               </td>
+                              {/* Trọng lượng */}
                               <td className="py-2.5 px-3 text-right font-mono text-xs text-gray-700">
-                                {((comp.weight || 0) * setQty).toFixed(3)}
+                                {comp.weight ? `${((comp.weight || 0) * setQty).toFixed(4)}g` : "—"}
                               </td>
+                              {/* Ghi chú */}
+                              <td className="py-2.5 px-3 text-xs text-gray-400">—</td>
+                              {/* Thao tác */}
                               <td className="py-2.5 px-4 text-center">
                                 <button
                                   onClick={() => removeSetComponent(item.id, comp.id)}
-                                  className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors text-[11px]"
+                                  className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors text-[11px] cursor-pointer"
                                   title="Loại món này khỏi bộ"
                                 >
                                   <Trash2 className="h-3.5 w-3.5 inline" />
@@ -409,12 +559,18 @@ export default function CatalogueCartPage() {
                       );
                     }
 
-                    // RENDER CASE 2: SẢN PHẨM ĐƠN LẺ (Đồng bộ format Mã SKU & Tag LẺ)
+                    // RENDER CASE 2: SẢN PHẨM ĐƠN LẺ & BIẾN THỂ (10 CỘT CHUẨN HÓA)
+                    const itemQty = Number(item.quantity) || 1;
+                    const itemWeight = Number(item.weight) || 0;
+                    const totalLineWeight = itemWeight * itemQty;
+                    const itemWage = Number(item.wagePrice) || 0;
+
                     return (
                       <tr key={item.id} className="hover:bg-[#f9fcfb] transition-colors border-t border-gray-100">
+                        {/* 1. Mã sản phẩm / Tên món */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center space-x-2.5">
-                            <span className="bg-emerald-100 text-[#00594c] border border-emerald-300 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shadow-2xs flex items-center space-x-1">
+                            <span className="bg-emerald-100 text-[#00594c] border border-emerald-300 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shadow-2xs flex items-center space-x-1 shrink-0">
                               <span>💎 LẺ</span>
                             </span>
                             <div>
@@ -422,15 +578,14 @@ export default function CatalogueCartPage() {
                                 <span className="text-gray-900 font-black">{item.productCode}</span>
                                 <button
                                   onClick={() => handleCopy(item.id, item.productCode)}
-                                  className="text-gray-400 hover:text-[#00594c] transition-colors p-0.5"
-                                  title="Sao chép mã món lẻ"
+                                  className="text-gray-400 hover:text-[#00594c] transition-colors p-0.5 cursor-pointer"
+                                  title="Sao chép mã sản phẩm"
                                 >
                                   {copiedId === item.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                                 </button>
                               </div>
                               <div className="text-[11px] text-gray-500 font-sans font-normal mt-0.5 flex flex-wrap items-center gap-1.5">
                                 <span>{item.productName}</span>
-                                {item.goldColor && <span className="text-gray-400">&bull; {item.goldColor}</span>}
                                 {item.itemDelta > 0 && (
                                   <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded">
                                     +{(item.itemDelta / 1000).toLocaleString()}k tùy biến
@@ -440,49 +595,85 @@ export default function CatalogueCartPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3.5 px-3 text-xs">{item.mainStoneColor || "000"}</td>
+
+                        {/* 2. Màu xi */}
+                        <td className="py-3.5 px-3 text-xs font-semibold text-gray-800">
+                          {item.goldColor || "Vàng"}
+                        </td>
+
+                        {/* 3. Màu đá */}
+                        <td className="py-3.5 px-3 text-xs font-medium text-gray-800">
+                          {item.mainStoneColor || item.stoneColor || "—"}
+                        </td>
+
+                        {/* 4. Kích thước / Ni */}
+                        <td className="py-3.5 px-3 text-xs font-bold text-[#00594c] font-mono">
+                          {item.size || item.niSize || "—"}
+                        </td>
+
+                        {/* 5. Yêu cầu khách hàng */}
                         <td className="py-3.5 px-3 text-xs font-medium">
-                          {(item.changeRequest && item.changeRequest !== "—" && item.changeRequest !== "Chọn loại thay đổi") ? (
-                            <span className="text-[#00594c] font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          {(item.changeRequest && item.changeRequest !== "—" && item.changeRequest !== "Chọn loại thay đổi" && item.changeRequest !== "Không thay đổi") ? (
+                            <span className="text-[#00594c] font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                               {item.changeRequest}
                             </span>
-                          ) : (item.yckh && item.yckh !== "—") ? (
-                            <span className="text-[#00594c] font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          ) : (item.yckh && item.yckh !== "—" && item.yckh !== "Không thay đổi") ? (
+                            <span className="text-[#00594c] font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                               {item.yckh}
                             </span>
-                          ) : "—"}
+                          ) : (
+                            <span className="text-gray-400 font-mono">—</span>
+                          )}
                         </td>
-                        <td className="py-3.5 px-3 text-xs font-bold text-gray-800">
-                          <div>{item.niSize ? `Size Ni: ${item.niSize}` : "—"}</div>
-                          {item.isPricePending || item.isCustomOrOther ? (
-                            <div className="inline-flex items-center text-[10px] text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded font-bold mt-0.5 shadow-2xs">
+
+                        {/* 6. Tiền công */}
+                        <td className="py-3.5 px-3 text-xs">
+                          {item.isPricePending || item.isCustomOrOther || item.priceDisplay === "Tính giá sau" || itemWage === 0 ? (
+                            <span className="inline-flex items-center text-[10px] text-amber-800 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded font-bold shadow-2xs whitespace-nowrap">
                               <Clock className="w-2.5 h-2.5 mr-1 text-amber-600 animate-pulse" />
-                              Tiền công: Tính giá sau
-                            </div>
-                          ) : item.wagePrice ? (
-                            <div className="text-[10px] text-[#00594c] font-mono font-bold mt-0.5">
-                              Tiền công: {Number(item.wagePrice).toLocaleString()}đ
-                            </div>
-                          ) : null}
+                              Tính giá sau
+                            </span>
+                          ) : (
+                            <span className="font-mono font-bold text-emerald-700 text-xs">
+                              {itemWage.toLocaleString()}đ
+                            </span>
+                          )}
                         </td>
-                        <td className="py-3.5 px-3 text-center font-bold text-emerald-800 text-xs font-mono">
-                          {item.quantity}
+
+                        {/* 7. Số lượng (Input chỉnh trực tiếp) */}
+                        <td className="py-3.5 px-3 text-center">
+                          <input
+                            type="number"
+                            min="1"
+                            value={itemQty}
+                            onChange={(e) => updateCartItem(item.id, { quantity: Math.max(1, parseInt(e.target.value) || 1) })}
+                            className="w-16 px-2 py-1 text-center font-bold text-gray-800 bg-white border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs mx-auto text-xs font-mono"
+                          />
                         </td>
+
+                        {/* 8. Trọng lượng */}
                         <td className="py-3.5 px-3 text-right font-mono text-xs font-bold text-gray-900">
-                          {((item.weight || 0) * (item.quantity || 1)).toFixed(3)}
+                          {totalLineWeight > 0 ? `${totalLineWeight.toFixed(4)}g` : "—"}
                         </td>
+
+                        {/* 9. Ghi chú */}
+                        <td className="py-3.5 px-3 text-xs text-gray-500 max-w-[140px] truncate" title={item.note}>
+                          {item.note && item.note !== "—" ? item.note : <span className="text-gray-300">—</span>}
+                        </td>
+
+                        {/* 10. Thao tác */}
                         <td className="py-3.5 px-4 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center space-x-2">
                             <button
                               onClick={() => removeFromCart(item.id)}
-                              className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                               title="Xóa món lẻ"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => setEditingItem(item)}
-                              className="p-1.5 text-gray-500 hover:text-[#00594c] hover:bg-emerald-50 rounded-lg transition-colors"
+                              className="p-1.5 text-gray-500 hover:text-[#00594c] hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
                               title="Chỉnh sửa quy cách"
                             >
                               <Pencil className="h-4 w-4" />
@@ -500,68 +691,102 @@ export default function CatalogueCartPage() {
 
       </div>
 
-      {/* Edit Item Modal */}
+      {/* Edit Item Modal (Hỗ trợ chỉnh sửa toàn diện Màu xi, Màu đá, Size Ni, YCKH, Số lượng, Ghi chú) */}
       {editingItem && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-emerald-100 space-y-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl border border-emerald-100 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <h3 className="font-bold text-base text-gray-900">Chỉnh sửa quy cách sản phẩm</h3>
-              <button onClick={() => setEditingItem(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setEditingItem(null)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="space-y-3 text-sm">
+            <div className="space-y-3.5 text-sm">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Mã sản phẩm</label>
-                <div className="font-mono text-xs font-bold text-gray-800 bg-gray-50 p-2 rounded-lg truncate">
-                  {editingItem.productCode}
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Mã sản phẩm / Tên món</label>
+                <div className="font-mono text-xs font-bold text-gray-800 bg-gray-50 p-2.5 rounded-lg border border-gray-200 truncate">
+                  {editingItem.productCode} &bull; <span className="font-sans font-normal text-gray-600">{editingItem.productName}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
+                {/* Màu xi */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Size Ni</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Màu xi</label>
                   <select
-                    value={editingItem.niSize}
-                    onChange={(e) => setEditingItem({ ...editingItem, niSize: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg text-xs"
+                    value={editingItem.goldColor || "Vàng"}
+                    onChange={(e) => setEditingItem({ ...editingItem, goldColor: e.target.value })}
+                    className="w-full p-2 border border-gray-300 rounded-lg text-xs font-medium text-gray-800 outline-none focus:border-[#00594c]"
                   >
-                    {["48", "50", "52", "54", "56", "58", "60"].map(s => (
-                      <option key={s} value={s}>{s}</option>
+                    {["Vàng", "Trắng", "Hồng", "Hai màu"].map(c => (
+                      <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
                 </div>
 
+                {/* Màu đá */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Màu đá chính</label>
+                  <select
+                    value={editingItem.mainStoneColor || editingItem.stoneColor || "Trắng"}
+                    onChange={(e) => setEditingItem({ ...editingItem, mainStoneColor: e.target.value, stoneColor: e.target.value })}
+                    className="w-full p-2 border border-gray-300 rounded-lg text-xs font-medium text-gray-800 outline-none focus:border-[#00594c]"
+                  >
+                    {["Trắng", "Xanh dương", "Đen", "Xanh lá", "Đỏ", "Vàng", "Hồng", "Tím", "000"].map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Size Ni */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Kích thước / Size Ni</label>
+                  <input
+                    type="text"
+                    value={editingItem.size || editingItem.niSize || ""}
+                    onChange={(e) => setEditingItem({ ...editingItem, size: e.target.value, niSize: e.target.value })}
+                    placeholder="VD: 18, 20, 54, 42cm..."
+                    className="w-full p-2 border border-gray-300 rounded-lg text-xs font-bold text-[#00594c] outline-none focus:border-[#00594c]"
+                  />
+                </div>
+
+                {/* Số lượng */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Số lượng</label>
                   <input
                     type="number"
                     min="1"
-                    value={editingItem.quantity}
+                    value={editingItem.quantity || 1}
                     onChange={(e) => setEditingItem({ ...editingItem, quantity: Math.max(1, parseInt(e.target.value) || 1) })}
-                    className="w-full p-2 border border-gray-300 rounded-lg text-xs font-bold text-center"
+                    className="w-full p-2 border border-gray-300 rounded-lg text-xs font-bold text-center outline-none focus:border-[#00594c]"
                   />
                 </div>
               </div>
 
+              {/* Yêu cầu khách hàng */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Màu đá chính</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Yêu cầu khách hàng (YCKH)</label>
                 <input
                   type="text"
-                  value={editingItem.mainStoneColor}
-                  onChange={(e) => setEditingItem({ ...editingItem, mainStoneColor: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-lg text-xs"
+                  value={editingItem.changeRequest || editingItem.yckh || ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, changeRequest: e.target.value, yckh: e.target.value })}
+                  placeholder="VD: A00, Cast, Đắp lacquer, Khắc laser..."
+                  className="w-full p-2 border border-gray-300 rounded-lg text-xs text-gray-800 outline-none focus:border-[#00594c]"
                 />
               </div>
 
+              {/* Ghi chú */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Ghi chú / YCKH</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Ghi chú</label>
                 <textarea
                   rows={2}
                   value={editingItem.note || ""}
                   onChange={(e) => setEditingItem({ ...editingItem, note: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-lg text-xs"
+                  placeholder="Ghi chú chi tiết thêm..."
+                  className="w-full p-2 border border-gray-300 rounded-lg text-xs outline-none focus:border-[#00594c]"
                 />
               </div>
             </div>
@@ -569,7 +794,7 @@ export default function CatalogueCartPage() {
             <div className="pt-3 border-t border-gray-100 flex justify-end space-x-2">
               <button
                 onClick={() => setEditingItem(null)}
-                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
               >
                 Hủy
               </button>
@@ -578,7 +803,7 @@ export default function CatalogueCartPage() {
                   updateCartItem(editingItem.id, editingItem);
                   setEditingItem(null);
                 }}
-                className="px-5 py-2 text-xs font-bold bg-[#00594c] hover:bg-[#004737] text-white rounded-xl shadow-sm"
+                className="px-5 py-2 text-xs font-bold bg-[#00594c] hover:bg-[#004737] text-white rounded-xl shadow-xs cursor-pointer"
               >
                 Lưu thay đổi
               </button>
