@@ -16,7 +16,9 @@ const initialCartItems = [
     goldAge: "18K (75Y)",
     mainStoneColor: "Trắng / Đỏ",
     quantity: 1,
-    weight: 0.048,
+    goldWeight: 0.0420,
+    stoneWeight: 0.0060,
+    weight: 0.0480,
     wagePrice: 6200000,
     note: "Đóng gói Hộp Cưới Sơn Mài",
     imageType: "set-diamond-bridal",
@@ -27,7 +29,9 @@ const initialCartItems = [
         category: "Nhẫn nữ",
         name: "Nhẫn nữ",
         sku: "GY0RG000095A00A00CZBB3CZXX1017",
-        weight: 0.010,
+        goldWeight: 0.0085,
+        stoneWeight: 0.0015,
+        weight: 0.0100,
         wagePrice: 1500000,
         selectedOption: "50",
         optionType: "Size Ni",
@@ -41,7 +45,9 @@ const initialCartItems = [
         category: "Dây chuyền nữ",
         name: "Dây chuyền",
         sku: "GY0NE000004B00B00000000000000420",
-        weight: 0.018,
+        goldWeight: 0.0160,
+        stoneWeight: 0.0020,
+        weight: 0.0180,
         wagePrice: 2200000,
         selectedOption: "42",
         optionType: "Size",
@@ -55,7 +61,9 @@ const initialCartItems = [
         category: "Bông tai",
         name: "Bông tai",
         sku: "GY0EG000095A00A000000000000000",
-        weight: 0.006,
+        goldWeight: 0.0050,
+        stoneWeight: 0.0010,
+        weight: 0.0060,
         wagePrice: 900000,
         selectedOption: "0",
         optionType: "Size",
@@ -69,7 +77,9 @@ const initialCartItems = [
         category: "Lắc tay nữ",
         name: "Vòng tay",
         sku: "GY0BE000095A00A00CZBB3CZXX1560",
-        weight: 0.014,
+        goldWeight: 0.0125,
+        stoneWeight: 0.0015,
+        weight: 0.0140,
         wagePrice: 1600000,
         selectedOption: "54",
         optionType: "Size Ni",
@@ -95,13 +105,15 @@ const initialCartItems = [
     techGroup: "—",
     niSize: "54",
     quantity: 1,
-    weight: 0.010,
+    goldWeight: 0.0085,
+    stoneWeight: 0.0015,
+    weight: 0.0100,
     wagePrice: 1500000,
     note: "Chiếc lẻ tặng người thân",
     imageType: "loose-diamond"
   },
 
-  // 3. SẢN PHẨM MUA LẺ KHÁC
+  // 3. SẢN PHẨM MUA LẺ KHÁC (Không đá)
   {
     id: "cart-item-kitty",
     isSet: false,
@@ -116,7 +128,9 @@ const initialCartItems = [
     techGroup: "—",
     niSize: "56",
     quantity: 1,
-    weight: 0.040,
+    goldWeight: 0.0400,
+    stoneWeight: 0,
+    weight: 0.0400,
     wagePrice: 300000,
     note: "",
     imageType: "cat-charm-bracelet"
@@ -145,11 +159,11 @@ export function CatalogueCartProvider({ children }) {
   // Load from localStorage if available, or initialize
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("sevago_catalogue_cart_v3");
+      const saved = localStorage.getItem("sevago_catalogue_cart_v4");
       if (saved) {
         setCartItems(JSON.parse(saved));
       } else {
-        localStorage.setItem("sevago_catalogue_cart_v3", JSON.stringify(initialCartItems));
+        localStorage.setItem("sevago_catalogue_cart_v4", JSON.stringify(initialCartItems));
       }
     } catch (e) {
       console.error(e);
@@ -159,7 +173,7 @@ export function CatalogueCartProvider({ children }) {
   // Save to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem("sevago_catalogue_cart_v3", JSON.stringify(cartItems));
+      localStorage.setItem("sevago_catalogue_cart_v4", JSON.stringify(cartItems));
     } catch (e) {
       console.error(e);
     }
@@ -173,6 +187,11 @@ export function CatalogueCartProvider({ children }) {
   const addToCart = (itemConfig) => {
     if (itemConfig.isSet) {
       const setQty = Number(itemConfig.quantity) || 1;
+      const comps = itemConfig.components || [];
+      const setTotalW = comps.reduce((sum, c) => sum + (c.weight || 0), 0) || itemConfig.weight || 0.0480;
+      const setStoneW = comps.reduce((sum, c) => sum + (c.stoneWeight || 0), 0) || itemConfig.stoneWeight || 0.0060;
+      const setGoldW = comps.reduce((sum, c) => sum + (c.goldWeight || 0), 0) || itemConfig.goldWeight || (setTotalW - setStoneW);
+
       const newSetItem = {
         id: `cart-set-${Date.now()}`,
         isSet: true,
@@ -184,11 +203,13 @@ export function CatalogueCartProvider({ children }) {
         mainStoneColor: itemConfig.mainStoneColor,
         changeRequest: itemConfig.changeRequest,
         quantity: setQty,
-        weight: itemConfig.weight,
+        goldWeight: setGoldW,
+        stoneWeight: setStoneW,
+        weight: setTotalW,
         wagePrice: itemConfig.wagePrice,
         note: itemConfig.note || "",
         imageType: itemConfig.imageType,
-        components: itemConfig.components
+        components: comps
       };
       setCartItems(prev => [newSetItem, ...prev]);
       showToast(`👑 Đã thêm ${setQty} Bộ [${itemConfig.productCode}] vào giỏ chào hàng!`);
@@ -196,6 +217,11 @@ export function CatalogueCartProvider({ children }) {
     }
 
     const singleQty = Number(itemConfig.quantity) || 1;
+    const hasStone = itemConfig.mainStoneColor !== "000" && itemConfig.mainStoneColor !== "Không đá";
+    const singleStoneW = typeof itemConfig.stoneWeight === "number" ? itemConfig.stoneWeight : (hasStone ? 0.0015 : 0);
+    const singleTotalW = typeof itemConfig.weight === "number" ? itemConfig.weight : 0.0100;
+    const singleGoldW = typeof itemConfig.goldWeight === "number" ? itemConfig.goldWeight : Math.max(0, singleTotalW - singleStoneW);
+
     const newItem = {
       id: `cart-${Date.now()}`,
       isSet: false,
@@ -210,7 +236,9 @@ export function CatalogueCartProvider({ children }) {
       techGroup: itemConfig.techGroup || "—",
       niSize: itemConfig.niSize || "54",
       quantity: singleQty,
-      weight: itemConfig.weight || 0.010,
+      goldWeight: singleGoldW,
+      stoneWeight: singleStoneW,
+      weight: singleTotalW,
       wagePrice: itemConfig.wagePrice || 1500000,
       baseWage: itemConfig.baseWage || itemConfig.wagePrice || 1500000,
       itemDelta: itemConfig.itemDelta || 0,
@@ -224,32 +252,41 @@ export function CatalogueCartProvider({ children }) {
 
   const addBatchToCart = (items) => {
     if (!items || items.length === 0) return;
-    const newItems = items.map((itemConfig, idx) => ({
-      id: `cart-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`,
-      isSet: false,
-      category: itemConfig.category || itemConfig.categoryName || "Trang sức lẻ",
-      productCode: itemConfig.productCode || "GY0RG000095A00A00CZBB3CZXX1017",
-      productName: itemConfig.productName || "Trang sức cao cấp SEVAGO",
-      mainStoneColor: itemConfig.mainStoneColor || itemConfig.stoneColor || "Trắng",
-      goldColor: itemConfig.goldColor || "Vàng",
-      yckh: itemConfig.changeRequest || itemConfig.yckh || itemConfig.customerRequest || "—",
-      changeRequest: itemConfig.changeRequest || itemConfig.yckh || itemConfig.customerRequest || "—",
-      carvingStyle: itemConfig.carvingStyle || "—",
-      htjAccessory: itemConfig.htjAccessory || "—",
-      techGroup: itemConfig.techGroup || "—",
-      size: itemConfig.size || itemConfig.niSize || "20",
-      niSize: itemConfig.size || itemConfig.niSize || "20",
-      quantity: Number(itemConfig.quantity) || 1,
-      weight: typeof itemConfig.weight === "number" ? itemConfig.weight : 0.0294,
-      wagePrice: typeof itemConfig.wagePrice === "number" ? itemConfig.wagePrice : 0,
-      priceDisplay: itemConfig.priceDisplay || (itemConfig.wagePrice ? `${itemConfig.wagePrice.toLocaleString()}đ` : "Tính giá sau"),
-      isPricePending: itemConfig.isPricePending || itemConfig.priceDisplay === "Tính giá sau" || itemConfig.wagePrice === 0,
-      isCustomOrOther: itemConfig.isCustomOrOther || itemConfig.priceDisplay === "Tính giá sau",
-      baseWage: itemConfig.baseWage || itemConfig.wagePrice || 0,
-      itemDelta: itemConfig.itemDelta || 0,
-      note: itemConfig.note || "—",
-      imageType: itemConfig.imageType || "ring-men-black"
-    }));
+    const newItems = items.map((itemConfig, idx) => {
+      const totalW = typeof itemConfig.weight === "number" ? itemConfig.weight : 0.0294;
+      const hasStone = itemConfig.stoneColor !== "000" && itemConfig.mainStoneColor !== "000" && itemConfig.mainStoneColor !== "Không đá";
+      const stoneW = typeof itemConfig.stoneWeight === "number" ? itemConfig.stoneWeight : (hasStone ? 0.0030 : 0);
+      const goldW = typeof itemConfig.goldWeight === "number" ? itemConfig.goldWeight : Math.max(0, totalW - stoneW);
+
+      return {
+        id: `cart-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`,
+        isSet: false,
+        category: itemConfig.category || itemConfig.categoryName || "Trang sức lẻ",
+        productCode: itemConfig.productCode || "GY0RG000095A00A00CZBB3CZXX1017",
+        productName: itemConfig.productName || "Trang sức cao cấp SEVAGO",
+        mainStoneColor: itemConfig.mainStoneColor || itemConfig.stoneColor || "Trắng",
+        goldColor: itemConfig.goldColor || "Vàng",
+        yckh: itemConfig.changeRequest || itemConfig.yckh || itemConfig.customerRequest || "—",
+        changeRequest: itemConfig.changeRequest || itemConfig.yckh || itemConfig.customerRequest || "—",
+        carvingStyle: itemConfig.carvingStyle || "—",
+        htjAccessory: itemConfig.htjAccessory || "—",
+        techGroup: itemConfig.techGroup || "—",
+        size: itemConfig.size || itemConfig.niSize || "20",
+        niSize: itemConfig.size || itemConfig.niSize || "20",
+        quantity: Number(itemConfig.quantity) || 1,
+        goldWeight: goldW,
+        stoneWeight: stoneW,
+        weight: totalW,
+        wagePrice: typeof itemConfig.wagePrice === "number" ? itemConfig.wagePrice : 0,
+        priceDisplay: itemConfig.priceDisplay || (itemConfig.wagePrice ? `${itemConfig.wagePrice.toLocaleString()}đ` : "Tính giá sau"),
+        isPricePending: itemConfig.isPricePending || itemConfig.priceDisplay === "Tính giá sau" || itemConfig.wagePrice === 0,
+        isCustomOrOther: itemConfig.isCustomOrOther || itemConfig.priceDisplay === "Tính giá sau",
+        baseWage: itemConfig.baseWage || itemConfig.wagePrice || 0,
+        itemDelta: itemConfig.itemDelta || 0,
+        note: itemConfig.note || "—",
+        imageType: itemConfig.imageType || "ring-men-black"
+      };
+    });
 
     setCartItems(prev => [...newItems, ...prev]);
     const totalAddedQty = newItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -265,12 +302,16 @@ export function CatalogueCartProvider({ children }) {
     setCartItems(prev => prev.map(item => {
       if (item.id === setId && item.isSet) {
         const updatedComps = item.components.filter(c => c.id !== compId);
+        const singleSetGoldWeight = updatedComps.reduce((sum, c) => sum + (c.goldWeight || 0), 0);
+        const singleSetStoneWeight = updatedComps.reduce((sum, c) => sum + (c.stoneWeight || 0), 0);
         const singleSetWeight = updatedComps.reduce((sum, c) => sum + (c.weight || 0), 0);
         const singleSetWage = updatedComps.reduce((sum, c) => sum + (c.wagePrice || 0), 0);
         return {
           ...item,
           components: updatedComps,
-          weight: singleSetWeight * (item.quantity || 1),
+          goldWeight: singleSetGoldWeight,
+          stoneWeight: singleSetStoneWeight,
+          weight: singleSetWeight,
           wagePrice: singleSetWage * (item.quantity || 1)
         };
       }
@@ -280,7 +321,20 @@ export function CatalogueCartProvider({ children }) {
   };
 
   const updateCartItem = (id, updatedFields) => {
-    setCartItems(prev => prev.map(item => item.id === id ? { ...item, ...updatedFields } : item));
+    setCartItems(prev => prev.map(item => {
+      if (item.id === id) {
+        const updated = { ...item, ...updatedFields };
+        if (typeof updatedFields.goldWeight === "number" || typeof updatedFields.stoneWeight === "number") {
+          const gw = typeof updated.goldWeight === "number" ? updated.goldWeight : (updated.weight - (updated.stoneWeight || 0));
+          const sw = typeof updated.stoneWeight === "number" ? updated.stoneWeight : 0;
+          updated.goldWeight = gw;
+          updated.stoneWeight = sw;
+          updated.weight = gw + sw;
+        }
+        return updated;
+      }
+      return item;
+    }));
     showToast("✏️ Đã cập nhật thông tin sản phẩm");
   };
 
@@ -298,13 +352,36 @@ export function CatalogueCartProvider({ children }) {
     return sum + (Number(item.quantity) || 1);
   }, 0);
 
-  // Total weight
+  // Total Gold Weight (đã quy đổi theo tuổi vàng)
+  const totalGoldWeight = cartItems.reduce((sum, item) => {
+    const qty = Number(item.quantity) || 1;
+    if (item.isSet && item.components) {
+      const singleSetGoldW = item.components.reduce((cSum, c) => cSum + (c.goldWeight || (c.weight ? c.weight * 0.85 : 0)), 0);
+      return sum + (singleSetGoldW * qty);
+    }
+    const itemGoldW = typeof item.goldWeight === "number" ? item.goldWeight : Math.max(0, (Number(item.weight) || 0) - (Number(item.stoneWeight) || 0));
+    return sum + (itemGoldW * qty);
+  }, 0);
+
+  // Total Stone Weight
+  const totalStoneWeight = cartItems.reduce((sum, item) => {
+    const qty = Number(item.quantity) || 1;
+    if (item.isSet && item.components) {
+      const singleSetStoneW = item.components.reduce((cSum, c) => cSum + (c.stoneWeight || 0), 0);
+      return sum + (singleSetStoneW * qty);
+    }
+    const itemStoneW = typeof item.stoneWeight === "number" ? item.stoneWeight : 0;
+    return sum + (itemStoneW * qty);
+  }, 0);
+
+  // Total Weight (Tổng trọng lượng vàng + đá)
   const totalWeight = cartItems.reduce((sum, item) => {
+    const qty = Number(item.quantity) || 1;
     if (item.isSet && item.components) {
       const singleSetWeight = item.components.reduce((cSum, c) => cSum + (c.weight || 0), 0);
-      return sum + (singleSetWeight * (Number(item.quantity) || 1));
+      return sum + (singleSetWeight * qty);
     }
-    return sum + ((Number(item.weight) || 0) * (Number(item.quantity) || 1));
+    return sum + ((Number(item.weight) || 0) * qty);
   }, 0);
 
   // Total Wage
@@ -325,6 +402,8 @@ export function CatalogueCartProvider({ children }) {
         updateCartItem,
         clearCart,
         totalQuantity,
+        totalGoldWeight,
+        totalStoneWeight,
         totalWeight,
         totalWagePrice,
         toastMessage,

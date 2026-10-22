@@ -42,6 +42,8 @@ export default function CatalogueCartPage() {
     updateCartItem, 
     clearCart,
     totalQuantity, 
+    totalGoldWeight,
+    totalStoneWeight,
     totalWeight,
     totalWagePrice,
     showToast
@@ -105,6 +107,15 @@ export default function CatalogueCartPage() {
     if (sortField === "size") {
       valA = a.size || a.niSize || "";
       valB = b.size || b.niSize || "";
+    } else if (sortField === "goldWeight") {
+      valA = typeof a.goldWeight === "number" ? a.goldWeight : Math.max(0, (Number(a.weight) || 0) - (Number(a.stoneWeight) || 0));
+      valB = typeof b.goldWeight === "number" ? b.goldWeight : Math.max(0, (Number(b.weight) || 0) - (Number(b.stoneWeight) || 0));
+    } else if (sortField === "stoneWeight") {
+      valA = typeof a.stoneWeight === "number" ? a.stoneWeight : 0;
+      valB = typeof b.stoneWeight === "number" ? b.stoneWeight : 0;
+    } else if (sortField === "weight") {
+      valA = Number(a.weight) || 0;
+      valB = Number(b.weight) || 0;
     }
     if (typeof valA === "string") valA = valA.toLowerCase();
     if (typeof valB === "string") valB = valB.toLowerCase();
@@ -298,9 +309,18 @@ export default function CatalogueCartPage() {
               <span className="font-bold text-emerald-800 font-mono text-base">{totalQuantity} món</span>
             </div>
             <div>
-              <span className="text-gray-500 font-medium">Tổng trọng lượng:</span>{" "}
-              <span className="font-bold text-gray-900 font-mono">{totalWeight.toFixed(4)}</span>
+              <span className="text-gray-500 font-medium">TL vàng (quy đổi):</span>{" "}
+              <span className="font-bold text-amber-900 font-mono text-sm">{totalGoldWeight > 0 ? `${totalGoldWeight.toFixed(4)}g` : "—"}</span>
             </div>
+            <div>
+              <span className="text-gray-500 font-medium">TL đá:</span>{" "}
+              <span className="font-bold text-gray-800 font-mono text-sm">{totalStoneWeight > 0 ? `${totalStoneWeight.toFixed(4)}g` : "—"}</span>
+            </div>
+            <div>
+              <span className="text-gray-500 font-medium">Tổng trọng lượng:</span>{" "}
+              <span className="font-bold text-gray-950 font-mono text-sm">{totalWeight > 0 ? `${totalWeight.toFixed(4)}g` : "—"}</span>
+            </div>
+
             <div>
               <span className="text-gray-500 font-medium">Giá tạm tính:</span>{" "}
               <span className="font-bold text-[#00594c] font-mono">{totalWagePrice > 0 ? `${totalWagePrice.toLocaleString()}đ` : orderInfo.provisionalPrice}</span>
@@ -404,9 +424,38 @@ export default function CatalogueCartPage() {
                         <SortIcon field="quantity" />
                       </div>
                     </th>
-                    <th className="py-3.5 px-3 text-right cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" onClick={() => handleSort("weight")}>
+                    {/* CỘT 8: TRỌNG LƯỢNG VÀNG (QUY ĐỔI THEO TUỔI VÀNG) */}
+                    <th 
+                      className="py-3.5 px-3 text-right cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" 
+                      onClick={() => handleSort("goldWeight")}
+                      title="Trọng lượng vàng (đã quy đổi theo tuổi vàng)"
+                    >
                       <div className="flex items-center justify-end space-x-1">
-                        <span>Trọng lượng</span>
+                        <span>TL vàng (quy đổi)</span>
+                        <SortIcon field="goldWeight" />
+                      </div>
+                    </th>
+
+                    {/* CỘT 9: TRỌNG LƯỢNG ĐÁ */}
+                    <th 
+                      className="py-3.5 px-3 text-right cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" 
+                      onClick={() => handleSort("stoneWeight")}
+                      title="Trọng lượng đá"
+                    >
+                      <div className="flex items-center justify-end space-x-1">
+                        <span>TL đá</span>
+                        <SortIcon field="stoneWeight" />
+                      </div>
+                    </th>
+
+                    {/* CỘT 10: TỔNG TRỌNG LƯỢNG */}
+                    <th 
+                      className="py-3.5 px-3 text-right cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" 
+                      onClick={() => handleSort("weight")}
+                      title="Tổng trọng lượng (Vàng + Đá)"
+                    >
+                      <div className="flex items-center justify-end space-x-1">
+                        <span>Tổng TL</span>
                         <SortIcon field="weight" />
                       </div>
                     </th>
@@ -471,9 +520,17 @@ export default function CatalogueCartPage() {
                             <td className="py-3.5 px-3 text-center text-xs font-mono font-black text-[#00594c]">
                               {setQty} Bộ
                             </td>
-                            {/* Trọng lượng */}
+                            {/* TL vàng (quy đổi) */}
+                            <td className="py-3.5 px-3 text-right font-mono font-bold text-amber-900 text-xs">
+                              {item.goldWeight ? `${(Number(item.goldWeight) * setQty).toFixed(4)}g` : "—"}
+                            </td>
+                            {/* TL đá */}
+                            <td className="py-3.5 px-3 text-right font-mono font-medium text-gray-800 text-xs">
+                              {item.stoneWeight ? `${(Number(item.stoneWeight) * setQty).toFixed(4)}g` : "—"}
+                            </td>
+                            {/* Tổng TL */}
                             <td className="py-3.5 px-3 text-right font-mono font-black text-gray-900 text-xs">
-                              {item.weight ? `${Number(item.weight).toFixed(4)}g` : "—"}
+                              {item.weight ? `${(Number(item.weight) * setQty).toFixed(4)}g` : "—"}
                             </td>
                             {/* Ghi chú */}
                             <td className="py-3.5 px-3 text-xs text-gray-500">{item.note || "Hộp Cưới VIP"}</td>
@@ -537,8 +594,16 @@ export default function CatalogueCartPage() {
                               <td className="py-2.5 px-3 text-center text-xs font-mono text-gray-700 font-bold">
                                 {setQty}
                               </td>
-                              {/* Trọng lượng */}
+                              {/* TL vàng (quy đổi) */}
+                              <td className="py-2.5 px-3 text-right font-mono text-xs text-amber-900 font-medium">
+                                {comp.goldWeight ? `${((comp.goldWeight || 0) * setQty).toFixed(4)}g` : (comp.weight ? `${((comp.weight * 0.85) * setQty).toFixed(4)}g` : "—")}
+                              </td>
+                              {/* TL đá */}
                               <td className="py-2.5 px-3 text-right font-mono text-xs text-gray-700">
+                                {comp.stoneWeight ? `${((comp.stoneWeight || 0) * setQty).toFixed(4)}g` : "—"}
+                              </td>
+                              {/* Tổng TL */}
+                              <td className="py-2.5 px-3 text-right font-mono text-xs text-gray-800 font-bold">
                                 {comp.weight ? `${((comp.weight || 0) * setQty).toFixed(4)}g` : "—"}
                               </td>
                               {/* Ghi chú */}
@@ -559,10 +624,15 @@ export default function CatalogueCartPage() {
                       );
                     }
 
-                    // RENDER CASE 2: SẢN PHẨM ĐƠN LẺ & BIẾN THỂ (10 CỘT CHUẨN HÓA)
+                    // RENDER CASE 2: SẢN PHẨM ĐƠN LẺ & BIẾN THỂ (12 CỘT CHUẨN HÓA)
                     const itemQty = Number(item.quantity) || 1;
-                    const itemWeight = Number(item.weight) || 0;
-                    const totalLineWeight = itemWeight * itemQty;
+                    const itemGoldW = typeof item.goldWeight === "number" ? item.goldWeight : Math.max(0, (Number(item.weight) || 0) - (Number(item.stoneWeight) || 0));
+                    const itemStoneW = typeof item.stoneWeight === "number" ? item.stoneWeight : 0;
+                    const itemTotalW = typeof item.weight === "number" ? item.weight : (itemGoldW + itemStoneW);
+
+                    const lineGoldWeight = itemGoldW * itemQty;
+                    const lineStoneWeight = itemStoneW * itemQty;
+                    const lineTotalWeight = itemTotalW * itemQty;
                     const itemWage = Number(item.wagePrice) || 0;
 
                     return (
@@ -651,9 +721,19 @@ export default function CatalogueCartPage() {
                           />
                         </td>
 
-                        {/* 8. Trọng lượng */}
-                        <td className="py-3.5 px-3 text-right font-mono text-xs font-bold text-gray-900">
-                          {totalLineWeight > 0 ? `${totalLineWeight.toFixed(4)}g` : "—"}
+                        {/* 8. Trọng lượng vàng (quy đổi theo tuổi vàng) */}
+                        <td className="py-3.5 px-3 text-right font-mono text-xs font-bold text-amber-900">
+                          {lineGoldWeight > 0 ? `${lineGoldWeight.toFixed(4)}g` : "—"}
+                        </td>
+
+                        {/* 9. Trọng lượng đá */}
+                        <td className="py-3.5 px-3 text-right font-mono text-xs text-gray-700">
+                          {lineStoneWeight > 0 ? `${lineStoneWeight.toFixed(4)}g` : "—"}
+                        </td>
+
+                        {/* 10. Tổng trọng lượng */}
+                        <td className="py-3.5 px-3 text-right font-mono text-xs font-black text-gray-950">
+                          {lineTotalWeight > 0 ? `${lineTotalWeight.toFixed(4)}g` : "—"}
                         </td>
 
                         {/* 9. Ghi chú */}
@@ -762,6 +842,49 @@ export default function CatalogueCartPage() {
                     value={editingItem.quantity || 1}
                     onChange={(e) => setEditingItem({ ...editingItem, quantity: Math.max(1, parseInt(e.target.value) || 1) })}
                     className="w-full p-2 border border-gray-300 rounded-lg text-xs font-bold text-center outline-none focus:border-[#00594c]"
+                  />
+                </div>
+              </div>
+
+              {/* Trọng lượng vàng & Trọng lượng đá */}
+              <div className="grid grid-cols-3 gap-3 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
+                <div>
+                  <label className="block text-[11px] font-semibold text-amber-900 mb-1">TL vàng quy đổi (g)</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    min="0"
+                    value={typeof editingItem.goldWeight === "number" ? editingItem.goldWeight : 0.0085}
+                    onChange={(e) => {
+                      const gw = parseFloat(e.target.value) || 0;
+                      const sw = typeof editingItem.stoneWeight === "number" ? editingItem.stoneWeight : 0;
+                      setEditingItem({ ...editingItem, goldWeight: gw, weight: Number((gw + sw).toFixed(4)) });
+                    }}
+                    className="w-full p-2 border border-amber-300 rounded-lg text-xs font-mono font-bold text-amber-950 bg-white outline-none focus:border-amber-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-700 mb-1">TL đá (g)</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    min="0"
+                    value={typeof editingItem.stoneWeight === "number" ? editingItem.stoneWeight : 0}
+                    onChange={(e) => {
+                      const sw = parseFloat(e.target.value) || 0;
+                      const gw = typeof editingItem.goldWeight === "number" ? editingItem.goldWeight : (editingItem.weight || 0);
+                      setEditingItem({ ...editingItem, stoneWeight: sw, weight: Number((gw + sw).toFixed(4)) });
+                    }}
+                    className="w-full p-2 border border-gray-300 rounded-lg text-xs font-mono font-bold text-gray-800 bg-white outline-none focus:border-[#00594c]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-700 mb-1">Tổng TL (g)</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${((typeof editingItem.goldWeight === "number" ? editingItem.goldWeight : 0.0085) + (typeof editingItem.stoneWeight === "number" ? editingItem.stoneWeight : 0)).toFixed(4)}g`}
+                    className="w-full p-2 border border-gray-200 rounded-lg text-xs font-mono font-black text-gray-900 bg-gray-100 outline-none"
                   />
                 </div>
               </div>
@@ -972,7 +1095,7 @@ export default function CatalogueCartPage() {
                   <div>&bull; <strong>Mã đơn SO:</strong> {orderInfo.orderCode}</div>
                   <div>&bull; <strong>Khách hàng:</strong> {orderInfo.customerName} ({orderInfo.customerCode})</div>
                   <div>&bull; <strong>Tổng số lượng món:</strong> {totalQuantity} món</div>
-                  <div>&bull; <strong>Trọng lượng dự kiến:</strong> {totalWeight.toFixed(4)}</div>
+                  <div>&bull; <strong>Trọng lượng dự kiến:</strong> {totalWeight.toFixed(4)}g (TL vàng quy đổi: {totalGoldWeight.toFixed(4)}g &bull; TL đá: {totalStoneWeight.toFixed(4)}g)</div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
