@@ -309,11 +309,11 @@ export default function CatalogueCartPage() {
               <span className="font-bold text-emerald-800 font-mono text-base">{totalQuantity} món</span>
             </div>
             <div>
-              <span className="text-gray-500 font-medium">TL vàng (quy đổi):</span>{" "}
+              <span className="text-gray-500 font-medium">Tổng Trọng lượng vàng:</span>{" "}
               <span className="font-bold text-amber-900 font-mono text-sm">{totalGoldWeight > 0 ? `${totalGoldWeight.toFixed(4)}g` : "—"}</span>
             </div>
             <div>
-              <span className="text-gray-500 font-medium">TL đá:</span>{" "}
+              <span className="text-gray-500 font-medium">Tổng Trọng lượng đá:</span>{" "}
               <span className="font-bold text-gray-800 font-mono text-sm">{totalStoneWeight > 0 ? `${totalStoneWeight.toFixed(4)}g` : "—"}</span>
             </div>
             <div>
@@ -424,26 +424,26 @@ export default function CatalogueCartPage() {
                         <SortIcon field="quantity" />
                       </div>
                     </th>
-                    {/* CỘT 8: TRỌNG LƯỢNG VÀNG (QUY ĐỔI THEO TUỔI VÀNG) */}
+                    {/* CỘT 8: TỔNG TRỌNG LƯỢNG VÀNG */}
                     <th 
                       className="py-3.5 px-3 text-right cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" 
                       onClick={() => handleSort("goldWeight")}
-                      title="Trọng lượng vàng (đã quy đổi theo tuổi vàng)"
+                      title="Tổng Trọng lượng vàng (đã quy đổi theo tuổi vàng)"
                     >
                       <div className="flex items-center justify-end space-x-1">
-                        <span>TL vàng (quy đổi)</span>
+                        <span>Tổng Trọng lượng vàng</span>
                         <SortIcon field="goldWeight" />
                       </div>
                     </th>
 
-                    {/* CỘT 9: TRỌNG LƯỢNG ĐÁ */}
+                    {/* CỘT 9: TỔNG TRỌNG LƯỢNG ĐÁ */}
                     <th 
                       className="py-3.5 px-3 text-right cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" 
                       onClick={() => handleSort("stoneWeight")}
-                      title="Trọng lượng đá"
+                      title="Tổng Trọng lượng đá"
                     >
                       <div className="flex items-center justify-end space-x-1">
-                        <span>TL đá</span>
+                        <span>Tổng Trọng lượng đá</span>
                         <SortIcon field="stoneWeight" />
                       </div>
                     </th>
@@ -452,10 +452,10 @@ export default function CatalogueCartPage() {
                     <th 
                       className="py-3.5 px-3 text-right cursor-pointer hover:bg-emerald-50/50 select-none whitespace-nowrap" 
                       onClick={() => handleSort("weight")}
-                      title="Tổng trọng lượng (Vàng + Đá)"
+                      title="Tổng trọng lượng thành phẩm (Vàng + Đá)"
                     >
                       <div className="flex items-center justify-end space-x-1">
-                        <span>Tổng TL</span>
+                        <span>Tổng trọng lượng</span>
                         <SortIcon field="weight" />
                       </div>
                     </th>
@@ -764,6 +764,28 @@ export default function CatalogueCartPage() {
                     );
                   })}
                 </tbody>
+                <tfoot className="bg-[#f0f7f4] font-bold text-gray-900 border-t-2 border-emerald-300">
+                  <tr>
+                    <td colSpan={6} className="py-3 px-4 text-xs font-black uppercase text-[#00594c]">
+                      TỔNG CỘNG ({cartItems.length} DÒNG SẢN PHẨM &bull; {totalQuantity} MÓN)
+                    </td>
+                    <td className="py-3 px-3 text-center font-mono text-xs font-black text-[#00594c]">
+                      {totalQuantity}
+                    </td>
+                    <td className="py-3 px-3 text-right font-mono text-xs font-bold text-amber-900">
+                      {totalGoldWeight > 0 ? `${totalGoldWeight.toFixed(4)}g` : "—"}
+                    </td>
+                    <td className="py-3 px-3 text-right font-mono text-xs font-bold text-gray-800">
+                      {totalStoneWeight > 0 ? `${totalStoneWeight.toFixed(4)}g` : "—"}
+                    </td>
+                    <td className="py-3 px-3 text-right font-mono text-xs font-black text-gray-950">
+                      {totalWeight > 0 ? `${totalWeight.toFixed(4)}g` : "—"}
+                    </td>
+                    <td colSpan={2} className="py-3 px-4 text-center text-xs text-gray-400">
+                      —
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           )}
