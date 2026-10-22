@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { 
   ChevronRight, 
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   Copy, 
   Check, 
   ArrowLeft, 
@@ -122,6 +124,157 @@ export const EC_CHANGE_REQUEST_OPTIONS = {
   "Khác": []
 };
 
+// =============================================================================
+// COMPONENT: BIỂU TƯỢNG ĐÁ CHÍNH (GEM / STONE COLOR ICON CHUẨN THIẾT KẾ ẢNH 1)
+// =============================================================================
+function GemColorIcon({ className = "w-4 h-4 text-emerald-800" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <circle cx="12" cy="12" r="9.5" />
+      <path d="M12 6.5l3.8 5.5-3.8 5.5-3.8-5.5z" strokeLinejoin="round" />
+      <path d="M6 12h12" />
+      <path d="M9.5 9l5 6" />
+      <path d="M14.5 9l-5 6" />
+    </svg>
+  );
+}
+
+// =============================================================================
+// COMPONENT: MULTI-SELECT DROPDOWN CHO PHÉP ĐA CHỌN MÀU XI, KÍCH THƯỚC, MÀU ĐÁ
+// =============================================================================
+function MultiSelectDropdown({
+  label,
+  options = [],
+  selected = [],
+  onChange,
+  placeholder = "Chọn...",
+  icon = null,
+  disabled = false
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const handleToggle = (opt) => {
+    if (selected.includes(opt)) {
+      if (selected.length > 1) {
+        onChange(selected.filter((item) => item !== opt));
+      } else {
+        onChange([opt]); // Giữ tối thiểu 1 lựa chọn
+      }
+    } else {
+      onChange([...selected, opt]);
+    }
+  };
+
+  const handleSelectAll = (e) => {
+    e.stopPropagation();
+    onChange([...options]);
+  };
+
+  const handleReset = (e) => {
+    e.stopPropagation();
+    onChange(options.length > 0 ? [options[0]] : []);
+  };
+
+  const displayLabel = selected.length === 0 ? placeholder : selected.join(", ");
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      {label && (
+        <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+          {label} {disabled && <span className="text-gray-400 font-normal">(Cố định)</span>}
+        </label>
+      )}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full px-3 py-2 bg-white border rounded-lg text-xs font-medium flex items-center justify-between transition-all outline-none text-left ${
+          disabled
+            ? "bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed select-none"
+            : isOpen
+            ? "border-[#00594c] ring-1 ring-[#00594c] text-gray-900 shadow-2xs cursor-pointer"
+            : "border-gray-300 text-gray-800 hover:border-gray-400 focus:border-[#00594c] cursor-pointer"
+        }`}
+      >
+        <div className="flex items-center min-w-0 pr-1.5 truncate">
+          {icon && <span className="mr-1.5 shrink-0 inline-flex items-center">{icon}</span>}
+          <span className="truncate">{displayLabel}</span>
+        </div>
+        <div className="flex items-center gap-1 shrink-0 ml-1">
+          {selected.length > 1 && (
+            <span className="px-1.5 py-0.2 bg-emerald-50 text-[#00594c] border border-emerald-200 rounded-full text-[10px] font-bold">
+              {selected.length}
+            </span>
+          )}
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+
+      {/* Popover Menu */}
+      {isOpen && !disabled && (
+        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white rounded-xl border border-gray-200 shadow-xl py-1.5 max-h-56 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+          <div className="flex items-center justify-between px-3 py-1 border-b border-gray-100 text-[10px]">
+            <span className="text-gray-500 font-medium">Đã chọn: <b className="text-[#00594c]">{selected.length}</b></span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSelectAll}
+                className="text-[#00594c] hover:underline font-bold cursor-pointer"
+              >
+                Chọn tất cả
+              </button>
+              <span className="text-gray-300">•</span>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="text-gray-500 hover:text-red-600 font-medium cursor-pointer"
+              >
+                Mặc định
+              </button>
+            </div>
+          </div>
+          <div className="py-1">
+            {options.map((opt) => {
+              const isChecked = selected.includes(opt);
+              return (
+                <div
+                  key={opt}
+                  onClick={() => handleToggle(opt)}
+                  className={`px-3 py-1.5 flex items-center justify-between hover:bg-emerald-50/70 cursor-pointer text-xs transition-colors ${
+                    isChecked ? "bg-emerald-50/40 font-semibold text-[#00594c]" : "text-gray-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
+                      isChecked ? "bg-[#00594c] border-[#00594c] text-white" : "border-gray-300 bg-white"
+                    }`}>
+                      {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
+                    <span>{opt}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProductDetailPage({ params }) {
   const router = useRouter();
   const unwrappedParams = use(params);
@@ -132,10 +285,143 @@ export default function ProductDetailPage({ params }) {
 
   const { addToCart, addBatchToCart } = useCatalogueCart();
 
-  // State cho 3 thuộc tính cơ bản
-  const [goldColor, setGoldColor] = useState(product.defaultOptions?.goldColor || "Vàng");
-  const [mainStoneColor, setMainStoneColor] = useState(product.defaultOptions?.mainStoneColor || "Trắng");
-  const [selectedSize, setSelectedSize] = useState(product.defaultOptions?.niSize || "15");
+  // State cho 3 thuộc tính cơ bản hỗ trợ ĐA CHỌN (Multi-select) để tổ hợp biến thể
+  const defaultGold = product.defaultOptions?.goldColor || "Vàng";
+  const defaultStone = product.defaultOptions?.mainStoneColor || (productId?.includes("RM000186") ? "Trắng" : "Trắng");
+  const defaultNi = product.defaultOptions?.niSize || (productId?.includes("RM000186") ? "20" : (product.availableNiSizes?.[0] || "15"));
+
+  const [selectedGoldColors, setSelectedGoldColors] = useState([defaultGold]);
+  const [selectedStoneColors, setSelectedStoneColors] = useState([defaultStone]);
+  const [selectedNiSizes, setSelectedNiSizes] = useState([defaultNi]);
+
+  const goldColor = selectedGoldColors[0] || defaultGold;
+  const mainStoneColor = selectedStoneColors[0] || defaultStone;
+  const selectedSize = selectedNiSizes[0] || defaultNi;
+
+  const setGoldColor = (c) => setSelectedGoldColors([c]);
+  const setMainStoneColor = (c) => setSelectedStoneColors([c]);
+  const setSelectedSize = (s) => setSelectedNiSizes([s]);
+
+  // State danh sách biến thể đã tổ hợp (Draft Variants List)
+  const initialDraftVariants = useMemo(() => {
+    if (productId?.includes("RM000186") || product?.productCode?.includes("RM000186")) {
+      return [
+        {
+          id: "var-1",
+          variantName: "Vàng | 20 | Trắng | 000",
+          goldColor: "Vàng",
+          size: "20",
+          stoneColor: "Trắng",
+          customerRequest: "A00",
+          note: "—",
+          wageDisplay: "Tính giá sau",
+          wagePrice: 0,
+          quantity: 10,
+          weight: 0.0294,
+          productCode: "GY0RM000186A00A00CZWW1000000020",
+          drawingCode: "RM000186A00"
+        },
+        {
+          id: "var-2",
+          variantName: "Vàng | 20 | Xanh dương | 000",
+          goldColor: "Vàng",
+          size: "20",
+          stoneColor: "Xanh dương",
+          customerRequest: "A00",
+          note: "—",
+          wageDisplay: "Tính giá sau",
+          wagePrice: 0,
+          quantity: 10,
+          weight: 0.0294,
+          productCode: "GY0RM000186A00A00CZWW1000000020",
+          drawingCode: "RM000186A00"
+        },
+        {
+          id: "var-3",
+          variantName: "Vàng | 22 | Xanh dương | 000",
+          goldColor: "Vàng",
+          size: "22",
+          stoneColor: "Xanh dương",
+          customerRequest: "A00",
+          note: "—",
+          wageDisplay: "Tính giá sau",
+          wagePrice: 0,
+          quantity: 10,
+          weight: 0.0294,
+          productCode: "GY0RM000186A00A00CZWW1000000020",
+          drawingCode: "RM000186A00"
+        },
+        {
+          id: "var-4",
+          variantName: "Vàng | 22 | Trắng | 000",
+          goldColor: "Vàng",
+          size: "22",
+          stoneColor: "Trắng",
+          customerRequest: "A00",
+          note: "—",
+          wageDisplay: "Tính giá sau",
+          wagePrice: 0,
+          quantity: 10,
+          weight: 0.0294,
+          productCode: "GY0RM000186A00A00CZWW1000000020",
+          drawingCode: "RM000186A00"
+        }
+      ];
+    }
+    return [];
+  }, [productId, product]);
+
+  const [draftVariants, setDraftVariants] = useState(initialDraftVariants);
+
+  // Tổng số lượng, trọng lượng, giá công của bảng danh sách biến thể
+  const totalDraftQty = useMemo(() => {
+    return draftVariants.reduce((sum, v) => sum + (Number(v.quantity) || 0), 0);
+  }, [draftVariants]);
+
+  const totalDraftWeight = useMemo(() => {
+    const singleWeight = parseFloat(product.weight || product.goldWeight || 0.0294) || 0.0294;
+    return totalDraftQty * singleWeight;
+  }, [totalDraftQty, product]);
+
+  const totalDraftWage = useMemo(() => {
+    return draftVariants.reduce((sum, v) => sum + ((Number(v.wagePrice) || 0) * (Number(v.quantity) || 0)), 0);
+  }, [draftVariants]);
+
+  const handleUpdateDraftQty = (id, newQty) => {
+    const val = Math.max(1, parseInt(newQty) || 1);
+    setDraftVariants((prev) => prev.map((v) => (v.id === id ? { ...v, quantity: val } : v)));
+  };
+
+  const handleRemoveDraftVariant = (id) => {
+    setDraftVariants((prev) => prev.filter((v) => v.id !== id));
+  };
+
+  const handleAddAllDraftToCart = () => {
+    if (draftVariants.length === 0) return;
+
+    const itemsToAdd = draftVariants.map((v) => ({
+      id: `${product.id}-${v.goldColor}-${v.size}-${v.stoneColor}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      productCode: v.productCode || displayProductCode,
+      productName: product.productName,
+      categoryName: product.categoryName,
+      goldColor: v.goldColor,
+      mainStoneColor: v.stoneColor,
+      size: v.size,
+      quantity: Number(v.quantity) || 1,
+      weight: v.weight,
+      wagePrice: v.wagePrice,
+      priceDisplay: v.wageDisplay,
+      isCustomOrOther: v.wageDisplay === "Tính giá sau",
+      isPricePending: v.wageDisplay === "Tính giá sau",
+      changeRequest: v.customerRequest !== "A00" ? v.customerRequest : "—",
+      note: v.note !== "—" ? v.note : "",
+      imageType: product.imageType
+    }));
+
+    addBatchToCart(itemsToAdd);
+    setAddedSuccess(true);
+    setTimeout(() => setAddedSuccess(false), 2500);
+  };
 
   // =========================================================================
   // ĐỒNG BỘ CẤU HÌNH LOẠI THAY ĐỔI TỪ QUẢN LÝ SẢN PHẨM (QLSP)
@@ -374,10 +660,6 @@ export default function ProductDetailPage({ params }) {
     setTimeout(() => setAddedSuccess(false), 2500);
   };
 
-  const handleAddToDraftList = () => {
-    setAddedToListSuccess(true);
-    setTimeout(() => setAddedToListSuccess(false), 2500);
-  };
 
   const [note, setNote] = useState(product.defaultOptions?.note || "");
   const [activePreviewType, setActivePreviewType] = useState(product.imageType);
@@ -447,7 +729,64 @@ export default function ProductDetailPage({ params }) {
   const displayProductCode = activeVersion?.productCode || product.productCode;
   const displayDrawingCode = activeVersion?.drawingCode || product.drawingCode;
   const isFixedVersion = Boolean(activeVersion && !activeVersion.isBase);
+ 
+  // Hàm tổ hợp Descartes (Cartesian Product) các thuộc tính đã chọn thành danh sách biến thể
+  const handleAddToDraftList = () => {
+    if (selectedGoldColors.length === 0 || selectedNiSizes.length === 0 || selectedStoneColors.length === 0) {
+      return;
+    }
 
+    const combinations = [];
+    const reqCode = activeVersion?.code || (ecChangeCategory !== "Không thay đổi" ? ecChangeCategory : "A00");
+    const noteText = note.trim() || (otherChangeDescription.trim() || "—");
+    const unitWageDisplay = isCustomOrOther || (product.wagePrice === 0 || product.specs?.wage === "Tính giá sau") ? "Tính giá sau" : (product.specs?.wage || "205,000đ");
+    const unitWagePrice = isCustomOrOther || product.wagePrice === 0 ? 0 : (product.wagePrice || 205000);
+    const unitWeight = parseFloat(product.weight || product.goldWeight || 0.0294) || 0.0294;
+    const qty = Number(singleQty) || 1;
+
+    // Sinh tích Descartes: Màu xi × Kích thước × Màu đá chính
+    selectedGoldColors.forEach((gc) => {
+      selectedNiSizes.forEach((sz) => {
+        selectedStoneColors.forEach((sc) => {
+          const variantName = `${gc} | ${sz} | ${sc} | 000`;
+          combinations.push({
+            id: `var-${gc}-${sz}-${sc}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+            variantName,
+            goldColor: gc,
+            size: sz,
+            stoneColor: sc,
+            customerRequest: reqCode,
+            note: noteText,
+            wageDisplay: unitWageDisplay,
+            wagePrice: unitWagePrice,
+            quantity: qty,
+            weight: unitWeight,
+            productCode: displayProductCode,
+            drawingCode: displayDrawingCode
+          });
+        });
+      });
+    });
+
+    setDraftVariants((prev) => {
+      const updated = [...prev];
+      combinations.forEach((comb) => {
+        const existIdx = updated.findIndex((v) => v.variantName === comb.variantName && v.customerRequest === comb.customerRequest);
+        if (existIdx !== -1) {
+          updated[existIdx] = {
+            ...updated[existIdx],
+            quantity: updated[existIdx].quantity + comb.quantity
+          };
+        } else {
+          updated.push(comb);
+        }
+      });
+      return updated;
+    });
+
+    setAddedToListSuccess(true);
+    setTimeout(() => setAddedToListSuccess(false), 2500);
+  };
   // Quản lý hiển thị các phiên bản theo trang (tránh hiển thị tràn lan khi số lượng phiên bản nhiều)
   const VERSIONS_PER_PAGE = 3;
   const [versionPage, setVersionPage] = useState(0);
@@ -1706,261 +2045,183 @@ export default function ProductDetailPage({ params }) {
                 
                 <div className="space-y-4">
                   {/* =============================================================== */}
-                  {/* CASE B1: SẢN PHẨM ĐƠN LẺ CHUẨN ẢNH 2 & 3 (GYORG000143...)       */}
+                  {/* CASE B1: SẢN PHẨM ĐƠN LẺ CHUẨN ẢNH 1 & 2 (ĐA CHỌN & TỔ HỢP)     */}
                   {/* =============================================================== */}
                   {product.isStandardSingle ? (
                     <div className="space-y-4 bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs">
-                      {/* Specs Bar (3 cột: Trọng lượng quy đổi, Loại SP, Giá công - Bỏ cột Trọng lượng theo ảnh) */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-3 px-4 bg-[#f4f9f7] rounded-xl border border-emerald-100 text-left items-center">
+                      {/* Specs Bar (4 cột: Trọng lượng, Trọng lượng quy đổi, Loại SP, Giá công theo Ảnh 1) */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-1 text-left items-baseline border-b border-gray-100 pb-3">
+                        <div>
+                          <div className="text-[11px] text-gray-500 font-medium">Trọng lượng</div>
+                          <div className="text-sm font-bold text-[#00594c] mt-0.5 font-mono">
+                            {product.goldWeight || (product.weight ? `${Number(product.weight).toFixed(4)}g` : "0.0294g")}
+                          </div>
+                        </div>
                         <div>
                           <div className="text-[11px] text-gray-500 font-medium">Trọng lượng quy đổi</div>
-                          <div className="text-sm font-bold text-[#00594c] mt-0.5 font-mono">
-                            {product.specs?.convertedWeight || "0.4500g"}
+                          <div className="text-sm font-medium text-gray-400 mt-0.5">
+                            {product.specs?.convertedWeight || "—"}
                           </div>
                         </div>
                         <div>
                           <div className="text-[11px] text-gray-500 font-medium">Loại SP</div>
                           <div className="text-sm font-bold text-[#00594c] mt-0.5">
-                            {product.specs?.productType || product.categoryName || "Nhẫn nữ"}
+                            {product.specs?.productType || product.categoryName || "Nhẫn Nam"}
                           </div>
                         </div>
                         <div>
                           <div className="text-[11px] text-gray-500 font-medium">Giá công</div>
-                          {isCustomOrOther ? (
-                            <div className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 mt-0.5 shadow-2xs">
-                              <Clock className="w-3 h-3 mr-1 text-amber-600 animate-pulse" />
-                              <span>Tính giá sau</span>
-                            </div>
-                          ) : (
-                            <div className="text-sm font-bold text-[#00594c] mt-0.5 font-mono">
-                              {activeVersion && !activeVersion.isBase
-                                ? (activeVersion.priceDisplay || `${(activeVersion.wagePrice || 205000).toLocaleString()}đ`)
-                                : (product.specs?.wage || "205,000đ")}
-                            </div>
-                          )}
+                          <div className="text-sm font-bold text-[#00594c] mt-0.5">
+                            {isCustomOrOther ? "Tính giá sau" : (product.specs?.wage || "Tính giá sau")}
+                          </div>
                         </div>
                       </div>
 
-                      {/* PHẦN 1: 3 THUỘC TÍNH CƠ BẢN (Màu xi, Màu đá chính, Kích thước) - Disabled khi chọn version */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {/* 1. Màu xi */}
-                        <div>
-                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                            Màu xi {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định)</span>}
-                          </label>
-                          <select
-                            disabled={isFixedVersion}
-                            value={goldColor}
-                            onChange={(e) => setGoldColor(e.target.value)}
-                            className={`w-full px-3 py-2 rounded-lg text-xs font-medium outline-none ${
-                              isFixedVersion
-                                ? "bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed select-none"
-                                : "bg-white text-gray-800 border border-gray-300 focus:ring-1 focus:ring-[#00594c] cursor-pointer"
-                            }`}
-                          >
-                            {(product.availableGoldColors || ["Vàng", "Trắng", "Hồng", "Hai màu"]).map((c) => (
-                              <option key={c} value={c}>{c}</option>
-                            ))}
-                          </select>
-                        </div>
+                      {/* Hàng 1 & 2: Grid 2 cột theo đúng Ảnh 1 của Chị đẹp */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {/* 1. Màu xi (Đa chọn) */}
+                        <MultiSelectDropdown
+                          label="Màu xi"
+                          disabled={isFixedVersion}
+                          options={product.availableGoldColors || ["Vàng", "Trắng", "Hồng", "Hai màu"]}
+                          selected={selectedGoldColors}
+                          onChange={setSelectedGoldColors}
+                          placeholder="Chọn màu xi..."
+                        />
 
-                        {/* 2. Màu đá chính */}
-                        <div>
-                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                            Màu đá chính {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định)</span>}
-                          </label>
-                          <select
-                            disabled={isFixedVersion}
-                            value={mainStoneColor}
-                            onChange={(e) => setMainStoneColor(e.target.value)}
-                            className={`w-full px-3 py-2 rounded-lg text-xs font-medium outline-none ${
-                              isFixedVersion
-                                ? "bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed select-none"
-                                : "bg-white text-gray-800 border border-gray-300 focus:ring-1 focus:ring-[#00594c] cursor-pointer"
-                            }`}
-                          >
-                            {["Trắng", "Đỏ", "Xanh", "Tím", "Vàng", "Hồng", "Đen", "Không đá"].map((c) => (
-                              <option key={c} value={c}>{c}</option>
-                            ))}
-                          </select>
-                        </div>
+                        {/* 2. Kích thước sản phẩm (Đa chọn) */}
+                        <MultiSelectDropdown
+                          label="Kích thước sản phẩm"
+                          disabled={isFixedVersion}
+                          options={product.availableNiSizes || ["18", "19", "20", "21", "22", "23", "24"]}
+                          selected={selectedNiSizes}
+                          onChange={setSelectedNiSizes}
+                          placeholder="Chọn kích thước..."
+                        />
 
-                        {/* 3. Kích thước */}
+                        {/* 3. Màu đá chính (Đa chọn kèm biểu tượng đá quý xanh ngọc) */}
+                        <MultiSelectDropdown
+                          label="Màu đá chính"
+                          disabled={isFixedVersion}
+                          options={product.availableStoneColors || ["Trắng", "Xanh dương", "Đỏ", "Đen", "Xanh lá", "Vàng", "Hồng", "Tím"]}
+                          selected={selectedStoneColors}
+                          onChange={setSelectedStoneColors}
+                          placeholder="Chọn màu đá..."
+                          icon={<GemColorIcon className="w-4 h-4 text-emerald-800" />}
+                        />
+
+                        {/* 4. Yêu cầu thay đổi */}
                         <div>
                           <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                            Kích thước {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định)</span>}
+                            Yêu cầu thay đổi {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định)</span>}
                           </label>
                           <select
                             disabled={isFixedVersion}
-                            value={selectedSize}
-                            onChange={(e) => setSelectedSize(e.target.value)}
-                            className={`w-full px-3 py-2 rounded-lg text-xs font-medium outline-none ${
+                            value={isFixedVersion ? (activeVersion.changeTypeName || activeVersion.name || "Đắp lacquer - móc máy") : ecChangeCategory}
+                            onChange={(e) => handleSelectEcChangeCategory(e.target.value)}
+                            className={`w-full px-3 py-2 rounded-lg text-xs font-medium outline-none shadow-2xs ${
                               isFixedVersion
-                                ? "bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed select-none"
+                                ? "bg-gray-100 text-gray-600 border border-gray-200 cursor-not-allowed select-none"
                                 : "bg-white text-gray-800 border border-gray-300 focus:ring-1 focus:ring-[#00594c] cursor-pointer"
                             }`}
                           >
-                            {(product.availableNiSizes || ["14", "15", "16", "17", "18"]).map((s) => (
-                              <option key={s} value={s}>{s}</option>
+                            <option value="Không thay đổi">Chọn loại thay đổi</option>
+                            {!isFixedVersion && EC_ALLOWED_CHANGE_REQUESTS.filter(r => r !== "Không thay đổi").map((req) => (
+                              <option key={req} value={req}>{req}</option>
                             ))}
                           </select>
                         </div>
                       </div>
 
-                      {/* PHẦN 2: YÊU CẦU THAY ĐỔI & MÔ TẢ (HIỂN THỊ ĐỦ TRƯỜNG CHỌN VÀ TRƯỜNG MÔ TẢ) */}
-                      <div className="pt-2 border-t border-gray-100 space-y-3">
-                        {/* Hàng chọn Yêu cầu thay đổi & Chi tiết thay đổi */}
-                        {(() => {
-                          const isCast = (isFixedVersion && (
-                            activeVersion?.code?.startsWith("B") || 
-                            activeVersion?.changeTypeName?.toLowerCase().includes("cast") || 
-                            activeVersion?.name?.toLowerCase().includes("cast")
-                          )) || (!isFixedVersion && ecChangeCategory.toLowerCase().includes("cast"));
+                      {/* Chi tiết thay đổi phụ (nếu có lựa chọn thay đổi cụ thể hoặc Khác) */}
+                      {(() => {
+                        const isCast = (isFixedVersion && (
+                          activeVersion?.code?.startsWith("B") || 
+                          activeVersion?.changeTypeName?.toLowerCase().includes("cast") || 
+                          activeVersion?.name?.toLowerCase().includes("cast")
+                        )) || (!isFixedVersion && ecChangeCategory.toLowerCase().includes("cast"));
 
-                          const hasDetail = !isCast && (
-                            isFixedVersion 
-                              ? Boolean(activeVersion?.attributes?.changeDetail) 
-                              : Boolean(ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).length > 0)
-                          );
+                        const hasDetail = !isCast && (
+                          isFixedVersion 
+                            ? Boolean(activeVersion?.attributes?.changeDetail) 
+                            : Boolean(ecChangeCategory !== "Không thay đổi" && ecChangeCategory !== "Khác" && (EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).length > 0)
+                        );
 
-                          return (
-                            <div className={`grid gap-3.5 ${hasDetail ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
-                              {/* Trường chọn Yêu cầu thay đổi */}
+                        if (!hasDetail && ecChangeCategory !== "Khác") return null;
+
+                        return (
+                          <div className="pt-1 space-y-2">
+                            {hasDetail && !isFixedVersion && (
                               <div>
-                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                                  Yêu cầu thay đổi {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định theo phiên bản)</span>}
-                                </label>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">Chi tiết thay đổi *</label>
                                 <select
-                                  disabled={isFixedVersion}
-                                  value={isFixedVersion ? (activeVersion.changeTypeName || activeVersion.name || "Đắp lacquer - móc máy") : ecChangeCategory}
-                                  onChange={(e) => handleSelectEcChangeCategory(e.target.value)}
-                                  className={`w-full px-3 py-2 rounded-lg text-xs font-medium outline-none shadow-2xs ${
-                                    isFixedVersion
-                                      ? "bg-gray-100 text-gray-600 border border-gray-200 cursor-not-allowed select-none"
-                                      : "bg-white text-gray-800 border border-gray-300 focus:ring-1 focus:ring-[#00594c] cursor-pointer"
-                                  }`}
+                                  value={ecChangeDetail}
+                                  onChange={(e) => setEcChangeDetail(e.target.value)}
+                                  className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs font-semibold text-emerald-900 outline-none cursor-pointer shadow-2xs"
                                 >
-                                  {isFixedVersion && (
-                                    <option value={activeVersion.changeTypeName || activeVersion.name || "Đắp lacquer - móc máy"}>
-                                      {activeVersion.changeTypeName || activeVersion.name || "Đắp lacquer - móc máy"}
-                                    </option>
-                                  )}
-                                  {!isFixedVersion && EC_ALLOWED_CHANGE_REQUESTS.map((req) => (
-                                    <option key={req} value={req}>{req}</option>
+                                  {(EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).map((opt) => (
+                                    <option key={opt} value={opt}>{opt}</option>
                                   ))}
                                 </select>
                               </div>
+                            )}
 
-                              {/* Trường chọn Chi tiết thay đổi (Dropdown con) - ẨN HOÀN TOÀN KHI LÀ CAST */}
-                              {hasDetail && isFixedVersion && (
-                                <div>
-                                  <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                                    Chi tiết thay đổi <span className="text-gray-400 font-normal">(Cố định)</span>
-                                  </label>
-                                  <select
-                                    disabled={true}
-                                    value={activeVersion.attributes?.changeDetail || activeVersion.desc || "Móc máy viền men xanh ngọc"}
-                                    className="w-full px-3 py-2 bg-gray-100 text-gray-600 border border-gray-200 rounded-lg text-xs font-medium cursor-not-allowed select-none shadow-2xs"
-                                  >
-                                    <option value={activeVersion.attributes?.changeDetail || activeVersion.desc || "Móc máy viền men xanh ngọc"}>
-                                      {activeVersion.attributes?.changeDetail || activeVersion.desc || "Móc máy viền men xanh ngọc"}
-                                    </option>
-                                  </select>
-                                </div>
-                              )}
-
-                              {hasDetail && !isFixedVersion && (
-                                <div className="animate-in fade-in slide-in-from-left-1 duration-150">
-                                  <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                                    {ecChangeCategory.includes("Khóa") 
-                                      ? "Chi tiết khóa *" 
-                                      : ecChangeCategory.includes("Tăng đơ") 
-                                      ? "Chi tiết tăng đơ *" 
-                                      : ecChangeCategory.includes("Kiểu bào") 
-                                      ? "Chi tiết kiểu bào *" 
-                                      : ecChangeCategory.includes("lacquer")
-                                      ? "Chi tiết kỹ thuật mạ men *"
-                                      : "Chi tiết thay đổi *"}
-                                  </label>
-                                  <select
-                                    value={ecChangeDetail}
-                                    onChange={(e) => setEcChangeDetail(e.target.value)}
-                                    className="w-full px-3 py-2 bg-white border border-emerald-300 focus:border-[#00594c] rounded-lg text-xs font-semibold text-emerald-900 outline-none cursor-pointer shadow-2xs"
-                                  >
-                                    {(EC_CHANGE_REQUEST_OPTIONS[ecChangeCategory] || []).map((opt) => (
-                                      <option key={opt} value={opt}>{opt}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
-
-                        {/* Trường Mô tả cho Yêu cầu thay đổi */}
-                        <div>
-                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                            Mô tả yêu cầu thay đổi {isFixedVersion && <span className="text-gray-400 font-normal">(Cố định theo phiên bản)</span>}
-                            {!isFixedVersion && ecChangeCategory === "Khác" && <span className="text-red-500 font-bold ml-1">*</span>}
-                          </label>
-                          {isFixedVersion ? (
-                            <textarea
-                              rows={2}
-                              disabled={true}
-                              value={activeVersion.desc ? `Sản xuất theo Drawing ${activeVersion.drawingCode}: ${activeVersion.desc}` : `Sản xuất chuẩn xác theo Drawing ${activeVersion.drawingCode} và Routing kỹ thuật đã phê duyệt.`}
-                              className="w-full px-3 py-2 bg-gray-100 text-gray-500 border border-gray-200 rounded-lg text-xs cursor-not-allowed select-none resize-none shadow-2xs leading-relaxed"
-                            />
-                          ) : (
-                            <div className="space-y-1">
-                              <textarea
-                                rows={2}
-                                value={otherChangeDescription}
-                                onChange={(e) => {
-                                  setOtherChangeDescription(e.target.value);
-                                  if (formError) setFormError("");
-                                }}
-                                placeholder={
-                                  ecChangeCategory === "Khác"
-                                    ? "Nhập mô tả chi tiết yêu cầu thay đổi của bạn (ví dụ: thay đổi kích thước theo bản vẽ riêng, mẫu khóa đặc thù, đắp hoa văn riêng...)..."
-                                    : "Ghi chú thêm về yêu cầu thay đổi (nếu có nhập ghi chú, đơn giá sẽ là Tính giá sau)..."
-                                }
-                                className={`w-full px-3 py-2 bg-white border rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs resize-none ${
-                                  formError && ecChangeCategory === "Khác" && !otherChangeDescription.trim()
-                                    ? "border-red-500 ring-1 ring-red-400"
-                                    : "border-gray-300 focus:border-[#00594c]"
-                                }`}
-                              />
-                              {ecChangeCategory === "Khác" && (
-                                <p className="text-[11px] text-amber-700 font-medium">
+                            {ecChangeCategory === "Khác" && (
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                                  Mô tả yêu cầu thay đổi <span className="text-red-500 font-bold">*</span>
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  value={otherChangeDescription}
+                                  onChange={(e) => {
+                                    setOtherChangeDescription(e.target.value);
+                                    if (formError) setFormError("");
+                                  }}
+                                  placeholder="Nhập mô tả chi tiết yêu cầu thay đổi riêng..."
+                                  className="w-full px-3 py-2 bg-white border border-gray-300 focus:border-[#00594c] rounded-lg text-xs text-gray-800 outline-none shadow-2xs resize-none"
+                                />
+                                <p className="text-[11px] text-amber-700 font-medium mt-1">
                                   ⏳ Yêu cầu 'Khác' sẽ được Tính giá sau và tự động tách thành đơn hàng riêng ở trạng thái Chờ xử lý.
                                 </p>
-                              )}
-                              {formError && (
-                                <p className="text-[11px] text-red-600 font-semibold">⚠️ {formError}</p>
-                              )}
-                            </div>
-                          )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Hàng 3: Số lượng (nằm góc trái chuẩn Ảnh 1) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-700 mb-1">Số lượng</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={singleQty}
+                            onChange={(e) => setSingleQty(Math.max(1, parseInt(e.target.value) || 1))}
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none font-bold shadow-2xs"
+                          />
                         </div>
                       </div>
 
-                      {/* PHẦN 3: SỐ LƯỢNG */}
-                      <div className="pt-2 border-t border-gray-100 space-y-1">
-                        <label className="block text-[11px] font-semibold text-gray-700 mb-1">Số lượng</label>
+                      {/* Hàng 4: Ghi chú (toàn bộ chiều rộng chuẩn Ảnh 1) */}
+                      <div className="pt-1">
+                        <label className="block text-[11px] font-semibold text-gray-700 mb-1">Ghi chú</label>
                         <input
-                          type="number"
-                          min="1"
-                          value={singleQty}
-                          onChange={(e) => setSingleQty(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-800 focus:ring-1 focus:ring-[#00594c] outline-none font-bold"
+                          type="text"
+                          value={note}
+                          onChange={(e) => setNote(e.target.value)}
+                          placeholder="Nhập ghi chú"
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs"
                         />
                       </div>
 
-                      {/* Row 6: Buttons Thêm vào danh sách & Thêm vào giỏ hàng */}
+                      {/* Hàng 5: Buttons Thêm vào danh sách & Thêm vào giỏ hàng */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                         <button
                           type="button"
                           onClick={handleAddToDraftList}
-                          className="w-full py-2.5 px-4 border border-[#00594c] text-[#00594c] hover:bg-emerald-50 rounded-lg text-xs font-bold transition-colors cursor-pointer text-center"
+                          className="w-full py-2.5 px-4 border border-[#00594c] text-[#00594c] hover:bg-emerald-50 rounded-lg text-xs font-bold transition-colors cursor-pointer text-center shadow-2xs"
                         >
                           {addedToListSuccess ? "✓ Đã thêm vào danh sách!" : "Thêm vào danh sách"}
                         </button>
@@ -2366,8 +2627,104 @@ export default function ProductDetailPage({ params }) {
             </div>
 
           </div>
+
+          {/* =============================================================== */}
+          {/* DRAFT VARIANTS LIST (BẢNG TỔ HỢP BIẾN THỂ THEO ẢNH 2)           */}
+          {/* =============================================================== */}
+          {draftVariants.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-gray-200/80 animate-in fade-in duration-200">
+              {/* Summary Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 px-1">
+                <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs sm:text-sm font-medium text-gray-500">
+                  <div>
+                    Số lượng: <span className="font-bold text-[#00594c]">{totalDraftQty}</span>
+                  </div>
+                  <span className="text-gray-300">|</span>
+                  <div>
+                    Trọng lượng: <span className="font-bold text-[#00594c]">{totalDraftWeight.toFixed(4)}g</span>
+                  </div>
+                  <span className="text-gray-300">|</span>
+                  <div>
+                    Giá công: <span className="font-bold text-[#00594c]">{totalDraftWage === 0 ? "0đ" : `${totalDraftWage.toLocaleString()}đ`}</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAddAllDraftToCart}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#00594c] hover:bg-[#004737] text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+                >
+                  <span>Thêm vào giỏ hàng</span>
+                  <ChevronUp className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-2xs">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#00594c] text-white text-[11px] font-bold uppercase tracking-wider">
+                      <th className="py-3 px-4">BIẾN THỂ</th>
+                      <th className="py-3 px-4">YÊU CẦU KHÁCH HÀNG</th>
+                      <th className="py-3 px-4">GHI CHÚ</th>
+                      <th className="py-3 px-4">GIÁ CÔNG</th>
+                      <th className="py-3 px-4 text-center">SỐ LƯỢNG</th>
+                      <th className="py-3 px-3 text-center w-12"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white text-xs">
+                    {draftVariants.map((v) => (
+                      <tr key={v.id} className="hover:bg-emerald-50/20 transition-colors">
+                        <td className="py-3.5 px-4 font-medium text-[#00594c]">
+                          {v.variantName}
+                        </td>
+                        <td className="py-3.5 px-4 font-medium text-[#00594c]">
+                          {v.customerRequest}
+                        </td>
+                        <td className="py-3.5 px-4 text-gray-400">
+                          {v.note || "—"}
+                        </td>
+                        <td className="py-3.5 px-4 font-bold text-[#00594c]">
+                          {v.wageDisplay}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <input
+                            type="number"
+                            min="1"
+                            value={v.quantity}
+                            onChange={(e) => handleUpdateDraftQty(v.id, e.target.value)}
+                            className="w-16 px-2 py-1 text-center font-bold text-gray-800 bg-white border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#00594c] outline-none shadow-2xs mx-auto"
+                          />
+                        </td>
+                        <td className="py-3.5 px-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDraftVariant(v.id)}
+                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Xóa dòng biến thể này"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Floating Scroll to Top button (Ảnh 2) */}
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="fixed bottom-6 right-6 z-40 p-2.5 bg-white text-gray-600 hover:text-[#00594c] border border-gray-200 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95"
+        title="Cuộn lên đầu trang"
+      >
+        <ChevronUp className="w-5 h-5 text-gray-700" />
+      </button>
 
       {/* ================================================================= */}
       {/* STICKY QUICK-ORDER BAR (TỐI ƯU TRẢI NGHIỆM IPAD & MOBILE)        */}

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingCart, BookOpen, ChevronDown, Check, LayoutGrid, Box, Sparkles } from "lucide-react";
+import { ShoppingCart, BookOpen, ChevronDown, Check, LayoutGrid, Box, Sparkles, Coins } from "lucide-react";
 
 export default function SubsystemSwitcher() {
   const pathname = usePathname();
@@ -13,6 +13,7 @@ export default function SubsystemSwitcher() {
   const isUserGuide = pathname?.startsWith("/user-guide");
   const isProductManagement = pathname?.startsWith("/product-management");
   const isCatalogue = pathname?.startsWith("/catalogue");
+  const isDebtManagement = pathname?.startsWith("/debt-management");
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -32,7 +33,14 @@ export default function SubsystemSwitcher() {
   );
   let currentLabel = "Bán Hàng";
 
-  if (isProductManagement) {
+  if (isDebtManagement) {
+    currentIcon = (
+      <div className="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-xs font-bold">
+        <Coins className="h-4 w-4" />
+      </div>
+    );
+    currentLabel = "Quản Lý Công Nợ";
+  } else if (isProductManagement) {
     currentIcon = (
       <div className="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-xs font-bold">
         <Box className="h-4 w-4" />
@@ -150,7 +158,26 @@ export default function SubsystemSwitcher() {
               {isCatalogue && <Check className="h-3.5 w-3.5 text-emerald-700" />}
             </Link>
 
-            {/* 4. Hướng Dẫn Sử Dụng */}
+            {/* 4. Quản Lý Công Nợ (Mới) */}
+            <Link
+              href="/debt-management"
+              onClick={() => setOpen(false)}
+              className={`flex items-center justify-between p-2 rounded-lg transition-colors text-xs ${
+                isDebtManagement
+                  ? "bg-amber-50 text-amber-950 font-bold border border-amber-300"
+                  : "hover:bg-gray-50 text-gray-700 font-medium"
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 font-bold">
+                  <Coins className="h-3.5 w-3.5" />
+                </div>
+                <span>Quản Lý Công Nợ</span>
+              </div>
+              {isDebtManagement && <Check className="h-3.5 w-3.5 text-amber-700" />}
+            </Link>
+
+            {/* 5. Hướng Dẫn Sử Dụng */}
             <Link
               href="/user-guide"
               onClick={() => setOpen(false)}

@@ -117,6 +117,74 @@ export const JEWELRY_CATEGORIES = [
 
 export const JEWELRY_PRODUCTS = [
   // =========================================================================
+  // SẢN PHẨM MẪU CHUẨN ẢNH THỰC TẾ: NHẪN NAM GY0RM000186A00A00CZWW1000000020
+  // =========================================================================
+  {
+    id: "GY0RM000186A00A00CZWW1000000020",
+    isSet: false,
+    isStandardSingle: true,
+    productCode: "GY0RM000186A00A00CZWW1000000020",
+    productName: "Nhẫn Nam",
+    drawingCode: "RM000186A00",
+    categoryId: "nhan-nam",
+    categoryName: "Nhẫn Nam",
+    weight: 0.0294,
+    goldWeight: "0.0294g",
+    convertedWeight: "—",
+    wagePrice: 0,
+    priceDisplay: "Tính giá sau",
+    rawPrice: 0,
+    soldCount: 88,
+    imageType: "ring-men-black",
+    specs: {
+      weight: "0.0294g",
+      convertedWeight: "—",
+      productType: "Nhẫn Nam",
+      wage: "Tính giá sau"
+    },
+    defaultOptions: {
+      goldColor: "Vàng",
+      niSize: "20",
+      mainStoneColor: "Trắng",
+      changeRequest: "Không thay đổi",
+      changeDescription: "",
+      quantity: 1,
+      note: ""
+    },
+    availableGoldColors: ["Vàng", "Trắng", "Hồng", "Hai màu"],
+    availableNiSizes: ["18", "19", "20", "21", "22", "23", "24"],
+    availableStoneColors: ["Trắng", "Xanh dương", "Đỏ", "Đen", "Xanh lá", "Vàng", "Hồng", "Tím"],
+    availableChangeRequests: [
+      "Không thay đổi",
+      "Cast",
+      "Đắp lacquer - móc máy",
+      "Thay kiểu bào ball",
+      "Thay Khóa",
+      "Khác"
+    ],
+    drawingVersions: [
+      {
+        id: "v-std",
+        code: "A00",
+        drawingCode: "RM000186A00",
+        productCode: "GY0RM000186A00A00CZWW1000000020",
+        name: "Bản vẽ chuẩn (Gốc)",
+        changeTypeName: "Bản vẽ chuẩn",
+        tag: "Bản vẽ gốc",
+        desc: "Thiết kế gốc tiêu chuẩn - Cho phép tùy biến thông số tự do",
+        badge: "Gốc",
+        imageType: "ring-men-black",
+        isBase: true,
+        attributes: {
+          goldColor: "Vàng",
+          mainStoneColor: "Trắng",
+          size: "20",
+          changeRequest: "Không thay đổi",
+          changeDetail: "Tiêu chuẩn kỹ thuật gốc"
+        }
+      }
+    ]
+  },
   // SẢN PHẨM MẪU CHUẨN ẢNH 2 & 3: NHẪN NỮ GYORG000143A00A00000000000015
   // =========================================================================
   {
