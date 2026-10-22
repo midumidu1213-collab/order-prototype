@@ -3,23 +3,43 @@
 import React from "react";
 
 const RENDER_IMAGE_MAP = {
-  "gold-chain-bracelet": "/images/products/gold-chain-bracelet.jpg",
-  "bracelet-gold": "/images/products/gold-chain-bracelet.jpg",
-  "cat-charm-bracelet": "/images/products/gold-chain-bracelet.jpg",
-  "bracelet-female": "/images/products/gold-chain-bracelet.jpg",
-  "bracelet-male": "/images/products/gold-chain-bracelet.jpg",
+  // Bộ trang sức
   "set-royal-emerald": "/images/products/set-royal-emerald.jpg",
   "set-diamond-bridal": "/images/products/set-diamond-bridal.jpg",
+
+  // Vòng tay & Lắc tay
+  "gold-chain-bracelet": "/images/products/gold-chain-bracelet.jpg",
+  "bracelet-gold": "/images/products/gold-chain-bracelet.jpg",
+  "cat-charm-bracelet": "/images/products/bracelet-female.jpg",
+  "bracelet-female": "/images/products/bracelet-female.jpg",
+  "bracelet-male": "/images/products/bracelet-male.jpg",
+  "purple-flower-bracelet": "/images/products/bracelet-female.jpg",
+
+  // Dây chuyền & Kiềng cổ
+  "necklace-emerald": "/images/products/necklace-emerald.jpg",
+  "necklace-men": "/images/products/necklace-men.jpg",
+  "kieng-co": "/images/products/kieng-co.jpg",
+
+  // Mặt dây chuyền
+  "pendant-female": "/images/products/pendant-female.jpg",
+  "pendant-male": "/images/products/pendant-male.jpg",
+
+  // Nhẫn
   "ring-snake": "/images/products/ring-solitaire.jpg",
   "ring-solitaire": "/images/products/ring-solitaire.jpg",
   "wedding-rings": "/images/products/wedding-rings.jpg",
-  "ring-men-black": "/images/products/ring-solitaire.jpg",
-  "ring-kim-tien": "/images/products/ring-solitaire.jpg",
-  "necklace-emerald": "/images/products/necklace-emerald.jpg",
-  "necklace-men": "/images/products/necklace-emerald.jpg",
-  "kieng-co": "/images/products/necklace-emerald.jpg",
-  "pendant-female": "/images/products/necklace-emerald.jpg",
-  "pendant-male": "/images/products/necklace-emerald.jpg",
+  "ring-men-black": "/images/products/ring-men.jpg",
+  "ring-men": "/images/products/ring-men.jpg",
+  "ring-kim-tien": "/images/products/ring-kim-tien.jpg",
+
+  // Bông tai
+  "earrings-heart": "/images/products/earrings-luxury.jpg",
+  "earrings-luxury": "/images/products/earrings-luxury.jpg",
+
+  // Kim cương rời & Lắc chân
+  "loose-diamond": "/images/products/loose-diamond.jpg",
+  "diamond-solitaire": "/images/products/loose-diamond.jpg",
+  "anklet": "/images/products/anklet.jpg",
 };
 
 export default function JewelryVisual({ type = "bracelet-gold", className = "w-full h-full" }) {
