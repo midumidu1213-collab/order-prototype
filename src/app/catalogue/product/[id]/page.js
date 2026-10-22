@@ -302,76 +302,8 @@ export default function ProductDetailPage({ params }) {
   const setMainStoneColor = (c) => setSelectedStoneColors([c]);
   const setSelectedSize = (s) => setSelectedNiSizes([s]);
 
-  // State danh sách biến thể đã tổ hợp (Draft Variants List)
-  const initialDraftVariants = useMemo(() => {
-    if (productId?.includes("RM000186") || product?.productCode?.includes("RM000186")) {
-      return [
-        {
-          id: "var-1",
-          variantName: "Vàng | 20 | Trắng | 000",
-          goldColor: "Vàng",
-          size: "20",
-          stoneColor: "Trắng",
-          customerRequest: "A00",
-          note: "—",
-          wageDisplay: "Tính giá sau",
-          wagePrice: 0,
-          quantity: 10,
-          weight: 0.0294,
-          productCode: "GY0RM000186A00A00CZWW1000000020",
-          drawingCode: "RM000186A00"
-        },
-        {
-          id: "var-2",
-          variantName: "Vàng | 20 | Xanh dương | 000",
-          goldColor: "Vàng",
-          size: "20",
-          stoneColor: "Xanh dương",
-          customerRequest: "A00",
-          note: "—",
-          wageDisplay: "Tính giá sau",
-          wagePrice: 0,
-          quantity: 10,
-          weight: 0.0294,
-          productCode: "GY0RM000186A00A00CZWW1000000020",
-          drawingCode: "RM000186A00"
-        },
-        {
-          id: "var-3",
-          variantName: "Vàng | 22 | Xanh dương | 000",
-          goldColor: "Vàng",
-          size: "22",
-          stoneColor: "Xanh dương",
-          customerRequest: "A00",
-          note: "—",
-          wageDisplay: "Tính giá sau",
-          wagePrice: 0,
-          quantity: 10,
-          weight: 0.0294,
-          productCode: "GY0RM000186A00A00CZWW1000000020",
-          drawingCode: "RM000186A00"
-        },
-        {
-          id: "var-4",
-          variantName: "Vàng | 22 | Trắng | 000",
-          goldColor: "Vàng",
-          size: "22",
-          stoneColor: "Trắng",
-          customerRequest: "A00",
-          note: "—",
-          wageDisplay: "Tính giá sau",
-          wagePrice: 0,
-          quantity: 10,
-          weight: 0.0294,
-          productCode: "GY0RM000186A00A00CZWW1000000020",
-          drawingCode: "RM000186A00"
-        }
-      ];
-    }
-    return [];
-  }, [productId, product]);
-
-  const [draftVariants, setDraftVariants] = useState(initialDraftVariants);
+  // State danh sách biến thể đã tổ hợp (Mặc định chưa có sản phẩm, khi Chị đẹp chọn thuộc tính và bấm "Thêm vào danh sách" mới tổ hợp hiển thị bên dưới)
+  const [draftVariants, setDraftVariants] = useState([]);
 
   // Tổng số lượng, trọng lượng, giá công của bảng danh sách biến thể
   const totalDraftQty = useMemo(() => {
