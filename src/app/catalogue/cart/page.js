@@ -27,7 +27,9 @@ import {
   Search,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { useCatalogueCart } from "@/context/CatalogueCartContext";
 import QuotationExportModal from "@/components/catalogue/QuotationExportModal";
@@ -54,6 +56,32 @@ export default function CatalogueCartPage() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
   const [isQuotationModalOpen, setIsQuotationModalOpen] = useState(false);
+
+  // Quản lý trạng thái thu gọn - mở rộng các sản phẩm Bộ
+  const [collapsedSets, setCollapsedSets] = useState({});
+
+  const toggleSetCollapse = (setId) => {
+    setCollapsedSets((prev) => ({
+      ...prev,
+      [setId]: !prev[setId]
+    }));
+  };
+
+  const setItems = cartItems.filter((i) => i.isSet);
+  const hasSetItems = setItems.length > 0;
+  const allSetsCollapsed = hasSetItems && setItems.every((i) => collapsedSets[i.id]);
+
+  const toggleAllSets = () => {
+    if (allSetsCollapsed) {
+      setCollapsedSets({});
+    } else {
+      const newCollapsed = {};
+      setItems.forEach((i) => {
+        newCollapsed[i.id] = true;
+      });
+      setCollapsedSets(newCollapsed);
+    }
+  };
 
   // Search & Sort state
   const [searchQuery, setSearchQuery] = useState("");
@@ -353,8 +381,28 @@ export default function CatalogueCartPage() {
               </span>
             </div>
             
-            {/* Search Input Filter for Cart Items */}
+            {/* Search Input Filter & Quick Collapse/Expand All Sets for Cart Items */}
             <div className="flex items-center space-x-3">
+              {hasSetItems && (
+                <button
+                  type="button"
+                  onClick={toggleAllSets}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-emerald-200 bg-emerald-50/80 text-[#00594c] hover:bg-emerald-100 transition-colors cursor-pointer shadow-2xs"
+                  title={allSetsCollapsed ? "Mở rộng tất cả các bộ" : "Thu gọn tất cả các bộ"}
+                >
+                  {allSetsCollapsed ? (
+                    <>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                      <span>Mở rộng tất cả bộ</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3.5 w-3.5" />
+                      <span>Thu gọn tất cả bộ</span>
+                    </>
+                  )}
+                </button>
+              )}
               <div className="relative">
                 <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -469,13 +517,28 @@ export default function CatalogueCartPage() {
                     // RENDER CASE 1: SẢN PHẨM BỘ (PARENT + CHILD ROWS)
                     if (item.isSet) {
                       const setQty = Number(item.quantity) || 1;
+                      const isCollapsed = !!collapsedSets[item.id];
+                      const compCount = item.components?.length || 0;
+
                       return (
                         <React.Fragment key={item.id}>
                           {/* Parent Set Header Row */}
                           <tr className="bg-emerald-50/70 font-bold border-t-2 border-emerald-300">
                             <td className="py-3.5 px-4">
-                              <div className="flex items-center space-x-2.5">
-                                <span className="bg-amber-400 text-slate-950 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shadow-2xs flex items-center space-x-1">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleSetCollapse(item.id)}
+                                  className="p-1 rounded-md hover:bg-emerald-200/80 text-[#00594c] transition-colors cursor-pointer shrink-0"
+                                  title={isCollapsed ? "Mở rộng xem chi tiết các món con" : "Thu gọn danh sách món con"}
+                                >
+                                  {isCollapsed ? (
+                                    <ChevronRight className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4" />
+                                  )}
+                                </button>
+                                <span className="bg-amber-400 text-slate-950 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shadow-2xs flex items-center space-x-1 shrink-0">
                                   <Crown className="h-3 w-3 inline" />
                                   <span>BỘ</span>
                                 </span>
@@ -500,9 +563,25 @@ export default function CatalogueCartPage() {
                             <td className="py-3.5 px-3 text-xs text-gray-800 font-semibold">{item.goldColor || "Trắng"}</td>
                             {/* Màu đá */}
                             <td className="py-3.5 px-3 text-xs text-emerald-950 font-semibold">{item.mainStoneColor || "—"}</td>
-                            {/* Kích thước / Ni */}
-                            <td className="py-3.5 px-3 text-xs text-emerald-800 font-bold">
-                              {item.components?.length || 0} Món thành phần
+                            {/* Kích thước / Ni (Tích hợp nút bấm Toggle thu gọn / mở rộng tiện lợi) */}
+                            <td className="py-3.5 px-3 text-xs">
+                              <button
+                                type="button"
+                                onClick={() => toggleSetCollapse(item.id)}
+                                className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer text-xs ${
+                                  isCollapsed
+                                    ? "bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300 shadow-2xs"
+                                    : "bg-emerald-100/90 text-emerald-900 hover:bg-emerald-200 border border-emerald-300"
+                                }`}
+                                title={isCollapsed ? "Bấm để mở rộng danh sách món con" : "Bấm để thu gọn danh sách món con"}
+                              >
+                                <span>{compCount} Món thành phần</span>
+                                {isCollapsed ? (
+                                  <ChevronRight className="h-3.5 w-3.5 text-amber-800" />
+                                ) : (
+                                  <ChevronDown className="h-3.5 w-3.5 text-emerald-800" />
+                                )}
+                              </button>
                             </td>
                             {/* YCKH */}
                             <td className="py-3.5 px-3 text-xs text-gray-600 font-medium">
@@ -546,8 +625,8 @@ export default function CatalogueCartPage() {
                             </td>
                           </tr>
 
-                          {/* Child Component Rows (Món con trong bộ) */}
-                          {item.components?.map((comp) => (
+                          {/* Child Component Rows (Món con trong bộ) - Chỉ hiển thị khi KHÔNG thu gọn */}
+                          {!isCollapsed && item.components?.map((comp) => (
                             <tr key={comp.id} className="bg-white hover:bg-gray-50/90 transition-colors border-l-4 border-l-emerald-500">
                               <td className="py-2.5 px-4 pl-8 sm:pl-10 text-xs">
                                 <div className="flex items-start space-x-2">
