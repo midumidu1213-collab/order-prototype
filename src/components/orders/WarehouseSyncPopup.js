@@ -303,6 +303,8 @@ export default function WarehouseSyncPopup({
           itemCode: stock.itemCode,
           pickedQty: qty,
           oldOrderCode: stock.oldOrderCode,
+          oldCustomer: stock.oldCustomer || "Khách hàng cũ",
+          weight: stock.weight || "0.5000",
           dateInStock: stock.dateInStock,
           location: stock.location
         });

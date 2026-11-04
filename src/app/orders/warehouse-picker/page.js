@@ -59,7 +59,7 @@ export default function WarehousePickerPrototype() {
       requestedQty: 5,
       stockAvailable: 2,
       stockBagCode: "BAG-TP-9905",
-      stockLocation: "Két K3 - Ngăn C01",
+      stockLocation: "Kho CXLL - Ngăn C01",
       stockSource: "Khách sỉ hủy đơn nguyên bộ",
       laborPrice: 3200000,
       matchStatus: "FULL_MATCH"
@@ -463,7 +463,7 @@ export default function WarehousePickerPrototype() {
                     Bước 3: Điều Khiển Phân Bổ Số Lượng & Điều Tiết Nhả Đá
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Hỗ trợ kịch bản đặt 100 món, kho có 80 món $\rightarrow$ Tách 80 món kho + 20 món đúc mới
+                    Hỗ trợ kịch bản đặt 100 món, kho có 80 món → Tách 80 món kho + 20 món đúc mới
                   </p>
                 </div>
                 <button
@@ -518,12 +518,12 @@ export default function WarehousePickerPrototype() {
               {/* MA TRẬN PHÂN BỔ 2 NHÁNH TRỰC QUAN */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
-                {/* Nhánh 1: Kho Thành Phẩm */}
+                {/* Nhánh 1: Kho Thành Phẩm (Chờ Xử Lý Lại) */}
                 <div className="p-4 rounded-xl border-2 border-emerald-300 bg-emerald-50/60 space-y-3 relative overflow-hidden">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-emerald-950 flex items-center text-sm">
                       <Warehouse className="h-4 w-4 mr-1.5 text-emerald-700" />
-                      Nhánh A: Lấy từ Kho Thành Phẩm
+                      Nhánh A: Lấy từ Kho CXLL (Trừ Tồn Tức Thì)
                     </span>
                     <span className="font-mono font-black text-lg text-emerald-800 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-300">
                       {qtyFromStock} món
@@ -537,14 +537,17 @@ export default function WarehousePickerPrototype() {
                         Tự động NHẢ {qtyFromStock} phần đá đã tạm hold
                       </div>
                       <p className="text-[11px] text-slate-500 pl-4.5">
-                        Phôi kho đã ngậm đủ 100% đá $\rightarrow$ Trả {qtyFromStock} phần đá về tồn kho khả dụng ngay lập tức.
+                        Phôi kho đã ngậm đủ 100% đá → Nhả phần đá hold trả về tồn khả dụng ngay lập tức.
                       </p>
                     </div>
 
-                    <div className="bg-white p-2.5 rounded-lg border border-emerald-200">
-                      <span className="font-bold text-slate-700 block text-[11px]">Routing làm mới tại QLSP:</span>
-                      <span className="text-[11px] text-indigo-900 font-medium">
-                        Tẩy xi $\rightarrow$ Khắc logo/tuổi khách mới $\rightarrow$ Xi mạ mới $\rightarrow$ KCS (2-3 ngày)
+                    <div className="bg-white p-2.5 rounded-lg border border-emerald-200 space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-slate-800 block text-[11px]">BOM: Rỗng • Routing gán cứng 3 trạm:</span>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">Gán cố định</span>
+                      </div>
+                      <span className="text-[11px] text-[#005a46] font-mono font-bold block">
+                        Serve FG (Kho CXLL) → Stamping (Đóng dấu/khắc) → Packing Out (Nhập lại Kho TP)
                       </span>
                     </div>
                   </div>
@@ -573,10 +576,13 @@ export default function WarehousePickerPrototype() {
                       </p>
                     </div>
 
-                    <div className="bg-white p-2.5 rounded-lg border border-blue-200">
-                      <span className="font-bold text-slate-700 block text-[11px]">Quy trình sản xuất tiêu chuẩn:</span>
-                      <span className="text-[11px] text-slate-600 font-medium">
-                        Đúc phôi $\rightarrow$ Nguội $\rightarrow$ Gắn đá $\rightarrow$ Xi mạ $\rightarrow$ KCS (10-15 ngày)
+                    <div className="bg-white p-2.5 rounded-lg border border-blue-200 space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-slate-800 block text-[11px]">BOM & Routing Tiêu Chuẩn (QLSP):</span>
+                        <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">Chuẩn QLSP</span>
+                      </div>
+                      <span className="text-[11px] text-slate-600 font-medium block">
+                        Sáp → Đúc phôi → Nguội → Gắn đá → Xi mạ → KCS (10-15 ngày)
                       </span>
                     </div>
                   </div>
@@ -609,10 +615,10 @@ export default function WarehousePickerPrototype() {
               <div className="flex items-center justify-between border-b border-gray-200 pb-4">
                 <div>
                   <h3 className="text-base font-bold text-gray-900 flex items-center">
-                    Bước 4: Đồng Bộ Đơn Hàng & Vòng Đời Chuyển KHSX
+                    Bước 4: Trừ Tồn Tức Thì & Phân Tách 2 Luồng KHSX
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Minh họa chính xác: QLSP cập nhật Routing $\rightarrow$ &apos;Đủ thông tin KT&apos; $\rightarrow$ QLĐH bấm Chuyển KHSX
+                    Kho khóa giữ phôi chống pick trùng → QLĐH bấm Chuyển KHSX → KHSX phân 2 luồng (BOM rỗng vs Sản xuất mới)
                   </p>
                 </div>
                 <button
@@ -628,124 +634,171 @@ export default function WarehousePickerPrototype() {
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
                   <div>
-                    <span className="text-xs text-slate-400 block font-bold uppercase">Mã đơn hàng SO</span>
-                    <span className="font-mono font-black text-lg text-slate-900">SO2608001</span>
+                    <span className="text-xs text-slate-400 block font-bold uppercase">Mã đơn hàng SO Mới</span>
+                    <span className="font-mono font-black text-lg text-[#005a46]">SO261024</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs font-bold text-slate-600">Trạng thái hiện tại:</span>
+                    <span className="text-xs font-bold text-slate-600">Trạng thái xử lý:</span>
                     <span className={`px-3 py-1 rounded-full text-xs font-black uppercase ${
                       orderStatus === "CHO_KY_THUAT"
-                        ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
+                        ? "bg-amber-100 text-amber-800 border border-amber-300"
                         : orderStatus === "DU_THONG_TIN_KT"
                         ? "bg-blue-100 text-blue-800 border border-blue-300 animate-pulse"
-                        : "bg-indigo-100 text-indigo-800 border border-indigo-300"
+                        : "bg-emerald-100 text-emerald-800 border border-emerald-300"
                     }`}>
-                      {orderStatus === "CHO_KY_THUAT" && "Chờ Kỹ thuật (QLSP)"}
-                      {orderStatus === "DU_THONG_TIN_KT" && "Đủ thông tin kỹ thuật"}
-                      {orderStatus === "DA_CHUYEN_KHSX" && "Đã chuyển KHSX"}
+                      {orderStatus === "CHO_KY_THUAT" && "Đã Trừ Tồn & Khóa Giữ Phôi"}
+                      {orderStatus === "DU_THONG_TIN_KT" && "Sẵn Sàng Chuyển KHSX"}
+                      {orderStatus === "DA_CHUYEN_KHSX" && "KHSX Đã Tiếp Nhận & Tách MO"}
                     </span>
                   </div>
                 </div>
 
-                {/* 3 MỐC TIẾN TRÌNH RÕ RÀNG */}
+                {/* 4 MỐC TIẾN TRÌNH RÕ RÀNG */}
                 <div className="space-y-3 text-xs">
                   
-                  {/* Mốc 1: Gửi QLSP */}
-                  <div className={`p-3 rounded-xl border flex items-center justify-between ${
-                    orderStatus === "CHO_KY_THUAT" ? "bg-white border-yellow-300" : "bg-emerald-50 border-emerald-200"
-                  }`}>
+                  {/* Mốc 1: Kho trừ tồn tức thì */}
+                  <div className="p-3.5 rounded-xl border bg-emerald-50/80 border-emerald-200 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                        orderStatus === "CHO_KY_THUAT" ? "bg-yellow-500 text-white" : "bg-emerald-600 text-white"
-                      }`}>
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs bg-emerald-600 text-white shrink-0">
                         1
                       </div>
                       <div>
-                        <span className="font-bold text-slate-900 block">QLSP Tiếp nhận & Cập nhật Routing làm mới</span>
-                        <span className="text-[11px] text-slate-500">Cấu hình: Tẩy xi $\rightarrow$ Khắc logo/tuổi mới $\rightarrow$ Xi mạ $\rightarrow$ KCS</span>
+                        <span className="font-bold text-slate-900 block flex items-center">
+                          <span>Kho CXLL: Khóa Giữ & Trừ Tồn Khả Dụng Ngay Lập Tức</span>
+                          <span className="ml-2 px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-mono text-[10px] font-bold">
+                            Tồn khả dụng: 0
+                          </span>
+                        </span>
+                        <span className="text-[11px] text-slate-600">
+                          {qtyFromStock} phôi tại Kho CXLL đã được gán nhãn [Đã gán đơn mới / Đã giữ chỗ - SO261024], triệt tiêu hoàn toàn rủi ro pick trùng vào đơn khác.
+                        </span>
                       </div>
                     </div>
-                    {orderStatus === "CHO_KY_THUAT" && (
-                      <button
-                        onClick={() => setOrderStatus("DU_THONG_TIN_KT")}
-                        className="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white font-bold text-xs rounded-lg shadow-xs cursor-pointer"
-                      >
-                        [Demo: Giả lập QLSP Duyệt]
-                      </button>
-                    )}
-                    {orderStatus !== "CHO_KY_THUAT" && (
-                      <span className="text-emerald-700 font-bold flex items-center">
-                        <Check className="h-4 w-4 mr-1" /> Đã cập nhật Routing
-                      </span>
-                    )}
+                    <span className="text-emerald-700 font-bold flex items-center text-xs whitespace-nowrap">
+                      <Check className="h-4 w-4 mr-1 text-emerald-600" /> Đã trừ tồn kho
+                    </span>
                   </div>
 
-                  {/* Mốc 2: Cập nhật Đủ thông tin KT & QLĐH bấm chuyển */}
-                  <div className={`p-3 rounded-xl border flex items-center justify-between ${
-                    orderStatus === "DU_THONG_TIN_KT"
+                  {/* Mốc 2: QLĐH kiểm soát & Bấm nút Chuyển KHSX */}
+                  <div className={`p-3.5 rounded-xl border flex items-center justify-between ${
+                    orderStatus === "CHO_KY_THUAT" || orderStatus === "DU_THONG_TIN_KT"
                       ? "bg-white border-blue-400 shadow-xs"
-                      : orderStatus === "DA_CHUYEN_KHSX"
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-slate-100 border-slate-200 opacity-60"
+                      : "bg-emerald-50/60 border-emerald-200"
                   }`}>
                     <div className="flex items-center space-x-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                        orderStatus === "DU_THONG_TIN_KT"
-                          ? "bg-blue-600 text-white"
-                          : orderStatus === "DA_CHUYEN_KHSX"
-                          ? "bg-emerald-600 text-white"
-                          : "bg-slate-400 text-white"
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                        orderStatus === "DA_CHUYEN_KHSX" ? "bg-emerald-600 text-white" : "bg-blue-600 text-white"
                       }`}>
                         2
                       </div>
                       <div>
                         <span className="font-bold text-slate-900 block">
-                          QLĐH Kiểm soát & Bấm nút &apos;Chuyển KHSX&apos;
+                          QLĐH Kiểm Soát & Bấm Nút [Chuyển KHSX]
                         </span>
-                        <span className="text-[11px] text-slate-500">
-                          Hệ thống không tự ý nhảy cóc sang KHSX; Bán hàng kiểm tra và chủ động bấm chuyển lệnh
+                        <span className="text-[11px] text-slate-600">
+                          Kinh doanh kiểm tra các thông số đơn hàng và chủ động chuyển lệnh xuống Kế hoạch sản xuất.
                         </span>
                       </div>
                     </div>
 
-                    {orderStatus === "DU_THONG_TIN_KT" && (
+                    {orderStatus !== "DA_CHUYEN_KHSX" ? (
                       <button
                         onClick={() => setOrderStatus("DA_CHUYEN_KHSX")}
-                        className="px-4 py-2 bg-[#005a46] hover:bg-[#004737] text-white font-bold text-xs rounded-lg shadow-sm flex items-center space-x-1.5 cursor-pointer animate-bounce"
+                        className="px-4 py-2 bg-[#005a46] hover:bg-[#004737] text-white font-bold text-xs rounded-lg shadow-sm flex items-center space-x-1.5 cursor-pointer animate-bounce whitespace-nowrap"
                       >
                         <Send className="h-3.5 w-3.5" />
-                        <span>Bấm [Chuyển KHSX] ngay</span>
+                        <span>Chuyển KHSX ngay</span>
                       </button>
-                    )}
-                    {orderStatus === "DA_CHUYEN_KHSX" && (
-                      <span className="text-emerald-700 font-bold flex items-center">
-                        <Check className="h-4 w-4 mr-1" /> Đã chuyển KHSX thành công
+                    ) : (
+                      <span className="text-emerald-700 font-bold flex items-center text-xs whitespace-nowrap">
+                        <Check className="h-4 w-4 mr-1" /> Đã chuyển KHSX
                       </span>
                     )}
                   </div>
 
-                  {/* Mốc 3: KHSX Tách Planned Order */}
-                  <div className={`p-3 rounded-xl border flex items-center justify-between ${
-                    orderStatus === "DA_CHUYEN_KHSX" ? "bg-white border-indigo-300" : "bg-slate-100 border-slate-200 opacity-60"
+                  {/* Mốc 3: KHSX Tách 2 Luồng Sản Xuất */}
+                  <div className={`p-3.5 rounded-xl border ${
+                    orderStatus === "DA_CHUYEN_KHSX" ? "bg-white border-indigo-300 shadow-xs" : "bg-slate-100 border-slate-200 opacity-60"
                   }`}>
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                        orderStatus === "DA_CHUYEN_KHSX" ? "bg-indigo-600 text-white" : "bg-slate-400 text-white"
-                      }`}>
-                        3
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-900 block">KHSX Tách 2 Lệnh Sản Xuất Kế Hoạch (PO)</span>
-                        <span className="text-[11px] text-slate-500">
-                          Lệnh A ({qtyFromStock} món kho $\rightarrow$ xuất phôi xi mạ) + Lệnh B ({qtyNewProduction} món $\rightarrow$ đúc mới hoàn toàn)
-                        </span>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
+                          orderStatus === "DA_CHUYEN_KHSX" ? "bg-indigo-600 text-white" : "bg-slate-400 text-white"
+                        }`}>
+                          3
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="font-bold text-slate-900 block">
+                              KHSX Phân Tách 2 Luồng Riêng Biệt (MO & Mã Bag mới SO-261024-xxx)
+                            </span>
+                            <span className="text-[11px] text-slate-500">
+                              Mỗi luồng áp dụng cấu trúc kỹ thuật và quy trình quản lý khác nhau:
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                            <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 space-y-1">
+                              <span className="font-bold text-emerald-900 block">
+                                🟢 Luồng 1: {qtyFromStock} SP Lấy từ Kho CXLL
+                              </span>
+                              <div className="text-[11px] text-emerald-800 space-y-0.5">
+                                <div>• <b>BOM:</b> Rỗng (Phôi đã có sẵn, không tiêu hao vàng/đá)</div>
+                                <div>• <b>Routing gán cứng 3 trạm:</b> <span className="font-mono font-bold">Serve FG → Stamping → Packing Out</span></div>
+                                <div>• <b>Mã Bag mới:</b> <span className="font-mono">SO-261024-001</span></div>
+                              </div>
+                            </div>
+
+                            <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 space-y-1">
+                              <span className="font-bold text-blue-900 block">
+                                🔵 Luồng 2: {qtyNewProduction} SP Sản Xuất Mới
+                              </span>
+                              <div className="text-[11px] text-blue-800 space-y-0.5">
+                                <div>• <b>BOM & Routing:</b> Kéo tự động từ Danh mục QLSP</div>
+                                <div>• <b>Công đoạn:</b> Sáp → Đúc → Nguội → Đính đá → Đánh bóng → Xi mạ → KCS</div>
+                                <div>• <b>Mã Bag mới:</b> <span className="font-mono">SO-261024-002</span></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    {orderStatus === "DA_CHUYEN_KHSX" && (
-                      <span className="text-indigo-700 font-bold bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-200">
-                        2 Planned Orders Sẵn Sàng
-                      </span>
-                    )}
+                  </div>
+
+                  {/* Mốc 4: Vòng đời cấp phôi và hoàn tất giao hàng */}
+                  <div className={`p-3.5 rounded-xl border ${
+                    orderStatus === "DA_CHUYEN_KHSX" ? "bg-amber-50/70 border-amber-200" : "bg-slate-100 border-slate-200 opacity-60"
+                  }`}>
+                    <div className="flex items-start space-x-3">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
+                        orderStatus === "DA_CHUYEN_KHSX" ? "bg-amber-600 text-white" : "bg-slate-400 text-white"
+                      }`}>
+                        4
+                      </div>
+                      <div className="space-y-2 flex-1">
+                        <span className="font-bold text-slate-900 block">
+                          KHSX Release MPS → Chuyển Xuống Kho TP (DS Chờ Serve FG / Chuyển Bag)
+                        </span>
+                        <p className="text-[11px] text-slate-600">
+                          Kho Thành Phẩm nhận danh sách chờ Serve FG → Mở giao diện Điều phối Chuyển Bag để cấp phôi vào Bag mới <b>SO-261024-001</b> → Xác nhận cấp và Đóng Bag cũ.
+                        </p>
+                        {orderStatus === "DA_CHUYEN_KHSX" && (
+                          <div className="pt-2 flex items-center justify-between border-t border-amber-200/60">
+                            <span className="text-[11px] font-bold text-amber-900">
+                              Đã phát hành lệnh sản xuất MPS:
+                            </span>
+                            <Link
+                              href="/inventory/reprocess/serve?targetBag=SO-261024-001&oldBag=SO-260800061"
+                              className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-bold text-[11px] shadow-xs inline-flex items-center gap-1.5 transition-colors"
+                            >
+                              <Zap className="h-3.5 w-3.5 text-amber-300" />
+                              <span>Mở Trạm Serve FG (Chuyển sang Bag mới)</span>
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

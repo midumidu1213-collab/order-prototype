@@ -94,6 +94,10 @@ export default function OrderDetailPage({ params }) {
   const [isProductionPlanModalOpen, setIsProductionPlanModalOpen] = useState(false);
   const [selectedPlanItem, setSelectedPlanItem] = useState(null);
 
+  // State quản lý Modal xem Chi Tiết Các Lô Thành Phẩm Đã Pick (Khi click vào cột SL Pick Kho)
+  const [isStockPickModalOpen, setIsStockPickModalOpen] = useState(false);
+  const [selectedStockPickItem, setSelectedStockPickItem] = useState(null);
+
   // State quản lý Modal Tùy chọn thuộc tính kỹ thuật nội bộ (Admin) cho đơn Chờ xử lý
   const [isAdminConfigModalOpen, setIsAdminConfigModalOpen] = useState(false);
 
@@ -477,10 +481,19 @@ export default function OrderDetailPage({ params }) {
                 {order.type || "Đơn hàng Gia công"}
               </span>
             </div>
-            <div>
-              <span className="text-slate-400 text-[11px] block">Trọng lượng:</span>
-              <span className="font-mono font-bold text-slate-800">{order.weight || "408.0000L"}</span>
-              <span className="text-[10px] text-slate-400 ml-1">(Lượng - L)</span>
+            <div className="pt-1 border-t border-slate-100 space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 text-[11px]">Trọng lượng vàng:</span>
+                <span className="font-mono font-bold text-slate-800">408.0000 <span className="text-[10px] text-slate-400 font-normal">(L)</span></span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 text-[11px]">Tổng TL đá:</span>
+                <span className="font-mono font-bold text-slate-700">18.5200 <span className="text-[10px] text-slate-400 font-normal">(L)</span></span>
+              </div>
+              <div className="flex items-center justify-between text-xs bg-emerald-50/80 px-1.5 py-0.5 rounded border border-emerald-200">
+                <span className="text-emerald-900 font-semibold text-[11px]">Tổng trọng lượng:</span>
+                <span className="font-mono font-black text-emerald-800">426.5200 <span className="text-[10px] text-emerald-600 font-normal">(L)</span></span>
+              </div>
             </div>
           </div>
 
@@ -584,11 +597,20 @@ export default function OrderDetailPage({ params }) {
                 <th className="px-3 py-3 text-center">Ni/Size</th>
                 <th className="px-3 py-3 text-center font-bold">Số lượng</th>
                 <th className="px-3 py-3 text-center">Yêu cầu thay đổi</th>
-                <th className="px-3 py-3 text-right">Trọng lượng (L)</th>
+                <th className="px-3 py-3 text-right">Trọng lượng vàng</th>
+                <th className="px-3 py-3 text-right">TL Đá</th>
+                <th className="px-3 py-3 text-right">Tổng trọng lượng</th>
                 <th className="px-4 py-3 text-right">Đơn giá</th>
                 <th className="px-3 py-3 text-center">Ghi chú</th>
-                <th className="px-3 py-3 text-center whitespace-nowrap min-w-[120px]">Trạng thái BOM/Routing</th>
-                <th className="px-3 py-3 text-center whitespace-nowrap min-w-[130px]">SL Pick Kho TP</th>
+                <th className="px-3 py-3 text-center whitespace-nowrap min-w-[130px]" title="Đây là trạng thái BOM/Routing dành cho item sản xuất mới">
+                  BOM/Routing (SX Mới)
+                </th>
+                <th className="px-3 py-3 text-center whitespace-nowrap min-w-[85px] text-emerald-800 bg-emerald-50/50">
+                  SL Pick Kho
+                </th>
+                <th className="px-3 py-3 text-center whitespace-nowrap min-w-[85px] text-amber-800 bg-amber-50/50">
+                  SL SX Mới
+                </th>
                 <th className="px-3 py-3 text-center w-20">Thao tác</th>
               </tr>
             </thead>
@@ -675,9 +697,19 @@ export default function OrderDetailPage({ params }) {
                           {item.changeReq || "A00"}
                         </td>
 
-                        {/* Trọng lượng */}
+                        {/* Trọng lượng vàng */}
                         <td className="px-3 py-3.5 text-right font-mono text-slate-900 font-bold">
-                          {item.weight}
+                          {(item.weight || "2.1500L").replace(/L/g, '')}
+                        </td>
+
+                        {/* TL Đá */}
+                        <td className="px-3 py-3.5 text-right font-mono text-slate-700 font-medium">
+                          0.0820
+                        </td>
+
+                        {/* Tổng trọng lượng */}
+                        <td className="px-3 py-3.5 text-right font-mono text-emerald-800 font-bold">
+                          2.2320
                         </td>
 
                         {/* Đơn giá bộ */}
@@ -710,8 +742,15 @@ export default function OrderDetailPage({ params }) {
                         </td>
 
                         {/* SL Pick Kho TP */}
-                        <td className="px-3 py-3.5 text-center">
-                          <span className="text-slate-300 font-mono text-xs">0</span>
+                        <td className="px-3 py-3.5 text-center bg-emerald-50/20">
+                          <span className="text-slate-300 font-mono text-xs">—</span>
+                        </td>
+
+                        {/* SL SX Mới */}
+                        <td className="px-3 py-3.5 text-center bg-amber-50/20">
+                          <span className="font-mono font-bold text-amber-900 bg-amber-100/70 border border-amber-300 px-2 py-0.5 rounded text-xs inline-block">
+                            {item.qty}
+                          </span>
                         </td>
 
                         {/* Thao tác */}
@@ -799,9 +838,19 @@ export default function OrderDetailPage({ params }) {
                             A00
                           </td>
 
-                          {/* Trọng lượng */}
+                          {/* Trọng lượng vàng */}
                           <td className="px-3 py-3 text-right font-mono text-slate-700 font-medium">
-                            {comp.weight}
+                            {(comp.weight || "0.5000L").replace(/L/g, '')}
+                          </td>
+
+                          {/* TL Đá */}
+                          <td className="px-3 py-3 text-right font-mono text-slate-500">
+                            {comp.stoneColor && comp.stoneColor !== "---" ? "0.0200" : "—"}
+                          </td>
+
+                          {/* Tổng trọng lượng */}
+                          <td className="px-3 py-3 text-right font-mono text-slate-800 font-semibold">
+                            {comp.stoneColor && comp.stoneColor !== "---" ? (parseFloat((comp.weight || "0.5").replace(/L/g, '')) + 0.02).toFixed(4) : (comp.weight || "0.5000L").replace(/L/g, '')}
                           </td>
 
                           {/* Đơn giá */}
@@ -824,8 +873,15 @@ export default function OrderDetailPage({ params }) {
                           </td>
 
                           {/* SL Pick Kho TP */}
-                          <td className="px-3 py-3 text-center">
-                            <span className="text-slate-300 font-mono text-xs">0</span>
+                          <td className="px-3 py-3 text-center bg-emerald-50/20">
+                            <span className="text-slate-300 font-mono text-xs">—</span>
+                          </td>
+
+                          {/* SL SX Mới */}
+                          <td className="px-3 py-3 text-center bg-amber-50/20">
+                            <span className="font-mono font-bold text-amber-900 bg-amber-100/70 border border-amber-300 px-2 py-0.5 rounded text-xs inline-block">
+                              {comp.qty}
+                            </span>
                           </td>
 
                           {/* Thao tác */}
@@ -890,9 +946,21 @@ export default function OrderDetailPage({ params }) {
                       {item.changeReq || "A00"}
                     </td>
 
-                    {/* Trọng lượng */}
+                    {/* Trọng lượng vàng (Bỏ đơn vị tính L theo ảnh) */}
                     <td className="px-3 py-3.5 text-right font-mono text-slate-800 font-semibold">
-                      {item.weight || "0.4500"}
+                      {(item.weight || "0.4500").replace(/L/g, '')}
+                    </td>
+
+                    {/* TL Đá */}
+                    <td className="px-3 py-3.5 text-right font-mono text-slate-500">
+                      {item.stoneColor && item.stoneColor !== "---" ? "0.0150" : <span className="text-slate-300 font-normal select-none">—</span>}
+                    </td>
+
+                    {/* Tổng trọng lượng */}
+                    <td className="px-3 py-3.5 text-right font-mono text-slate-900 font-bold">
+                      {item.stoneColor && item.stoneColor !== "---" 
+                        ? (parseFloat((item.weight || "0.4500").replace(/L/g, '')) + 0.015).toFixed(4)
+                        : (item.weight || "0.4500").replace(/L/g, '')}
                     </td>
 
                     {/* Đơn giá */}
@@ -907,7 +975,7 @@ export default function OrderDetailPage({ params }) {
                       {item.note || "--"}
                     </td>
 
-                    {/* Trạng thái BOM/Routing (Tách 2 luồng SX Mới & Kho TP Type: FG) */}
+                    {/* Trạng thái BOM/Routing (Đây là trạng thái BOM/Routing dành cho item sản xuất mới) */}
                     <td className="px-3 py-3.5 text-center whitespace-nowrap">
                       {item.qtyFromStock > 0 ? (
                         <button
@@ -917,7 +985,7 @@ export default function OrderDetailPage({ params }) {
                             setIsProductionPlanModalOpen(true);
                           }}
                           className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 hover:bg-emerald-200 text-[#005a46] border border-emerald-300 inline-flex items-center space-x-1 cursor-pointer transition-all shadow-2xs hover:scale-105"
-                          title="Bấm để xem chi tiết Kế hoạch sản xuất 2 Luồng (SX Mới & Kho TP)"
+                          title="Đây là trạng thái BOM/Routing dành cho item sản xuất mới (Click xem chi tiết 2 Luồng)"
                         >
                           <Boxes className="h-3 w-3 shrink-0 text-[#005a46]" />
                           <span>{item.routingStatus || "2 Luồng: SX Mới + Kho TP (FG)"}</span>
@@ -938,23 +1006,34 @@ export default function OrderDetailPage({ params }) {
                       )}
                     </td>
 
-                    {/* SL Pick Kho TP: Hiển thị tinh gọn số lượng đã pick chọn từ kho */}
-                    <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                    {/* SL Pick Kho: Bỏ hoàn toàn '/100' tránh hiểu nhầm tỷ lệ */}
+                    <td className="px-3 py-3.5 text-center whitespace-nowrap bg-emerald-50/20">
                       {item.qtyFromStock > 0 ? (
                         <button
                           type="button"
                           onClick={() => {
-                            setSelectedPlanItem(item);
-                            setIsProductionPlanModalOpen(true);
+                            setSelectedStockPickItem(item);
+                            setIsStockPickModalOpen(true);
                           }}
-                          className="font-mono font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-md text-xs inline-flex items-center space-x-1 cursor-pointer transition-colors shadow-2xs"
-                          title="Bấm xem phân bổ các lô & kế hoạch sản xuất"
+                          className="font-mono font-black text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 px-3 py-1 rounded-lg text-xs inline-flex items-center space-x-1 cursor-pointer transition-colors shadow-2xs"
+                          title="Bấm xem chi tiết các Lô thành phẩm đã pick từ kho"
                         >
-                          <span>{item.qtyFromStock} / {item.qty}</span>
-                          <Eye className="h-3 w-3 text-emerald-600" />
+                          <span>{item.qtyFromStock}</span>
+                          <Eye className="h-3 w-3 text-emerald-700" />
                         </button>
                       ) : (
-                        <span className="text-slate-300 font-mono text-xs">0</span>
+                        <span className="text-slate-300 font-mono text-xs select-none">—</span>
+                      )}
+                    </td>
+
+                    {/* SL Sản Xuất Mới: Cột mới tách biệt */}
+                    <td className="px-3 py-3.5 text-center whitespace-nowrap bg-amber-50/20">
+                      {item.qty - (item.qtyFromStock || 0) > 0 ? (
+                        <span className="font-mono font-black text-amber-900 bg-amber-100/80 border border-amber-300 px-3 py-1 rounded-lg text-xs inline-block shadow-2xs">
+                          {item.qty - (item.qtyFromStock || 0)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300 font-mono text-xs select-none">—</span>
                       )}
                     </td>
 
@@ -1125,26 +1204,33 @@ export default function OrderDetailPage({ params }) {
 
                   <div className="space-y-3 text-xs">
                     <div>
-                      <span className="text-slate-500 text-[11px] block">Routing cố định (Hard 2 công đoạn):</span>
+                      <span className="text-slate-500 text-[11px] block font-medium">Routing cố định (Hard 3 công đoạn):</span>
                       <div className="mt-1 p-2.5 bg-white rounded-lg border border-emerald-200 space-y-2">
                         <div className="flex items-start space-x-2">
                           <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#005a46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
                           <div>
                             <strong className="text-slate-900 text-xs">STG-SERVE-FG: Serve FG (Phục vụ kho TP)</strong>
-                            <p className="text-[11px] text-slate-500">Điều chuyển hàng từ két kho TP, kiểm tra ngoại quan & ni tay (Thời gian: 0.5 ngày)</p>
+                            <p className="text-[11px] text-slate-500">Cấp phôi từ Kho CXLL theo số lượng đã gán (Thời gian: 0.5 ngày)</p>
                           </div>
                         </div>
                         <div className="flex items-start space-x-2">
                           <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#005a46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
                           <div>
+                            <strong className="text-slate-900 text-xs">STG-STAMPING: Stamping (Xưởng Thực Thi)</strong>
+                            <p className="text-[11px] text-slate-500">Khắc lại logo khách hàng DNTN Ý NGỌC & ký hiệu chuẩn theo SO mới (Thời gian: 1.0 ngày)</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start space-x-2">
+                          <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#005a46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                          <div>
                             <strong className="text-slate-900 text-xs">STG-PACKING-OUT: Packing Out (Đóng gói xuất kho)</strong>
-                            <p className="text-[11px] text-slate-500">Hoàn thiện đóng gói, dán tem vỉ theo quy cách đơn mới (Thời gian: 0.5 ngày)</p>
+                            <p className="text-[11px] text-slate-500">Kiểm tra KCS ngoại quan, hoàn thiện đóng tem vỉ và nhập kho sẵn sàng giao hàng (Thời gian: 0.5 ngày)</p>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Chi tiết các Lô hàng đã pick */}
+                    {/* Chi tiết các Lô hàng đã pick (Bỏ badge rác theo yêu cầu của Chị đẹp) */}
                     {selectedPlanItem.pickedLots && selectedPlanItem.pickedLots.length > 0 && (
                       <div className="p-3 bg-white rounded-lg border border-emerald-200 space-y-1.5">
                         <span className="text-[11px] font-bold text-[#005a46] block">
@@ -1155,15 +1241,9 @@ export default function OrderDetailPage({ params }) {
                             <div key={idx} className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200 text-[11px]">
                               <div>
                                 <span className="font-mono font-black text-slate-900 text-xs">{lot.lotCode}</span>
-                                {lot.bagCode && (
-                                  <span className="text-slate-500 ml-1 font-mono text-[10px]">[{lot.bagCode}]</span>
-                                )}
-                                <span className="text-slate-500 ml-1.5 font-medium">(SO cũ: {lot.oldOrderCode})</span>
-                                {lot.location && (
-                                  <span className="text-slate-400 ml-1.5 text-[10px] block sm:inline">• {lot.location.split("(")[0].trim()}</span>
-                                )}
+                                <span className="text-slate-500 ml-2 font-medium">(SO cũ: {lot.oldOrderCode})</span>
                               </div>
-                              <div className="font-mono font-black text-emerald-800 text-xs bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
+                              <div className="font-mono font-black text-emerald-800 text-xs bg-emerald-100/70 px-2.5 py-0.5 rounded border border-emerald-300">
                                 {lot.pickedQty} món
                               </div>
                             </div>
@@ -1189,6 +1269,231 @@ export default function OrderDetailPage({ params }) {
                 type="button"
                 onClick={() => setIsProductionPlanModalOpen(false)}
                 className="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* MODAL MỚI CHUYÊN BIỆT: CHI TIẾT CÁC LÔ KHO THÀNH PHẨM ĐÃ PICK (KHI CLICK VÀO CỘT SL PICK KHO) */}
+      {isStockPickModalOpen && selectedStockPickItem && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            
+            {/* Header Modal - Xanh kho FG chuyên nghiệp */}
+            <div className="bg-gradient-to-r from-[#005a46] via-[#004737] to-[#013328] text-white px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-emerald-500/20 rounded-lg border border-emerald-400/30">
+                  <Warehouse className="h-5 w-5 text-emerald-300" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                    <span>Chi Tiết Lô Kho Thành Phẩm Đã Pick Vào Đơn Hàng</span>
+                    <span className="text-[11px] bg-emerald-400/20 text-emerald-200 px-2.5 py-0.5 rounded-full border border-emerald-400/30 font-bold font-mono">
+                      {selectedStockPickItem.qtyFromStock || 36} Món
+                    </span>
+                  </h3>
+                  <p className="text-xs text-emerald-100/80 mt-0.5">
+                    Đơn hàng: <strong className="text-white font-mono">{order.code}</strong> • Item: <strong className="text-white font-mono">{selectedStockPickItem.itemCode}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsStockPickModalOpen(false)}
+                className="text-emerald-200 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Nội dung Modal - Tinh gọn, chỉ hiển thị thông tin Kho TP, KHÔNG có Routing Sản xuất mới */}
+            <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+              
+              {/* 3 Thẻ Thông Tin Tóm Tắt */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                {/* Thẻ 1: Thông tin sản phẩm */}
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                  <span className="text-slate-400 text-[11px] block">Sản phẩm áp dụng:</span>
+                  <div className="font-bold text-slate-900 text-sm">
+                    {selectedStockPickItem.itemName || selectedStockPickItem.name || "Bông Tai Nữ Vàng 61Y"}
+                  </div>
+                  <div className="text-slate-600 text-[11px]">
+                    Tuổi vàng: <strong className="text-slate-800">{order.gold}</strong> • Ni/Size: <strong className="text-slate-800">{selectedStockPickItem.size || "---"}</strong>
+                  </div>
+                </div>
+
+                {/* Thẻ 2: Số lượng & Trọng lượng đã pick */}
+                <div className="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-200 space-y-1">
+                  <span className="text-emerald-800 text-[11px] block font-medium">Số lượng pick từ Kho TP:</span>
+                  <div className="flex items-baseline space-x-2">
+                    <span className="font-mono font-black text-emerald-900 text-lg">
+                      {selectedStockPickItem.qtyFromStock || 36} món
+                    </span>
+                    <span className="text-emerald-700 text-xs">
+                      / {selectedStockPickItem.qty} món ({Math.round(((selectedStockPickItem.qtyFromStock || 36) / selectedStockPickItem.qty) * 100)}%)
+                    </span>
+                  </div>
+                  <div className="text-emerald-800 text-[11px] font-mono">
+                    Tổng TL pick kho: <strong>{((parseFloat(selectedStockPickItem.weight) || 0.5) * (selectedStockPickItem.qtyFromStock || 36)).toFixed(4)} (L)</strong>
+                  </div>
+                </div>
+
+                {/* Thẻ 3: Trạng thái & Cơ chế kho */}
+                <div className="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200 space-y-1">
+                  <span className="text-amber-800 text-[11px] block font-medium">Cơ chế quản lý kho:</span>
+                  <div className="font-bold text-amber-950 text-xs flex items-center space-x-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                    <span>Đã khóa giữ chỗ & trừ tồn tức thì</span>
+                  </div>
+                  <p className="text-[11px] text-amber-900 leading-tight">
+                    Tránh trùng đơn khác. Tự động giải phóng đá giữ chỗ về kho phụ liệu.
+                  </p>
+                </div>
+              </div>
+
+              {/* Khối Quy Trình Routing Làm Mới Cố Định (Hard 3 công đoạn) */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-800 uppercase text-[11px] tracking-wide flex items-center space-x-1.5">
+                    <Zap className="h-3.5 w-3.5 text-amber-600" />
+                    <span>Quy Trình Routing Làm Mới Cố Định (Gán Cứng 3 Trạm):</span>
+                  </span>
+                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-300 font-mono">
+                    BOM RỖNG • TYPE: FG
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-200 flex items-start space-x-2">
+                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#005a46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                    <div>
+                      <strong className="text-slate-900 text-xs block">Serve FG (Kho CXLL)</strong>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Cấp phôi từ Kho CXLL theo số lượng đã gán (0.5 ngày)</p>
+                    </div>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-200 flex items-start space-x-2">
+                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#005a46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                    <div>
+                      <strong className="text-slate-900 text-xs block">Stamping (Xưởng Thực Thi)</strong>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Khắc lại logo DNTN Ý NGỌC & tuổi vàng chuẩn (1.0 ngày)</p>
+                    </div>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-200 flex items-start space-x-2">
+                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-[#005a46] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                    <div>
+                      <strong className="text-slate-900 text-xs block">Packing Out (Kho TP)</strong>
+                      <p className="text-[11px] text-slate-500 mt-0.5">KCS ngoại quan, đóng tem vỉ và nhập kho sẵn sàng giao (0.5 ngày)</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* BẢNG CHI TIẾT CÁC LÔ HÀNG ĐÃ GÁN (DATA TABLE CHUẨN MỰC - KHÔNG BADGE RÁC) */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+                <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-[#005a46] uppercase tracking-wider flex items-center space-x-2">
+                    <Boxes className="h-4 w-4 text-[#005a46]" />
+                    <span>Danh Sách Các Lô Thành Phẩm Đã Gán Vào Đơn ({selectedStockPickItem.pickedLots?.length || 5} Lô)</span>
+                  </h4>
+                  <span className="text-[11px] text-slate-500">
+                    Vị trí lưu kho: <strong className="text-slate-800">Kho Chờ Xử Lý Lại (CXLL)</strong>
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
+                    <thead className="bg-slate-50 font-bold text-slate-600 uppercase text-[11px] tracking-wider whitespace-nowrap">
+                      <tr>
+                        <th className="px-3 py-2.5 text-center w-12">STT</th>
+                        <th className="px-4 py-2.5">Mã Lô (Tồn Kho TP)</th>
+                        <th className="px-3 py-2.5">SO Gốc Bị Hủy</th>
+                        <th className="px-4 py-2.5">Khách Hàng Gốc</th>
+                        <th className="px-3 py-2.5 text-center font-bold text-emerald-800 bg-emerald-50/50">SL Pick</th>
+                        <th className="px-3 py-2.5 text-right font-mono">Trọng Lượng (L)</th>
+                        <th className="px-3 py-2.5 text-center">Trạng Thái</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {(selectedStockPickItem.pickedLots && selectedStockPickItem.pickedLots.length > 0
+                        ? selectedStockPickItem.pickedLots
+                        : [
+                            { lotCode: "SO-260900106", oldOrderCode: "SO-26070040", oldCustomer: "Tiệm Vàng Kim Thành", pickedQty: 8, weight: "4.0000" },
+                            { lotCode: "SO-260900047", oldOrderCode: "SO-26070042", oldCustomer: "Vàng Mi Hồng Sài Gòn", pickedQty: 6, weight: "3.0000" },
+                            { lotCode: "SO-260900019", oldOrderCode: "SO-26070045", oldCustomer: "Doji Jewelry Miền Nam", pickedQty: 7, weight: "3.5000" },
+                            { lotCode: "SO-261000795", oldOrderCode: "SO-26070050", oldCustomer: "Tiệm Vàng Ngọc Thẩm", pickedQty: 9, weight: "4.5000" },
+                            { lotCode: "SO-261002499", oldOrderCode: "SO-26070055", oldCustomer: "DNTN Vàng Bạc Ý Ngọc", pickedQty: 6, weight: "3.0000" }
+                          ]
+                      ).map((lot, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-400">
+                            {idx + 1}
+                          </td>
+                          <td className="px-4 py-2.5 whitespace-nowrap">
+                            <span className="font-mono font-black text-slate-900 text-xs">
+                              {lot.lotCode}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap font-mono text-slate-600 font-medium">
+                            {lot.oldOrderCode}
+                          </td>
+                          <td className="px-4 py-2.5 text-slate-700">
+                            {lot.oldCustomer || "Khách hàng cũ"}
+                          </td>
+                          <td className="px-3 py-2.5 text-center whitespace-nowrap bg-emerald-50/30">
+                            <span className="font-mono font-black text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded border border-emerald-300 text-xs inline-block">
+                              {lot.pickedQty} món
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-right whitespace-nowrap font-mono text-slate-800 font-semibold">
+                            {lot.weight ? parseFloat(lot.weight).toFixed(4) : (lot.pickedQty * 0.5).toFixed(4)}
+                          </td>
+                          <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 inline-block">
+                              Đã khóa tồn
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-slate-50 font-bold text-slate-800 border-t-2 border-slate-200 text-xs">
+                      <tr>
+                        <td colSpan={4} className="px-4 py-2.5 text-right uppercase tracking-wider font-bold text-slate-600">
+                          Tổng cộng ({selectedStockPickItem.pickedLots?.length || 5} Lô):
+                        </td>
+                        <td className="px-3 py-2.5 text-center bg-emerald-100/60 font-mono font-black text-emerald-950 text-sm">
+                          {selectedStockPickItem.qtyFromStock || 36} món
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900">
+                          {((parseFloat(selectedStockPickItem.weight) || 0.5) * (selectedStockPickItem.qtyFromStock || 36)).toFixed(4)}
+                        </td>
+                        <td className="px-3 py-2.5 text-center text-emerald-700 font-medium">
+                          100% Khả dụng
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer Modal */}
+            <div className="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex items-center justify-between">
+              <Link
+                href="/inventory/reprocess"
+                className="text-xs text-[#005a46] hover:text-[#004737] font-bold flex items-center space-x-1 hover:underline"
+              >
+                <span>Xem trong Kho Chờ Xử Lý Lại (CXLL)</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <button
+                type="button"
+                onClick={() => setIsStockPickModalOpen(false)}
+                className="px-5 py-2 bg-[#004737] hover:bg-[#00382b] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
               >
                 Đóng
               </button>

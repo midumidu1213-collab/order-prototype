@@ -1,69 +1,87 @@
-# US-[MODULE]-[XX]: [Tên User Story]
+# [Mã US]: [Tên Module] - [Tên User Story]
 
 > **Mã Story:** `US-[MODULE]-[XX]`  
-> **Module:** [Tên Module - Ví dụ: Quản lý đơn hàng (Sales Order Management)]  
-> **Feature:** [Tên Tính năng - Ví dụ: Yêu cầu hủy SO (Cancel Sales Order Requests)]  
+> **Epic:** [Tên Epic - Ví dụ: Epic 03: Chờ Xử Lý Lại / Epic 02: Quản Trị Đơn Hàng]  
+> **Module / Feature:** [Tên Module] / [Tên Tính năng cụ thể]  
+> **Actor chính:** [Vai trò người dùng thao tác chính - Ví dụ: Quản lý Kho thành phẩm, Sale Admin...]  
+> **Tài liệu tham chiếu:** [Link Figma / Prototype / API Spec nếu có]  
+> **Trạng thái:** `Draft` / `Ready for Review` / `Approved`
 
 ---
 
-## 1. Tóm tắt User Story (User Story Statement)
-*   **AS A:** [Vai trò người dùng - Ví dụ: Nhân viên Kinh doanh, Quản lý Kỹ thuật...]
-*   **I WANT TO:** [Hành động/Tính năng mong muốn thao tác trên hệ thống]
-*   **SO THAT:** [Mục đích và giá trị nghiệp vụ mang lại cho người dùng / doanh nghiệp]
+## 1. USER STORY *
+
+*   **Là một (As a):** [Vai trò người dùng thao tác chính]
+*   **Tôi muốn (I want):** 
+    1. [Mục tiêu 1...]
+    2. [Mục tiêu 2...]
+    3. [Mục tiêu 3...]
+*   **Để (So that):** [Lợi ích, giá trị mang lại cho doanh nghiệp và vận hành hệ thống]
 
 ---
 
-## 2. Luồng Nghiệp vụ (Business Flow)
+## 2. TIÊU CHÍ CHẤP NHẬN (ACCEPTANCE CRITERIA - AC) *
+
+*   **AC 1: [Tên kịch bản 1 - Luồng chính / Happy Path]**
+    *   **Given (Biết rằng):** [Điều kiện tiền đề, ngữ cảnh bắt đầu trước khi thao tác]
+    *   **When (Khi):** [Hành động kích hoạt, tương tác của người dùng trên giao diện]
+    *   **Then (Thì):** [Kết quả đầu ra mong đợi, phản hồi của hệ thống và trạng thái dữ liệu]
+    *   **And (Và):** [Hiệu ứng bổ sung, thông báo Toast, cập nhật badge...]
+
+*   **AC 2: [Tên kịch bản 2 - Luồng ngoại lệ & Chặn lỗi ràng buộc (Validation / Guard)]**
+    *   **Biết rằng (Given):** [Điều kiện khi dữ liệu hoặc trạng thái không thỏa mãn quy tắc]
+    *   **Khi (When):** [Người dùng thực hiện thao tác trên giao diện]
+    *   **Thì (Then):** [Hệ thống chặn thao tác và hiển thị thông báo lỗi cụ thể]
+
+*   **AC 3: [Tên kịch bản 3 - Thao tác chọn nhiều / Hàng loạt (Batch Actions)]**
+    *   **Biết rằng (Given):** [Ngữ cảnh người dùng cần thao tác trên nhiều bản ghi cùng lúc]
+    *   **Khi (When):** [Người dùng tick chọn Checkbox nhiều dòng và bấm nút hành động chung]
+    *   **Thì (Then):** [Hệ thống thực thi đồng thời và phản hồi kết quả tổng hợp]
+
+*   **AC 4: [Tên kịch bản 4 - Thao tác số lượng lẻ / Tùy biến phân bổ]**
+    *   **Biết rằng (Given):** [Ngữ cảnh xử lý số lượng một phần của bản ghi (VD: 2/4 pcs)]
+    *   **Khi (When):** [Người dùng nhập số lượng lẻ cần xử lý]
+    *   **Thì (Then):** [Hệ thống tách bản ghi, xử lý đúng số lượng nhập và giữ lại phần còn lại]
+
+---
+
+## 3. THIẾT KẾ (UX/UI) *
+
+*   **Link Figma / Prototype:** [Đường dẫn URL prototype / màn hình tương ứng]
+*   **Ảnh đính kèm:** 
+    *   *(Chèn ảnh chụp màn hình UI, mockup hoặc modal popup tại đây)*
+
+---
+
+## 4. QUY TẮC NGHIỆP VỤ (BUSINESS RULES) *
+
+*   **BR-[MODULE]-01 ([Tên Quy tắc 1]):** [Nội dung quy tắc, công thức tính toán, điều kiện ràng buộc cốt lõi].
+*   **BR-[MODULE]-02 ([Tên Quy tắc 2]):** [Quy tắc chuyển đổi trạng thái dữ liệu, chốt chặn nghiệp vụ giữa các phân hệ].
+*   **BR-[MODULE]-03 ([Tên Quy tắc 3]):** [Quy chuẩn định dạng số, mã vạch, màu sắc hoặc phân quyền thao tác].
+
+---
+
+## 5. DANH MỤC DỮ LIỆU & RÀNG BUỘC
+
+### 5.1 Màn hình [Tên màn hình / Popup / Drawer]
+
+| Fields (Tên trường) | Type (Kiểu dữ liệu) | Required (Bắt buộc) | Default value (Giá trị mặc định) | Rules (Quy tắc & Nghiệp vụ) |
+| :--- | :--- | :---: | :--- | :--- |
+| **[Tên trường 1]** | Text / Varchar | Có | Rỗng | Độ dài tối đa 50 ký tự, không chứa ký tự đặc biệt. |
+| **[Tên trường 2]** | Dropdown / Enum | Có | Giá trị đầu tiên | Danh sách giá trị: `Option A`, `Option B`. |
+| **[Tên trường 3]** | Number / Decimal | Tùy chọn | `0` | Định dạng số lẻ 4 chữ số thập phân (`0.0000`), không âm. |
+| **Checkbox** | Boolean | Không | `Unchecked` | Cho phép tick chọn từng dòng hoặc chọn tất cả tại header. |
+| **Thao tác** | Action / Button | — | — | Kích hoạt modal hoặc thực thi hành động tương ứng. |
+
+---
+
+## 6. LUỒNG NGHIỆP VỤ (MERMAID FLOW)
 
 ```mermaid
 flowchart TD
-    Start([Bắt đầu / Hành động kích hoạt]) --> Step1[Bước 1: Người dùng truy cập / thực hiện thao tác]
-    Step1 --> Step2[Bước 2: Hệ thống tải dữ liệu / hiển thị form]
-    Step2 --> Step3[Bước 3: Nhập liệu / Tương tác]
-    
-    Step3 --> Decision{Kiểm tra điều kiện / Validation}
-    Decision -->|Hợp lệ| Success[Thực thi hành động & Cập nhật hệ thống]
-    Decision -->|Không hợp lệ| Error[Hiển thị cảnh báo lỗi / Chặn thao tác]
-    
-    Success --> Done([Hoàn tất quy trình & Điều hướng])
+    Start([🟢 Bắt đầu: Người dùng truy cập màn hình]) --> Action[Thực hiện thao tác trên giao diện]
+    Action --> CheckRule{Kiểm tra ràng buộc nghiệp vụ?}
+    CheckRule -->|Không thỏa mãn| ShowError[Chặn thao tác & Báo lỗi rõ ràng]
+    CheckRule -->|Thỏa mãn| Execute[Thực thi nghiệp vụ & Cập nhật trạng thái dữ liệu]
+    Execute --> Success([🏁 Hoàn tất thành công & Điều hướng])
 ```
-
----
-
-## 3. Đặc tả Cột Dữ liệu / Giao diện (Field Specifications)
-
-| STT | Tên trường / Cột | Kiểu dữ liệu | Bắt buộc | Mô tả & Quy tắc hiển thị / Validation |
-| :---: | :--- | :--- | :---: | :--- |
-| 1 | **[Tên trường 1]** | Chuỗi (Text) / Số / Ngày | Có / Không | [Mô tả mục đích, format hiển thị, giá trị mặc định] |
-| 2 | **[Tên trường 2]** | Lựa chọn (Select Dropdown) | Có / Không | [Danh sách giá trị lựa chọn, quy tắc lọc] |
-| 3 | **[Tên trường 3]** | Tự động tính (Read-only) | Có | [Công thức tính toán hoặc quy tắc sinh mã tự động] |
-| 4 | **Trạng thái** | Phân loại (Enum) | Có | Badge màu phân biệt: <br>• `Trạng thái 1` (Vàng)<br>• `Trạng thái 2` (Xanh lá)<br>• `Trạng thái 3` (Đỏ) |
-| 5 | **Thao tác** | Hành động (Action) | Có | Icon Sửa ✏️, Xóa 🗑️, Xem chi tiết... |
-
----
-
-## 4. Tiêu chí Chấp nhận (Acceptance Criteria - Gherkin)
-
-### AC 1: [Tên kịch bản 1 - Luồng thành công / Happy Path]
-*   **Given:** [Ngữ cảnh / Tiền điều kiện ban đầu trước khi thao tác]
-*   **When:** [Hành động thao tác của người dùng]
-*   **Then:** [Kết quả mong đợi: Hệ thống xử lý dữ liệu, lưu DB, thay đổi UI ra sao]
-*   **And:** [Các hiệu ứng phụ kèm theo nếu có (Thông báo Toast, chuyển trang...)]
-
-### AC 2: [Tên kịch bản 2 - Luồng ngoại lệ / Validation / Edge Case]
-*   **Given:** [Ngữ cảnh xảy ra ngoại lệ]
-*   **When:** [Người dùng nhập sai, bỏ trống trường bắt buộc, hoặc thao tác ngoài phạm vi]
-*   **Then:** [Hệ thống hiển thị thông báo lỗi cụ thể và chặn không cho tiếp tục]
-
-### AC 3: [Tên kịch bản 3 - Tương tác giao diện / Real-time Behavior]
-*   **Given:** [Giao diện đang mở form/bảng]
-*   **When:** [Người dùng tương tác nhập số lượng, click mở rộng dòng...]
-*   **Then:** [Hệ thống tự động tính toán / mở rộng Subtable với thời gian phản hồi ≤ 300ms]
-
----
-
-## 5. Definition of Done (DoD)
-- [ ] Giao diện chuẩn UI/UX hệ thống, tương thích hiển thị trên Desktop.
-- [ ] Đầy đủ các trường dữ liệu và ràng buộc validation theo đặc tả.
-- [ ] Đã kiểm thử các kịch bản Acceptance Criteria (Happy path & Edge cases).
-- [ ] Đã verify trên môi trường Prototype/Staging và sync code lên kho lưu trữ.

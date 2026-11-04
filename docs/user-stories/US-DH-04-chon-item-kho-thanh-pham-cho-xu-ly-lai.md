@@ -1,157 +1,101 @@
-# US-DH-04: Chọn Item Trong Kho Thành Phẩm (Chờ Xử Lý Lại) Vào Đơn Hàng & Phân Luồng KHSX
+# US-DH-04: Gán Phôi Chờ Xử Lý Lại (CXLL) Vào Đơn Hàng Khi Tạo Mới Hoặc Chỉnh Sửa
 
 > **Mã Story:** `US-DH-04`  
-> **Module:** Quản lý đơn hàng (Sales Order Management) & Kế hoạch sản xuất (Production Planning)  
-> **Feature:** Quản lý Cấp Lô Tồn Kho TP Chờ Xử Lý Lại (1 Lô ~ 1 Bag ≤ 10 món) & Routing Cố Định (FG) Tách 2 Luồng KHSX  
-> **Phiên bản:** `2.1` | **Trạng thái:** `Sẵn sàng thẩm định (Ready for Review)`  
+> **Epic:** Epic 02: Quản Trị Đơn Hàng (SO)  
+> **Module / Feature:** Quản Lý Đơn Hàng / Gán Phôi Kho Chờ Xử Lý Lại  
+> **Actor chính:** Nhân viên Kinh doanh (Sales) / Cán bộ Quản lý đơn hàng (Sale Admin)  
+> **Tài liệu tham chiếu:** [Prototype Chi Tiết Đơn Hàng: /orders/SO2608011](http://localhost:3000/orders/SO2608011)  
+> **Trạng thái:** `Ready for Review`  
 
 ---
 
-## 1. Tóm tắt User Story (User Story Statement)
+## 1. USER STORY *
 
-*   **AS A:** Nhân viên Kinh doanh (Sales) / Kỹ thuật viên Đơn hàng / Cán bộ Kế hoạch Sản xuất (QLSP)
-*   **I WANT TO:** 
-    1. Quét và pick chọn hàng từ các **Lô (Lot / Bag Code)** trong Kho Thành Phẩm (trạng thái Chờ xử lý lại) có thuộc tính khớp 100% (cùng Mã item, cùng Tuổi vàng, Ni tay, Đá) vào đơn hàng mới.
-    2. Phản ánh đúng thực tế xưởng kim hoàn: **1 Lô ~ 1 Bag thường có số lượng không quá 10 món**, do đó 1 Item có thể bao gồm nhiều lô/túi khác nhau. Hệ thống cho phép hiển thị số lượng tồn riêng của từng lô và tùy chọn số lượng pick cho từng lô (gõ số lượng lẻ hoặc chọn hết lô).
-    3. Tự động gán **Routing Cố Định (Type: FG)** gồm 2 công đoạn hardcoded: `STG-SERVE-FG: Serve FG` và `STG-PACKING-OUT: Packing Out` cho số lượng lấy từ kho.
-    4. Tách Kế hoạch sản xuất (KHSX) thành **2 luồng độc lập**: Luồng Sản Xuất Mới (cho phần số lượng còn lại) và Luồng Kho Thành Phẩm (cho phần số lượng đã pick kho).
-*   **SO THAT:** Tối ưu hóa tồn kho thành phẩm có sẵn, rút ngắn chu kỳ giao hàng cho khách, tinh gọn quy trình sản xuất (không phải đúc/nguội/gắn đá lại đối với hàng kho), và hiển thị giao diện thoáng đãng, xem trọn vẹn 100% thông tin các cột.
-
----
-
-## 2. Bối cảnh & Nguyên tắc Cốt lõi (First Principles)
-
-1.  **Thực tế nghiệp vụ Cấp Lô (Lot/Bag) trong Xưởng Kim Hoàn:** 
-    *   Mỗi túi hàng (`BagCode`) hay mỗi lô thành phẩm (`LotCode`) trong kho thành phẩm chờ xử lý lại có quy mô nhỏ, **thường không quá 10 món/lô/túi** (ví dụ: 5 món, 8 món, 6 món, 7 món...).
-    *   Do đó, khi khách hàng đặt số lượng lớn (ví dụ: 100 món), một dòng sản phẩm (Item) trong đơn có thể được bù đắp từ **nhiều lô khác nhau** trong kho.
-    *   Giao diện bắt buộc phải hiển thị cấu trúc phân cấp: **Item Cha (Tổng tồn & Tổng pick) ➔ Các Lô Con (Chi tiết từng lô ≤ 10 món)**, cho phép người dùng tùy chọn pick theo từng lô.
-2.  **3 Bước Luồng Xử Lý Chuẩn Nghiệp Vụ:**
-    *   **Bước 1 - Pick Lô:** Kinh doanh chọn lô trong kho thành phẩm cùng item, cùng tuổi vàng. Cho phép pick từ nhiều lô khác nhau (chọn hết lô hoặc gõ số lượng lẻ cho từng lô). Số lượng còn lại sau khi trừ đi phần pick kho sẽ tự động chuyển sang luồng **Sản xuất mới**.
-    *   **Bước 2 - Gán Routing Cố Định (Type: FG):** Đối với số lượng pick từ kho, hệ thống tự động gán Routing cố định chỉ gồm 2 công đoạn:
-        *   `STG-SERVE-FG: Serve FG (Phục vụ kho TP)`: Điều chuyển hàng từ két kho TP theo mã lô, kiểm tra ngoại quan & ni tay (Thời gian: 0.5 ngày).
-        *   `STG-PACKING-OUT: Packing Out (Đóng gói xuất kho)`: Hoàn thiện đóng gói, dán tem vỉ theo SO mới và sẵn sàng xuất giao (Thời gian: 0.5 ngày).
-    *   **Bước 3 - Phân Luồng KHSX (2 Workflows):** Khi chuyển sang Kế hoạch Sản xuất, dòng hàng được bóc tách làm 2 luồng công việc rõ ràng:
-        *   *Luồng 1 (Sản xuất mới):* Áp dụng Full Routing tiêu chuẩn (Đúc → Nguội → Gắn đá → Đánh bóng → Xi mạ → KCS) kèm cấp mới vàng & đá theo BOM.
-        *   *Luồng 2 (Kho TP):* Áp dụng Routing Cố Định (Type: FG, 2 công đoạn), không cấp mới vàng/đá và tự động giải phóng lượng đá giữ chỗ tương ứng về kho phụ liệu.
+*   **Là một (As a):** Nhân viên Kinh doanh (Sales) / Sale Admin
+*   **Tôi muốn (I want):** 
+    1. Khi tạo đơn hàng mới (`/orders/create`) hoặc khi chỉnh sửa đơn hàng (`/orders/[id]`), hệ thống tự động nhận diện nếu có sản phẩm trùng khớp 100% trong Kho Thành Phẩm Chờ Xử Lý Lại (CXLL) và hiển thị chỉ báo gợi ý cho phép pick vào đơn.
+    2. Popup gán phôi (`WarehouseSyncPopup`) hiển thị theo phân cấp rõ ràng: Item Cha ➔ Các Lô con (≤ 10 món/lô), cho phép tùy chọn pick số lượng cho từng lô lẻ hoặc pick hết lô.
+    3. Hệ thống hỗ trợ phân bổ linh hoạt (Split Allocation): Nếu khách đặt số lượng lớn hơn số lượng tồn phôi CXLL, phần lấy phôi CXLL được tách riêng, và phần còn lại tự động đưa sang luồng sản xuất mới hoàn toàn.
+    4. Ngay khi xác nhận gán: Hệ thống tự động khóa giữ chỗ (`Allocated`) phôi tại Kho CXLL và **nhả 100% lượng đá giữ chỗ tương ứng** về kho phụ liệu đá khả dụng.
+*   **Để (So that):** Tận dụng tối đa thành phẩm có sẵn trong kho, rút ngắn thời gian giao hàng từ 10-15 ngày xuống còn 1-2 ngày, tiết kiệm chi phí đúc mới và tránh giam giữ đá ảo.
 
 ---
 
-## 3. Sơ đồ Luồng Nghiệp vụ (Mermaid Business Flow)
+## 2. TIÊU CHÍ CHẤP NHẬN (ACCEPTANCE CRITERIA - AC) *
+
+*   **AC 1: Nhận diện tự động & Gợi ý khớp 100% thuộc tính**
+    *   **Given (Biết rằng):** Kinh doanh vừa nhập xong dòng hàng: Mã Item, Tuổi vàng, Ni tay/Size, Màu đá.
+    *   **When (Khi):** Hệ thống quét Kho CXLL và phát hiện có phôi khớp 100% thuộc tính.
+    *   **Then (Thì):** Dòng hàng hiển thị banner gợi ý màu xanh ngọc: *"💡 Phát hiện tồn kho CXLL: Có sẵn M món khớp 100% thuộc tính. [Mở popup pick chọn]"*.
+
+*   **AC 2: Tùy chọn số lượng từng Lô con trong Popup mở rộng**
+    *   **Biết rằng (Given):** Người dùng mở popup `WarehouseSyncPopup`.
+    *   **When (Khi):** Người dùng nhập số lượng lẻ cho từng lô con (≤ 10 món/lô) hoặc bấm nút `[⚡ Pick hết lô]`.
+    *   **Then (Thì):** Hệ thống tự động tính toán: Tổng SL pick kho CXLL và SL còn lại chuyển sang Sản xuất mới.
+
+*   **AC 3: Khóa giữ chỗ phôi & Nhả đá kho phụ liệu**
+    *   **Biết rằng (Given):** Người dùng bấm `[Xác nhận pick chọn M món]`.
+    *   **Then (Thì):** M món phôi trong Kho CXLL chuyển sang trạng thái `Đã giữ chỗ` (kèm mã SO mới).
+    *   **And (Và):** Hệ thống lập tức phát lệnh nhả $M$ suất đá giữ chỗ về lại Kho Đá khả dụng.
+
+*   **AC 4: Cho phép gán phôi cả khi Tạo mới và khi Chỉnh sửa đơn**
+    *   **Given (Biết rằng):** Đơn hàng đang ở màn hình Tạo mới (`/orders/create`) hoặc Chỉnh sửa (`/orders/[id]`).
+    *   **Then (Thì):** Tính năng quét và gán phôi CXLL hoạt động đồng nhất, hỗ trợ Bán hàng tối ưu tồn kho ở mọi khâu tiền sản xuất.
+
+---
+
+## 3. THIẾT KẾ (UX/UI) *
+
+*   **Link Figma / Prototype:** [Chi Tiết Đơn Hàng SO2608011: /orders/SO2608011](http://localhost:3000/orders/SO2608011)
+*   **Ảnh đính kèm:**
+    *   *Popup chi tiết mặt hàng trong Kho CXLL và pick chọn theo cấp Lô:*
+
+---
+
+## 4. QUY TẮC NGHIỆP VỤ (BUSINESS RULES) *
+
+*   **BR-DH-01 (Exact Match 100%):** Bắt buộc khớp đồng thời 4 thuộc tính kỹ thuật: Mã Item, Tuổi vàng, Ni tay/Size, Quy cách đá. Tuyệt đối không nong/cắt ni hay cạy đá.
+*   **BR-DH-02 (Cấp Lô nhỏ $\le 10$ món):** Phản ánh đúng thực tế xưởng kim hoàn, mỗi lô trong kho thường $\le 10$ món. Popup phải hỗ trợ pick từ nhiều lô khác nhau.
+*   **BR-DH-03 (Split Allocation Mandatory):** Khi $\text{SL Đặt} > \text{SL Tồn CXLL}$, hệ thống bắt buộc phân bổ: Tối đa số lượng kho có sẵn và phần thiếu hụt chuyển sang sản xuất mới.
+*   **BR-DH-04 (Stone Delta Release):** Tự động nhả số lượng đá giữ chỗ tương ứng với số lượng phôi lấy từ kho CXLL về kho phụ liệu đá khả dụng.
+
+---
+
+## 5. DANH MỤC DỮ LIỆU & RÀNG BUỘC
+
+### 5.1 Popup Gán Phôi Kho CXLL (`WarehouseSyncPopup`)
+
+| Fields (Tên trường) | Type (Kiểu dữ liệu) | Required (Bắt buộc) | Default value (Giá trị mặc định) | Rules (Quy tắc & Nghiệp vụ) |
+| :--- | :--- | :---: | :--- | :--- |
+| **Mã Item & Thuộc tính** | Text | Có | Kế thừa | Mã 30 ký tự, Tên sản phẩm, Ni tay, Đá. |
+| **Mã Lô (Bag)** | Text / Font-mono | Có | Kế thừa | Định danh lô cũ trong kho (VD: `SO-260800001`). |
+| **Mã Đơn Cũ** | Text / Font-mono | Có | Kế thừa | Mã đơn hàng cũ bị hủy (VD: `SO123456`). |
+| **SL Tồn Của Lô** | Integer | Có | Kế thừa | Số lượng phôi sẵn có trong lô ($\le 10$ món). |
+| **SL Pick Chọn** | Stepper / Integer | Có | `0` (hoặc FIFO) | Cho phép nhập lẻ ($0 \le \text{SL} \le \text{Tồn Lô}$) hoặc bấm tăng giảm stepper. |
+| **Tổng SL Pick Kho** | Integer | Tự tính | Tổng các lô pick | Tự động cập nhật realtime khi thay đổi số lượng từng lô. |
+| **SL Còn Lại SX Mới** | Integer | Tự tính | `SL Đặt - Pick Kho` | Tự động chuyển sang Luồng Sản Xuất Mới. |
+
+---
+
+## 6. LUỒNG NGHIỆP VỤ (MERMAID FLOW)
 
 ```mermaid
 flowchart TD
-    Start([1. Mở Chi tiết Đơn hàng: /orders/:id]) --> CheckStatus{2. Trạng thái đơn hợp lệ?<br>Chờ KT / Đủ TT KT / Chờ xác nhận}
+    Start([Kinh doanh nhập dòng hàng: /orders/create hoặc /orders/:id]) --> Scan[Hệ thống quét ngầm Kho CXLL]
+    Scan --> CheckMatch{Khớp 100% Item, Vàng, Ni, Đá?}
+    CheckMatch -->|Không khớp| Normal[Sản xuất mới 100%]
+    CheckMatch -->|Có tồn kho| ShowBanner[Hiển thị gợi ý: Phát hiện tồn kho CXLL]
     
-    CheckStatus -->|Không hợp lệ| HideBanner[Ẩn Banner & Khóa thao tác pick kho]
-    CheckStatus -->|Hợp lệ| ScanStock[3. Hệ thống quét tồn kho khớp 100%:<br>Mã Item, Tuổi vàng, Ni tay, Màu đá]
+    ShowBanner --> ClickOpen[Bấm nút: Mở popup pick chọn phôi]
+    ClickOpen --> OpenPopup[Popup hiển thị Master-Detail: Item Cha -> Chi tiết từng Lô con]
     
-    ScanStock --> HasMatch{Có lô tồn kho khớp &<br>SL khả dụng > 0?}
-    HasMatch -->|Không có| TableNormal[Bảng đơn hàng hiển thị bình thường]
-    HasMatch -->|Có tồn kho| ShowBanner[4. Hiển thị Banner gợi ý tồn kho theo cấp Lô]
+    OpenPopup --> PickChoice{Kinh doanh pick số lượng}
+    PickChoice -->|Pick từng lô lẻ| InputLot[Nhập số lượng lẻ cho từng lô con]
+    PickChoice -->|Pick hết lô| PickAll[Bấm nút: Pick hết lô]
     
-    ShowBanner --> ClickOpen[5. Bấm 'Nhấn mở popup xem chi tiết & pick chọn']
-    ClickOpen --> OpenPopup[6. Hiển thị Popup Mở Rộng: w-96vw max-w-1550px<br>Hiển thị Master-Detail: Item Cha -> Chi tiết từng Lô con <= 10 món]
+    InputLot --> ClickConfirm[Bấm nút: Xác nhận pick chọn]
+    PickAll --> ClickConfirm
     
-    OpenPopup --> PickAction{7. Kinh doanh tùy chọn SL từng Lô trong Item}
-    PickAction -->|Bấm nút 'Hết lô' tại lô con| PickMaxLot[Gán SL pick = SL tồn của lô đó <= 10]
-    PickAction -->|Gõ SL lẻ cho từng lô| InputQtyLot[Nhập số lượng lẻ: 0 <= SL <= Tồn lô]
-    PickAction -->|Bấm '⚡ Pick hết lô' tại Item| PickAllLots[Tự động pick toàn bộ các lô của Item]
-    
-    PickAction --> ClickConfirm[8. Bấm nút: 'Xác nhận pick chọn']
-    
-    ClickConfirm --> Step1[Bước 1: Tính toán phân bổ số lượng:<br>• SL Kho TP = Tổng pick các lô con<br>• SL Còn lại = SL Đặt - SL Kho TP -> Chuyển SX Mới]
-    
-    Step1 --> Step2[Bước 2: Gán Routing Cố Định Type: FG:<br>• CĐ 1: STG-SERVE-FG: Serve FG<br>• CĐ 2: STG-PACKING-OUT: Packing Out]
-    
-    Step2 --> Step3[Bước 3: Tách KHSX thành 2 luồng độc lập:<br>• Luồng SX Mới: Full Routing + Cấp mới vàng/đá<br>• Luồng Kho TP: Routing FG + Nhả đá giữ chỗ]
-    
-    Step3 --> UpdateUI[9. Cập nhật Bảng Dòng Sản Phẩm:<br>• Badge BOM/Routing: '2 Luồng: SX Mới + Kho TP (FG)'<br>• Cột SL Pick Kho TP: 'X / Tổng Đặt'<br>• Click xem Modal Kế Hoạch 2 Luồng chi tiết từng Lô]
+    ClickConfirm --> Execute[1. Phân bổ: SL CXLL vs SL Đúc Mới<br>2. Khóa giữ chỗ phôi tại Kho CXLL<br>3. Nhả đá giữ chỗ về kho phụ liệu đá]
+    Execute --> UpdateOrderTable[Cập nhật bảng dòng hàng: Badge 2 Luồng SX Mới + Kho TP]
 ```
-
----
-
-## 4. Quy tắc Nghiệp vụ (Business Rules - BR)
-
-| Mã BR | Tên quy tắc | Nội dung quy tắc chi tiết |
-| :---: | :--- | :--- |
-| **BR-01** | **Điều kiện trạng thái đơn hàng** | Chỉ kích hoạt khi đơn ở trạng thái tiền sản xuất: `Chờ Kỹ thuật`, `Đủ thông tin KT`, hoặc `Chờ xác nhận (Chờ duyệt)`. |
-| **BR-02** | **So khớp 100% thuộc tính** | Bắt buộc khớp đồng thời 4 yếu tố: `Mã Item (30 ký tự)`, `Chất liệu & Tuổi vàng`, `Ni tay/Size`, và `Màu đá/Loại đá`. |
-| **BR-03** | **Đặc tả Cấp Lô (1 Lô / Túi $\le$ 10 món)** | Mỗi bản ghi trong kho thành phẩm được định danh bằng `Mã Lô (LotCode)` và `Túi hàng (BagCode)`. Số lượng tồn của mỗi lô nhỏ $\le 10$ món. Một Item có thể gồm nhiều lô tồn kho với ngày nhập kho và vị trí két khác nhau. |
-| **BR-04** | **Cơ chế Tùy chọn SL từng Lô trong Item** | Kinh doanh có quyền: (1) Nhập số lượng lẻ cho từng lô con; (2) Click nút **"Hết lô"** để pick toàn bộ tồn của lô đó; (3) Click nút **"⚡ Pick hết lô"** tại thanh Item để chọn nhanh toàn bộ các lô của Item đó. |
-| **BR-05** | **Tự động chuyển SL còn lại sang SX Mới** | $\text{SL SX Mới} = \max(0, \text{SL Đặt} - \text{SL Pick Kho})$. Nếu $\text{SL SX Mới} > 0$: Nguồn hàng là `SPLIT_ALLOCATION` (2 luồng). Nếu $\text{SL SX Mới} = 0$: Nguồn hàng là `WAREHOUSE_REWORK` (100% Kho TP). |
-| **BR-06** | **Gán Routing Cố Định (Hard 2 Công đoạn - Type: FG)** | Hàng pick từ kho thành phẩm bắt buộc áp dụng mã Routing `RT-FG-FIXED` (Loại: `FG`), gồm đúng 2 công đoạn: `STG-SERVE-FG (Serve FG)` và `STG-PACKING-OUT (Packing Out)`. Tuyệt đối không sinh các công đoạn đúc, làm nguội, gắn đá, xi mạ cho phần hàng kho. |
-| **BR-07** | **Phân luồng KHSX (Production Plan Split)** | Khi đơn hàng chuyển sang phân hệ KHSX/Điều độ, hệ thống tự động sinh 2 nhánh lệnh sản xuất con: Nhánh A (SX Mới - Type: NEW_PROD) và Nhánh B (Kho TP - Type: FG) với định mức nguyên vật liệu và tiến độ độc lập. |
-| **BR-08** | **Giải phóng giữ chỗ đá (Stone Release)** | Tự động giải phóng đá giữ chỗ tương ứng với số lượng pick từ kho (`PARTIALLY_RELEASED`), tránh chiếm dụng đá tại kho phụ liệu. |
-| **BR-09** | **Bố cục Popup mở rộng toàn diện (Full Information)** | Popup được thiết kế với kích thước rộng rãi `w-[96vw] max-w-[1550px]`, đảm bảo hiển thị trọn vẹn 100% các cột thông tin mà không bị co ép hoặc che khuất cột `SL PICK CHỌN`. |
-
----
-
-## 5. Đặc tả Giao diện & Trường Dữ liệu (UI / Layout Specifications)
-
-### 5.1. Popup Danh Sách Mặt Hàng Trong Kho TP Chờ Xử Lý (WarehouseSyncPopup)
-Kích thước: `w-[96vw] max-w-[1550px]`. Cấu trúc phân cấp Master-Detail:
-
-*   **Thanh Tổng quan Item (Item Header Bar):**
-    *   Mã Item, Tên sản phẩm, Ni tay, Màu đá.
-    *   Badge tổng số lô: `📁 X lô tồn kho (≤ 10 món/lô)`.
-    *   Tổng số lượng đặt: `group.orderQty món`.
-    *   Tổng tồn kho của Item: `group.totalStockQty món`.
-    *   Tóm tắt phân bổ: `Đã chọn pick: A / B món` | `Còn lại SX mới: C món`.
-    *   Nút thao tác nhanh: `[⚡ Pick hết lô]` và `[Bỏ chọn]`.
-
-*   **Bảng Chi Tiết Mặt Hàng & Cấp Lô (Table Specification - Đã Chuẩn Hóa Theo First Principles):**
-
-| STT | Tên cột trên Giao diện | Vị trí / Căn lề | Mô tả hiển thị & Tương tác |
-| :---: | :--- | :---: | :--- |
-| 1 | **Checkbox** | Căn giữa | Chọn/Bỏ chọn riêng lô này (hoặc chọn cả item khi thu gọn). Có checkbox tổng tại header. |
-| 2 | **MÃ ITEM & THUỘC TÍNH** | Căn trái | **Có nút Thu gọn / Mở rộng** (`▼ Thu gọn` / `▶ Mở rộng`). Hiển thị Mã Item 30 ký tự, Tên sản phẩm, Ni tay, Đá và **Tổng số lượng chọn của Item** (`Tổng chọn: X / Y món`). Đã loại bỏ triệt để các badge rườm rà. |
-| 3 | **MÃ LÔ** | Căn giữa | **Format chuẩn:** `SO-260900106` (font mono, in đậm). Đã loại bỏ hoàn toàn các râu ria thừa thãi (mã túi `[BAG-TP-...]` và vị trí két kho). Khi thu gọn: hiển thị tóm tắt số lô tồn (VD: `5 lô tồn`). |
-| 4 | **SL ĐẶT** | Căn giữa | **Dòng Item:** Số lượng đặt của dòng hàng (`100 món`).<br>**Dòng Lô con:** Hiển thị `-` (thoáng đãng, tránh hiểu nhầm số 100 lặp lại). |
-| 5 | **MÃ ĐƠN CŨ** | Căn giữa | **(ĐÃ ĐỔI VỊ TRÍ SANG TRƯỚC SL TỒN)**: Mã SO cũ kèm icon `ⓘ` (Tooltip: Lý do tồn kho & Tên khách hàng cũ). |
-| 6 | **SL TỒN CỦA LÔ** | Căn giữa | **(ĐÃ ĐỔI VỊ TRÍ SANG SAU MÃ ĐƠN CŨ - ĐƠN GIẢN HƠN)**: Hiển thị dạng số phẳng font-mono thanh lịch, không dùng badge viên thuốc (VD: `36` ở dòng Item, `8`, `6`, `7` ở dòng lô con). |
-| 7 | **NGUYÊN LIỆU - TUỔI VÀNG** | Căn giữa | Nhãn tuổi vàng (VD: `Vàng - 61Y`). |
-| 8 | **NGÀY NHẬP KHO** | Căn giữa | Ngày sản phẩm vào kho kèm icon Lịch. |
-| 9 | **SL PICK CHỌN (TỪNG LÔ)** | Căn giữa | **Ô nhập số lượng / Tăng giảm Stepper (`-` [ Input ] `+`)**: Cho phép người dùng nhập trực tiếp hoặc bấm tăng/giảm ở cả cấp Item (tự động phân bổ FIFO) và từng Lô con. **Đã loại bỏ hoàn toàn các nút rườm rà `[Hết tồn]` và `[Hết lô]`**. |
-
-*   **Footer Popup:**
-    *   Đã bỏ đoạn text rườm rà góc trái.
-    *   Nút **`[Đóng]`**.
-    *   Nút **`[Xác nhận (...món)]`** (VD: `Xác nhận (36 món)`).
-
----
-
-## 6. Tiêu chí Chấp nhận (Acceptance Criteria - Gherkin)
-
-### AC 1: Hiển thị đầy đủ thông tin trên Popup mở rộng
-*   **Given:** Người dùng mở Popup "Danh Sách Mặt Hàng Trong Kho Thành Phẩm Chờ Xử Lý".
-*   **Then:** Popup hiển thị toàn màn hình với độ rộng `w-[96vw] max-w-[1550px]`.
-*   **And:** Toàn bộ 9 cột thông tin từ Checkbox đến Cột `SL PICK CHỌN` đều hiển thị rõ ràng, không bị co ép, không bị cắt cụt.
-
-### AC 2: Phản ánh đúng 1 Lô ~ 1 Bag có SL $\le$ 10 món
-*   **Given:** Người dùng quan sát danh sách các lô của Item `Nhẫn Nữ - Ni NNU-015`.
-*   **Then:** Cột `SL TỒN CỦA LÔ` hiển thị các túi/lô nhỏ có số lượng: `5 món`, `8 món`, `6 món`, `7 món`, `9 món`, `10 món` (tất cả đều $\le 10$ món).
-*   **And:** Thanh Item Header hiển thị tổng số lô là `6 lô tồn kho (≤ 10 món/lô)` với tổng tồn khả dụng là `45 món`.
-
-### AC 3: Tùy chọn SL từng lô và nút "Hết lô"
-*   **Given:** Người dùng muốn pick từ các lô của Item `Nhẫn Nữ`.
-*   **When:** Bấm nút `Hết lô` tại Lô 1 (5 món) và Lô 2 (8 món).
-*   **Then:** Dòng Lô 1 được tick và điền `5`, dòng Lô 2 được tick và điền `8`.
-*   **And:** Thanh Item Header tự động cập nhật: `Đã chọn pick: 13 / 100 món (2/6 lô)` và `Còn lại SX mới: 87 món`.
-
-### AC 4: Thao tác "⚡ Pick hết lô" trên Item Header
-*   **When:** Người dùng click nút `⚡ Pick hết lô` trên thanh Item Header.
-*   **Then:** Toàn bộ 6 lô con được tick chọn và điền tối đa số lượng khả dụng của từng lô (tổng 45 món).
-*   **And:** Số lượng còn lại chuyển sang Sản xuất mới được cập nhật ngay: $100 - 45 = 55$ món.
-
----
-
-## 7. Definition of Done (DoD)
-
-- [x] Đã cấu trúc lại dữ liệu tồn kho: Mỗi lô (bag) có số lượng thực tế $\le 10$ món.
-- [x] Đã mở rộng Popup `w-[96vw] max-w-[1550px]` giải quyết triệt để lỗi không xem được full thông tin.
-- [x] Đã thiết kế giao diện phân cấp Master-Detail: Item Header Bar + Các Lô con thành phần.
-- [x] Đã cho phép tùy chọn số lượng từng lô (gõ lẻ hoặc click Hết lô) và pick nhanh toàn bộ lô của Item.
-- [x] Đã gán Routing cố định (Type: FG, 2 công đoạn: Serve FG & Packing Out).
-- [x] Đã phân tách KHSX thành 2 luồng độc lập (SX Mới & Kho TP).
-- [x] Đã build production `npm run build` thành công và deploy lên Vercel.
-- [x] Đã đồng bộ tài liệu đặc tả chuẩn BA-Kit vào kho mã nguồn: [`docs/user-stories/US-DH-04-chon-item-kho-thanh-pham-cho-xu-ly-lai.md`](file:///d:/BA/H%E1%BB%8Dc%20AI/order-prototype/docs/user-stories/US-DH-04-chon-item-kho-thanh-pham-cho-xu-ly-lai.md).

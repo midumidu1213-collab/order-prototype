@@ -12,6 +12,9 @@ const SO_DATABASE = {
     orderType: "Đơn hàng Bán",
     material: "Vàng",
     goldAge: "61Y",
+    isTransferredToProduction: true,
+    productionStage: "Đang đúc & làm nguội (WIP Xưởng)",
+    depositAmount: 20000000,
     items: [
       {
         itemCode: "GY0RG000086A00A00CZGG3CZKK2008",
@@ -44,6 +47,12 @@ const SO_DATABASE = {
     orderType: "Đơn hàng Gia công",
     material: "Vàng",
     goldAge: "41.6Y",
+    isTransferredToProduction: true,
+    productionStage: "Ở trạm Packing Kho TP (Chờ giao)",
+    hasDeliveryOrder: true,
+    deliveryOrderCode: "DO-2608-0199",
+    doDeliveredQty: 2,
+    depositAmount: 10000000,
     items: [
       {
         itemCode: "GY0RG000055A00A00CZGG3CZKK1001",
@@ -68,6 +77,9 @@ const SO_DATABASE = {
     orderType: "Đơn hàng Bán",
     material: "Vàng",
     goldAge: "75W",
+    isTransferredToProduction: true,
+    productionStage: "Đang gắn đá & xi mạ (WIP Xưởng)",
+    depositAmount: 120000000,
     items: [
       {
         itemCode: "GW0RG000088A00A00CZGG3CZKK4000",
@@ -92,6 +104,9 @@ const SO_DATABASE = {
     orderType: "Đơn hàng Gia công",
     material: "Bạc",
     goldAge: "Bạc Ý 925",
+    isTransferredToProduction: false,
+    productionStage: "Chưa chuyển KHSX (Nội bộ KD)",
+    depositAmount: 1000000,
     items: [
       {
         itemCode: "SV0PD000021A00A00CZGG3CZKK1100",
@@ -108,6 +123,9 @@ const SO_DATABASE = {
     orderType: "Đơn hàng Bán",
     material: "Vàng",
     goldAge: "61Y",
+    isTransferredToProduction: false,
+    productionStage: "Chưa chuyển KHSX (Nội bộ KD)",
+    depositAmount: 50000000,
     items: [
       {
         itemCode: "GY0RG000091A00A00CZGG3CZKK9901",
@@ -185,6 +203,13 @@ export default function CreateCancelRequest() {
   ]);
 
   const [notification, setNotification] = useState(null);
+  const [confirmAdjustDO, setConfirmAdjustDO] = useState(false);
+
+  // State Card 4: Đánh giá chi phí dở dang WIP & Đề xuất phạt cọc (Base Form Type B)
+  const [penaltyRate, setPenaltyRate] = useState(50); // % phạt cọc: 0, 30, 50, 100
+  const [wipLaborCostPerItem, setWipLaborCostPerItem] = useState(250000); // Đơn giá công thợ dở dang/SP
+  const [wipLossCostPerItem, setWipLossCostPerItem] = useState(120000); // Chi phí hao hụt vàng/đá dở dang/SP
+  const [wipNote, setWipNote] = useState("");
 
   // Khi chọn toàn bộ sản phẩm trong SO
   const handleSelectAllSOItems = () => {
@@ -205,6 +230,7 @@ export default function CreateCancelRequest() {
   // Khi đổi SO -> load item của SO đó
   const handleSOChange = (newSOCode) => {
     setFormData((prev) => ({ ...prev, soCode: newSOCode }));
+    setConfirmAdjustDO(false);
     const soData = SO_DATABASE[newSOCode];
     if (soData && soData.items.length > 0) {
       const first = soData.items[0];
@@ -304,7 +330,7 @@ export default function CreateCancelRequest() {
 
     setNotification({
       type: "success",
-      message: `Đã tạo thành công yêu cầu hủy "${formData.requestCode}" cho đơn "${formData.soCode}"! Đang gửi duyệt Base Request (Mã RQ: 18797)...`,
+      message: `Đã tạo thành công yêu cầu hủy "${formData.requestCode}" cho đơn "${formData.soCode}"! Đang gửi duyệt Base Request... Sau khi duyệt, hệ thống sẽ tự động cập nhật SL đơn hàng và bắn thông báo đến User Đóng gói (xử lý DO) và Kho Thành Phẩm (chuyển CXLL).`,
     });
     setTimeout(() => {
       router.push("/cancel-requests");
@@ -406,19 +432,40 @@ export default function CreateCancelRequest() {
             <span className="text-xs text-gray-400">Tự động lấy thông tin từ SO gốc</span>
           </div>
 
-          {/* Thông tin đơn hàng gốc: Loại đơn & Chất liệu / Tuổi vàng */}
-          <div className="md:col-span-3 bg-emerald-50/50 border border-emerald-200 rounded-md p-3 flex flex-wrap gap-6 text-xs text-emerald-950 font-medium">
-            <div>
-              <span className="text-gray-500">Loại đơn hàng: </span>
-              <span className="font-bold text-[#005a46]">{selectedSO.orderType}</span>
+          {/* Thông tin đơn hàng gốc: Loại đơn, Chất liệu & Trạng thái KHSX */}
+          <div className="md:col-span-3 bg-emerald-50/50 border border-emerald-200 rounded-md p-3 flex flex-wrap items-center justify-between gap-4 text-xs text-emerald-950 font-medium">
+            <div className="flex flex-wrap gap-6 items-center">
+              <div>
+                <span className="text-gray-500">Loại đơn hàng: </span>
+                <span className="font-bold text-[#005a46]">{selectedSO.orderType}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Nguyên liệu: </span>
+                <span className="font-bold text-[#005a46]">{selectedSO.material}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Tuổi vàng: </span>
+                <span className="font-bold text-[#005a46]">{selectedSO.goldAge}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Tiền cọc đã nhận: </span>
+                <span className="font-bold text-amber-900 font-mono">
+                  {selectedSO.depositAmount ? `${selectedSO.depositAmount.toLocaleString("vi-VN")} đ` : "0 đ"}
+                </span>
+              </div>
             </div>
-            <div>
-              <span className="text-gray-500">Nguyên liệu: </span>
-              <span className="font-bold text-[#005a46]">{selectedSO.material}</span>
-            </div>
-            <div>
-              <span className="text-gray-500">Tuổi vàng: </span>
-              <span className="font-bold text-[#005a46]">{selectedSO.goldAge}</span>
+
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-500 text-[11px]">Phân loại duyệt Base:</span>
+              {selectedSO.isTransferredToProduction ? (
+                <span className="bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded text-[11px] border border-amber-300">
+                  Form Type B (Đã chuyển KHSX - KD, Xưởng & Kho cùng duyệt)
+                </span>
+              ) : (
+                <span className="bg-blue-100 text-blue-900 font-bold px-2 py-0.5 rounded text-[11px] border border-blue-300">
+                  Form Type A (Chưa chuyển KHSX - Duyệt nội bộ KD)
+                </span>
+              )}
             </div>
           </div>
 
@@ -638,6 +685,230 @@ export default function CreateCancelRequest() {
           </table>
         </div>
       </div>
+
+      {/* Card 3: Kiểm tra Phiếu Giao Hàng (DO) liên quan - Bắt buộc điều chỉnh */}
+      {selectedSO.hasDeliveryOrder ? (
+        <div className="bg-amber-50/70 shadow-sm rounded-lg border-2 border-amber-400 overflow-hidden">
+          <div className="px-5 py-3.5 bg-amber-100/80 border-b border-amber-300 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-base">⚠️</span>
+              <h2 className="text-sm font-bold text-amber-950 uppercase tracking-wide">
+                3. Kiểm tra Phiếu Giao Hàng (DO) Liên Quan — Bắt Buộc Điều Chỉnh
+              </h2>
+            </div>
+            <span className="text-xs bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded">
+              Ràng buộc kiểm soát giao vận
+            </span>
+          </div>
+
+          <div className="p-5 space-y-4">
+            <div className="text-xs text-amber-900 leading-relaxed">
+              Hệ thống phát hiện đơn hàng này <b>đã phát sinh Phiếu Giao Hàng ({selectedSO.deliveryOrderCode})</b> với số lượng giao là <b>{selectedSO.doDeliveredQty} SP</b>. Theo quy trình phân quyền mới: Sau khi yêu cầu hủy được phê duyệt trên Base, hệ thống sẽ <b>tự động gửi thông báo đến User (Đóng Gói)</b> để trực tiếp chỉnh sửa/hủy Phiếu giao hàng. <u>Kinh doanh (QLĐH) không cần thao tác xử lý DO tại bước này</u>.
+            </div>
+
+            <div className="bg-white rounded-lg border border-amber-300 p-3.5 overflow-x-auto text-xs">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr className="text-gray-600 font-bold">
+                    <th className="py-1 px-3 text-left">Mã Phiếu Giao Hàng (DO)</th>
+                    <th className="py-1 px-3 text-center">SL Giao Ban Đầu</th>
+                    <th className="py-1 px-3 text-center text-rose-600">SL Giảm Theo YC Hủy</th>
+                    <th className="py-1 px-3 text-center text-emerald-700">SL Còn Lại Dự Kiến</th>
+                    <th className="py-1 px-3 text-left">Trách Nhiệm Xử Lý</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 font-medium">
+                  <tr>
+                    <td className="py-2 px-3 font-bold text-purple-700">{selectedSO.deliveryOrderCode}</td>
+                    <td className="py-2 px-3 text-center">{selectedSO.doDeliveredQty} SP</td>
+                    <td className="py-2 px-3 text-center font-bold text-rose-600">-{Math.min(selectedSO.doDeliveredQty, totalCancelQty)} SP</td>
+                    <td className="py-2 px-3 text-center font-bold text-emerald-700">
+                      {Math.max(0, selectedSO.doDeliveredQty - totalCancelQty)} SP
+                    </td>
+                    <td className="py-2 px-3 text-slate-800 font-semibold">
+                      🔔 User (Đóng Gói) nhận thông báo & cập nhật/hủy DO sau duyệt
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Thông báo cơ chế Chốt Chặn tại Kho */}
+            <div className="bg-amber-100/70 p-3 rounded-md border border-amber-300 text-xs text-amber-950">
+              💡 <b>Chốt Chặn Kiểm Tra Tại Kho Thành Phẩm:</b> Sau khi Base duyệt, Kho Thành Phẩm sẽ nhận thông báo chuyển hàng sang Kho CXLL. Tuy nhiên, <b>hệ thống bắt buộc kiểm tra xem item có còn thuộc Phiếu giao hàng nào không</b>. Nếu User Đóng gói chưa xử lý DO, hệ thống sẽ <b>báo lỗi và chặn chuyển kho</b> để đảm bảo an toàn tuyệt đối.
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3.5 flex items-center justify-between text-xs text-emerald-900">
+          <div className="flex items-center space-x-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+            <span>
+              <b>Kiểm tra Phiếu Giao Hàng (DO):</b> Đơn hàng <b>{formData.soCode}</b> chưa phát sinh Phiếu Giao Hàng (DO). Không cần xử lý chứng từ giao nhận đi kèm.
+            </span>
+          </div>
+          <span className="text-[11px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded border border-emerald-300">
+            DO: Hợp lệ
+          </span>
+        </div>
+      )}
+
+      {/* Card 4: Đánh Giá Chi Phí Công Đoạn Dở Dang (WIP) & Đề Xuất Phạt Cọc (Base Form Type B) */}
+      {selectedSO.isTransferredToProduction ? (
+        <div className="bg-white shadow rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="h-2.5 w-2.5 rounded-full bg-amber-600"></div>
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">
+                  4. Đánh Giá Chi Phí Công Đoạn Dở Dang (WIP) & Đề Xuất Phạt Cọc
+                </h2>
+                <p className="text-xs text-gray-500">
+                  Áp dụng cho đơn ĐÃ CHUYỂN KHSX (Base Form Type B): Đánh giá bù đắp công thợ và hao hụt vàng trước khi duyệt hủy
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-amber-900 bg-amber-100 px-2.5 py-1 rounded-md border border-amber-300">
+              Form Type B • GĐKD & GĐSX cùng duyệt
+            </span>
+          </div>
+
+          <div className="p-6 space-y-6">
+            {/* Hàng 1: Thống kê nhanh Chi Phí WIP vs Tiền Cọc */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                <span className="text-[11px] text-gray-500 block font-medium">Tiền Cọc Đã Thu Của Khách</span>
+                <span className="text-base font-black text-slate-900 font-mono mt-0.5 block">
+                  {selectedSO.depositAmount ? `${selectedSO.depositAmount.toLocaleString("vi-VN")} đ` : "0 đ"}
+                </span>
+                <span className="text-[10px] text-slate-400">Theo phiếu thu SO gốc</span>
+              </div>
+
+              <div className="bg-rose-50 p-3.5 rounded-lg border border-rose-200">
+                <span className="text-[11px] text-rose-800 block font-medium">Ước Tính Chi Phí WIP Dở Dang</span>
+                <span className="text-base font-black text-rose-600 font-mono mt-0.5 block">
+                  {(totalCancelQty * (wipLaborCostPerItem + wipLossCostPerItem)).toLocaleString("vi-VN")} đ
+                </span>
+                <span className="text-[10px] text-rose-700">Công thợ + Hao hụt ({totalCancelQty} SP)</span>
+              </div>
+
+              <div className="bg-amber-50 p-3.5 rounded-lg border border-amber-200">
+                <span className="text-[11px] text-amber-800 block font-medium">Tiền Phạt Cọc Dự Kiến</span>
+                <span className="text-base font-black text-amber-900 font-mono mt-0.5 block">
+                  {Math.round(((selectedSO.depositAmount || 0) * penaltyRate) / 100).toLocaleString("vi-VN")} đ
+                </span>
+                <span className="text-[10px] text-amber-700">Tỷ lệ áp dụng: {penaltyRate}% cọc</span>
+              </div>
+
+              <div className="bg-emerald-50 p-3.5 rounded-lg border border-emerald-200">
+                <span className="text-[11px] text-emerald-800 block font-medium">Tiền Cọc Hoàn Lại Khách</span>
+                <span className="text-base font-black text-emerald-700 font-mono mt-0.5 block">
+                  {Math.max(
+                    0,
+                    (selectedSO.depositAmount || 0) -
+                      Math.round(((selectedSO.depositAmount || 0) * penaltyRate) / 100)
+                  ).toLocaleString("vi-VN")}{" "}
+                  đ
+                </span>
+                <span className="text-[10px] text-emerald-700">Chuyển sang công nợ / Hoàn trả</span>
+              </div>
+            </div>
+
+            {/* Hàng 2: Chi tiết cấu phần chi phí dở dang & Chọn tỷ lệ phạt cọc */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/70 p-4 rounded-xl border border-slate-200 text-xs">
+              {/* Cột trái: Cấu phần chi phí xưởng dở dang */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-slate-800 uppercase text-[11px] tracking-wide">
+                  Chi Tiết Chi Phí Công Đoạn Xưởng ({selectedSO.productionStage})
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Đơn giá công thợ dở dang (đúc, nguội, đá):</span>
+                    <div className="flex items-center space-x-1">
+                      <input
+                        type="number"
+                        step="10000"
+                        value={wipLaborCostPerItem}
+                        onChange={(e) => setWipLaborCostPerItem(Number(e.target.value) || 0)}
+                        className="w-28 text-right font-mono font-bold py-1 px-2 border border-gray-300 rounded bg-white text-xs"
+                      />
+                      <span className="text-gray-500">đ/SP</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Chi phí hao hụt vàng/đá ước tính:</span>
+                    <div className="flex items-center space-x-1">
+                      <input
+                        type="number"
+                        step="10000"
+                        value={wipLossCostPerItem}
+                        onChange={(e) => setWipLossCostPerItem(Number(e.target.value) || 0)}
+                        className="w-28 text-right font-mono font-bold py-1 px-2 border border-gray-300 rounded bg-white text-xs"
+                      />
+                      <span className="text-gray-500">đ/SP</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200 flex justify-between font-bold text-slate-900">
+                    <span>Tổng chi phí xưởng cần bù đắp:</span>
+                    <span className="font-mono text-rose-600">
+                      {(totalCancelQty * (wipLaborCostPerItem + wipLossCostPerItem)).toLocaleString("vi-VN")} đ
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cột phải: Chọn tỷ lệ phạt cọc đề xuất */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-slate-800 uppercase text-[11px] tracking-wide">
+                  Đề Xuất Tỷ Lệ Phạt Cọc Trình Ban Giám Đốc
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { rate: 100, label: "100% Cọc", desc: "Hủy gấp / Thiệt hại lớn" },
+                    { rate: 50, label: "50% Cọc (Chuẩn)", desc: "Chia sẻ 50/50 chi phí xưởng" },
+                    { rate: 30, label: "30% Cọc", desc: "Khách VIP / Hủy sớm" },
+                    { rate: 0, label: "0% (Miễn phạt)", desc: "Lỗi nội bộ / Đặc cách" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.rate}
+                      type="button"
+                      onClick={() => setPenaltyRate(opt.rate)}
+                      className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                        penaltyRate === opt.rate
+                          ? "bg-[#005a46] text-white border-[#005a46] shadow-xs"
+                          : "bg-white text-slate-700 border-gray-300 hover:bg-slate-100"
+                      }`}
+                    >
+                      <div className="font-bold text-xs">{opt.label}</div>
+                      <div className={`text-[10px] mt-0.5 ${penaltyRate === opt.rate ? "text-emerald-100" : "text-gray-500"}`}>
+                        {opt.desc}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="text-[11px] text-slate-600 bg-amber-50/80 p-2 rounded border border-amber-200">
+                  ⚠️ <b>Quy định thẩm quyền Form B:</b> Giám đốc Kinh doanh (GĐKD) chốt tỷ lệ phạt cọc và Giám đốc Sản xuất (GĐSX) phê duyệt xác nhận chi phí dở dang trước khi hệ thống kích hoạt lệnh hủy.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-blue-50/70 border border-blue-200 rounded-lg p-4 flex items-center justify-between text-xs text-blue-900">
+          <div className="flex items-center space-x-2">
+            <CheckCircle2 className="h-4 w-4 text-blue-600 flex-shrink-0" />
+            <span>
+              <b>Đơn hàng chưa chuyển KHSX (Form Type A):</b> Không phát sinh chi phí sản xuất dở dang (WIP = 0 đ). Trưởng phòng Kinh doanh (TPKD) phê duyệt phương án hoàn cọc nội bộ mà không cần chuyển KHSX/Kho thẩm định.
+            </span>
+          </div>
+          <span className="text-[11px] font-bold text-blue-800 bg-white px-2 py-0.5 rounded border border-blue-300">
+            Chi phí WIP: 0 đ
+          </span>
+        </div>
+      )}
 
       {/* Sticky Bottom Actions */}
       <div className="fixed bottom-0 right-0 left-64 bg-white border-t border-gray-200 px-6 py-3.5 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)] z-10">

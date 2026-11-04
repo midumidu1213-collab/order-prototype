@@ -358,23 +358,18 @@ export default function DebtManagementPage() {
               NGHIỆP VỤ PHÁT SINH
             </div>
             <div className="space-y-0.5">
-              <button
-                type="button"
-                onClick={() => setActiveTab("inTransit")}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg font-medium text-left transition-colors ${
-                  activeTab === "inTransit"
-                    ? "bg-[#00382b] text-amber-300 font-bold border border-amber-400/40"
-                    : "text-emerald-100 hover:bg-[#00382b]/60"
-                }`}
+              <Link
+                href="/debt-management/materials-receiving"
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg font-medium text-emerald-100 hover:bg-[#00382b]/60 transition-colors"
               >
                 <div className="flex items-center">
                   <Truck className="mr-2.5 h-4 w-4 text-amber-300" />
                   <span>Tiếp nhận NL (Kho MAT)</span>
                 </div>
-                <span className="text-[10px] bg-amber-400 text-slate-950 px-1.5 py-0.2 rounded-full font-bold">
-                  {MOCK_IN_TRANSIT_DELIVERIES.length}
+                <span className="text-[9px] bg-amber-400 text-slate-950 px-1.5 py-0.2 rounded-full font-bold">
+                  KSNL
                 </span>
-              </button>
+              </Link>
 
               <a
                 href="#hoa-don"

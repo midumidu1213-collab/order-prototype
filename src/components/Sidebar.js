@@ -104,6 +104,19 @@ export default function Sidebar() {
               </span>
             </Link>
             <Link
+              href="/inventory/reprocess"
+              className={`group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                pathname?.startsWith("/inventory/reprocess")
+                  ? "bg-rose-900/60 text-white font-bold shadow-xs border border-rose-400/40"
+                  : "hover:bg-[#004737] text-rose-300 font-semibold"
+              }`}
+            >
+              <span>Kho Chờ Xử Lý Lại</span>
+              <span className="text-[9px] font-black uppercase px-1 py-0.5 rounded bg-rose-500/30 text-rose-200">
+                US-08
+              </span>
+            </Link>
+            <Link
               href="/orders/customer-requests"
               className={`group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                 pathname.startsWith("/orders/customer-requests")

@@ -11,6 +11,7 @@ export default function AppShell({ children }) {
   const isUserGuide = pathname?.startsWith("/user-guide");
   const isProductManagement = pathname?.startsWith("/product-management");
   const isDebtManagement = pathname?.startsWith("/debt-management");
+  const isInventory = pathname?.startsWith("/inventory");
 
   if (isCatalogue) {
     return (
@@ -28,7 +29,7 @@ export default function AppShell({ children }) {
     );
   }
 
-  if (isProductManagement || isDebtManagement) {
+  if (isProductManagement || isDebtManagement || isInventory) {
     return (
       <div className="h-full w-full overflow-hidden bg-[#f4f6f8]">
         {children}
