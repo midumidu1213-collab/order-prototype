@@ -32,7 +32,42 @@ import ColumnFilterPopover from "@/components/orders/ColumnFilterPopover";
 import { MOCK_COMMERCIAL_INVENTORY, MOCK_STAMP_OPTIONS } from "@/data/inventoryMockData";
 
 export default function CommercialInventoryPage() {
-  const [inventoryList, setInventoryList] = useState(MOCK_COMMERCIAL_INVENTORY);
+  const [inventoryList, setInventoryList] = useState(() =>
+    MOCK_COMMERCIAL_INVENTORY.map((item) => {
+      const qtyUnallocated =
+        item.series && item.series.length > 0
+          ? item.series.filter((s) => s.status === "Chờ phân bổ").length
+          : item.status === "Chờ phân bổ"
+          ? item.totalQty
+          : 0;
+      const qtyAllocated =
+        item.series && item.series.length > 0
+          ? item.series.filter((s) => s.status === "Đã phân bổ").length
+          : item.status === "Đã phân bổ"
+          ? item.totalQty
+          : 0;
+      const qtyInvoice =
+        item.series && item.series.length > 0
+          ? item.series.filter((s) => s.status === "Chờ lập HĐ").length
+          : item.status === "Chờ lập HĐ"
+          ? item.totalQty
+          : 0;
+      const qtyDelivery =
+        item.series && item.series.length > 0
+          ? item.series.filter((s) => s.status === "Chờ giao").length
+          : item.status === "Chờ giao"
+          ? item.totalQty
+          : 0;
+
+      return {
+        ...item,
+        qtyUnallocated,
+        qtyAllocated,
+        qtyInvoice,
+        qtyDelivery
+      };
+    })
+  );
   
   // Tab trạng thái tồn: 'all' | 'unallocated' | 'allocated' | 'invoice' | 'delivery'
   const [activeTab, setActiveTab] = useState("all");
@@ -66,8 +101,11 @@ export default function CommercialInventoryPage() {
     itemCode: { sort: null, selectedValues: null, searchQuery: "" },
     category: { sort: null, selectedValues: null, searchQuery: "" },
     lop: { sort: null, selectedValues: null, searchQuery: "" },
-    availableQty: { sort: null, selectedValues: null, searchQuery: "" },
-    allocatedQty: { sort: null, selectedValues: null, searchQuery: "" },
+    totalQty: { sort: null, selectedValues: null, searchQuery: "" },
+    qtyUnallocated: { sort: null, selectedValues: null, searchQuery: "" },
+    qtyAllocated: { sort: null, selectedValues: null, searchQuery: "" },
+    qtyInvoice: { sort: null, selectedValues: null, searchQuery: "" },
+    qtyDelivery: { sort: null, selectedValues: null, searchQuery: "" },
     status: { sort: null, selectedValues: null, searchQuery: "" },
     weight: { sort: null, selectedValues: null, searchQuery: "" },
     metalWeight: { sort: null, selectedValues: null, searchQuery: "" },
@@ -98,8 +136,19 @@ export default function CommercialInventoryPage() {
       itemCode: Array.from(new Set(inventoryList.map((r) => r.itemCode))).sort(),
       category: Array.from(new Set(inventoryList.map((r) => r.category || r.itemName))).sort(),
       lop: Array.from(new Set(inventoryList.map((r) => r.lop))).sort(),
-      availableQty: Array.from(new Set(inventoryList.map((r) => (r.availableQty > 0 ? String(r.availableQty) : "—")))).sort(),
-      allocatedQty: Array.from(new Set(inventoryList.map((r) => (r.allocatedQty > 0 ? String(r.allocatedQty) : "—")))).sort(),
+      totalQty: Array.from(new Set(inventoryList.map((r) => String(r.totalQty)))).sort((a, b) => Number(a) - Number(b)),
+      qtyUnallocated: Array.from(
+        new Set(inventoryList.map((r) => (r.qtyUnallocated > 0 ? String(r.qtyUnallocated) : "—")))
+      ).sort(),
+      qtyAllocated: Array.from(
+        new Set(inventoryList.map((r) => (r.qtyAllocated > 0 ? String(r.qtyAllocated) : "—")))
+      ).sort(),
+      qtyInvoice: Array.from(
+        new Set(inventoryList.map((r) => (r.qtyInvoice > 0 ? String(r.qtyInvoice) : "—")))
+      ).sort(),
+      qtyDelivery: Array.from(
+        new Set(inventoryList.map((r) => (r.qtyDelivery > 0 ? String(r.qtyDelivery) : "—")))
+      ).sort(),
       status: Array.from(new Set(inventoryList.map((r) => r.status))).sort(),
       weight: Array.from(new Set(inventoryList.map((r) => r.weight.toFixed(4)))).sort(),
       metalWeight: Array.from(new Set(inventoryList.map((r) => r.metalWeight.toFixed(4)))).sort(),
@@ -151,6 +200,10 @@ export default function CommercialInventoryPage() {
       category: { sort: null, selectedValues: null, searchQuery: "" },
       lop: { sort: null, selectedValues: null, searchQuery: "" },
       totalQty: { sort: null, selectedValues: null, searchQuery: "" },
+      qtyUnallocated: { sort: null, selectedValues: null, searchQuery: "" },
+      qtyAllocated: { sort: null, selectedValues: null, searchQuery: "" },
+      qtyInvoice: { sort: null, selectedValues: null, searchQuery: "" },
+      qtyDelivery: { sort: null, selectedValues: null, searchQuery: "" },
       status: { sort: null, selectedValues: null, searchQuery: "" },
       weight: { sort: null, selectedValues: null, searchQuery: "" },
       metalWeight: { sort: null, selectedValues: null, searchQuery: "" },
@@ -219,9 +272,11 @@ export default function CommercialInventoryPage() {
         list = list.filter((item) => {
           let val = "";
           if (colKey === "category") val = item.category || item.itemName || "";
-          else if (colKey === "availableQty") val = item.availableQty > 0 ? String(item.availableQty) : "—";
-          else if (colKey === "allocatedQty") val = item.allocatedQty > 0 ? String(item.allocatedQty) : "—";
-          else if (colKey === "totalQty") val = `${item.totalQty} psc`;
+          else if (colKey === "totalQty") val = String(item.totalQty);
+          else if (colKey === "qtyUnallocated") val = item.qtyUnallocated > 0 ? String(item.qtyUnallocated) : "—";
+          else if (colKey === "qtyAllocated") val = item.qtyAllocated > 0 ? String(item.qtyAllocated) : "—";
+          else if (colKey === "qtyInvoice") val = item.qtyInvoice > 0 ? String(item.qtyInvoice) : "—";
+          else if (colKey === "qtyDelivery") val = item.qtyDelivery > 0 ? String(item.qtyDelivery) : "—";
           else if (colKey === "weight") val = item.weight.toFixed(4);
           else if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
           else if (colKey === "stoneWeight") val = item.stoneWeight > 0 ? item.stoneWeight.toFixed(4) : "—";
@@ -236,9 +291,11 @@ export default function CommercialInventoryPage() {
         list = list.filter((item) => {
           let val = "";
           if (colKey === "category") val = `${item.category || ""} ${item.itemName || ""}`;
-          else if (colKey === "availableQty") val = item.availableQty > 0 ? String(item.availableQty) : "";
-          else if (colKey === "allocatedQty") val = item.allocatedQty > 0 ? String(item.allocatedQty) : "";
-          else if (colKey === "totalQty") val = `${item.totalQty}`;
+          else if (colKey === "totalQty") val = String(item.totalQty);
+          else if (colKey === "qtyUnallocated") val = String(item.qtyUnallocated || "");
+          else if (colKey === "qtyAllocated") val = String(item.qtyAllocated || "");
+          else if (colKey === "qtyInvoice") val = String(item.qtyInvoice || "");
+          else if (colKey === "qtyDelivery") val = String(item.qtyDelivery || "");
           else if (colKey === "weight") val = item.weight.toFixed(4);
           else if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
           else if (colKey === "stoneWeight") val = item.stoneWeight > 0 ? item.stoneWeight.toFixed(4) : "—";
@@ -480,6 +537,7 @@ export default function CommercialInventoryPage() {
             return {
               ...item,
               totalQty: remain,
+              qtyUnallocated: remain,
               weight: Number(remainTotal.toFixed(4)),
               metalWeight: Number(remainMetal.toFixed(4)),
               stoneWeight: Number(remainStone.toFixed(4)),
@@ -813,7 +871,7 @@ export default function CommercialInventoryPage() {
 
               {/* Data Table Bố trí đầy đủ 16 cột chuẩn hóa theo chỉ đạo Chị đẹp */}
               <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left border-collapse min-w-[1680px]">
+                <table className="w-full text-xs text-left border-collapse min-w-[1880px]">
                   <thead className="bg-[#f8fafc] text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200 text-[11px] select-none">
                     <tr>
                       {/* CỘT CHECKBOX CHỌN NHIỀU (AC 3) */}
@@ -1065,69 +1123,171 @@ export default function CommercialInventoryPage() {
                         )}
                       </th>
 
-                      {/* 8. SL KHẢ DỤNG */}
+                      {/* 8. TỔNG SL */}
                       <th className="relative py-2.5 px-3 text-right">
                         <div className="flex items-center justify-end space-x-1">
-                          <span>SL KHẢ DỤNG</span>
+                          <span>TỔNG SL</span>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveFilterColKey(activeFilterColKey === "availableQty" ? null : "availableQty");
+                              setActiveFilterColKey(activeFilterColKey === "totalQty" ? null : "totalQty");
                             }}
                             className={`p-1 rounded transition-colors cursor-pointer ${
-                              isColumnFiltered("availableQty")
+                              isColumnFiltered("totalQty")
                                 ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                 : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                             }`}
-                            title="Lọc & sắp xếp cột SL Khả Dụng"
+                            title="Lọc & sắp xếp cột Tổng SL"
                           >
-                            <Filter className={`h-3 w-3 ${isColumnFiltered("availableQty") ? "fill-[#005a46]" : ""}`} />
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("totalQty") ? "fill-[#005a46]" : ""}`} />
                           </button>
                         </div>
-                        {activeFilterColKey === "availableQty" && (
+                        {activeFilterColKey === "totalQty" && (
                           <ColumnFilterPopover
-                            columnKey="availableQty"
-                            columnTitle="SL Khả Dụng"
+                            columnKey="totalQty"
+                            columnTitle="Tổng Số Lượng"
                             columnType="select"
-                            uniqueValues={uniqueValuesMap.availableQty}
-                            filterState={columnFilters.availableQty}
-                            onApply={(data) => handleApplyColumnFilter("availableQty", data)}
-                            onClear={() => handleClearColumnFilter("availableQty")}
+                            uniqueValues={uniqueValuesMap.totalQty}
+                            filterState={columnFilters.totalQty}
+                            onApply={(data) => handleApplyColumnFilter("totalQty", data)}
+                            onClear={() => handleClearColumnFilter("totalQty")}
                             onClose={() => setActiveFilterColKey(null)}
                           />
                         )}
                       </th>
 
-                      {/* 9. SL ĐÃ GIỮ CHỖ */}
-                      <th className="relative py-2.5 px-3 text-right">
+                      {/* 9. CHỜ PHÂN BỔ */}
+                      <th className="relative py-2.5 px-3 text-right text-amber-800">
                         <div className="flex items-center justify-end space-x-1">
-                          <span>SL ĐÃ GIỮ CHỖ</span>
+                          <span>CHỜ PHÂN BỔ</span>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveFilterColKey(activeFilterColKey === "allocatedQty" ? null : "allocatedQty");
+                              setActiveFilterColKey(activeFilterColKey === "qtyUnallocated" ? null : "qtyUnallocated");
                             }}
                             className={`p-1 rounded transition-colors cursor-pointer ${
-                              isColumnFiltered("allocatedQty")
+                              isColumnFiltered("qtyUnallocated")
                                 ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                 : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                             }`}
-                            title="Lọc & sắp xếp cột SL Đã Giữ Chỗ"
+                            title="Lọc & sắp xếp cột Chờ phân bổ"
                           >
-                            <Filter className={`h-3 w-3 ${isColumnFiltered("allocatedQty") ? "fill-[#005a46]" : ""}`} />
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("qtyUnallocated") ? "fill-[#005a46]" : ""}`} />
                           </button>
                         </div>
-                        {activeFilterColKey === "allocatedQty" && (
+                        {activeFilterColKey === "qtyUnallocated" && (
                           <ColumnFilterPopover
-                            columnKey="allocatedQty"
-                            columnTitle="SL Đã Giữ Chỗ"
+                            columnKey="qtyUnallocated"
+                            columnTitle="SL Chờ Phân Bổ"
                             columnType="select"
-                            uniqueValues={uniqueValuesMap.allocatedQty}
-                            filterState={columnFilters.allocatedQty}
-                            onApply={(data) => handleApplyColumnFilter("allocatedQty", data)}
-                            onClear={() => handleClearColumnFilter("allocatedQty")}
+                            uniqueValues={uniqueValuesMap.qtyUnallocated}
+                            filterState={columnFilters.qtyUnallocated}
+                            onApply={(data) => handleApplyColumnFilter("qtyUnallocated", data)}
+                            onClear={() => handleClearColumnFilter("qtyUnallocated")}
+                            onClose={() => setActiveFilterColKey(null)}
+                          />
+                        )}
+                      </th>
+
+                      {/* 10. ĐÃ PHÂN BỔ */}
+                      <th className="relative py-2.5 px-3 text-right text-emerald-800">
+                        <div className="flex items-center justify-end space-x-1">
+                          <span>ĐÃ PHÂN BỔ</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveFilterColKey(activeFilterColKey === "qtyAllocated" ? null : "qtyAllocated");
+                            }}
+                            className={`p-1 rounded transition-colors cursor-pointer ${
+                              isColumnFiltered("qtyAllocated")
+                                ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                                : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
+                            }`}
+                            title="Lọc & sắp xếp cột Đã phân bổ"
+                          >
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("qtyAllocated") ? "fill-[#005a46]" : ""}`} />
+                          </button>
+                        </div>
+                        {activeFilterColKey === "qtyAllocated" && (
+                          <ColumnFilterPopover
+                            columnKey="qtyAllocated"
+                            columnTitle="SL Đã Phân Bổ"
+                            columnType="select"
+                            uniqueValues={uniqueValuesMap.qtyAllocated}
+                            filterState={columnFilters.qtyAllocated}
+                            onApply={(data) => handleApplyColumnFilter("qtyAllocated", data)}
+                            onClear={() => handleClearColumnFilter("qtyAllocated")}
+                            onClose={() => setActiveFilterColKey(null)}
+                          />
+                        )}
+                      </th>
+
+                      {/* 11. CHỜ LẬP HÓA ĐƠN */}
+                      <th className="relative py-2.5 px-3 text-right text-blue-800">
+                        <div className="flex items-center justify-end space-x-1">
+                          <span>CHỜ LẬP HĐ</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveFilterColKey(activeFilterColKey === "qtyInvoice" ? null : "qtyInvoice");
+                            }}
+                            className={`p-1 rounded transition-colors cursor-pointer ${
+                              isColumnFiltered("qtyInvoice")
+                                ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                                : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
+                            }`}
+                            title="Lọc & sắp xếp cột Chờ lập HĐ"
+                          >
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("qtyInvoice") ? "fill-[#005a46]" : ""}`} />
+                          </button>
+                        </div>
+                        {activeFilterColKey === "qtyInvoice" && (
+                          <ColumnFilterPopover
+                            columnKey="qtyInvoice"
+                            columnTitle="SL Chờ Lập Hóa Đơn"
+                            columnType="select"
+                            uniqueValues={uniqueValuesMap.qtyInvoice}
+                            filterState={columnFilters.qtyInvoice}
+                            onApply={(data) => handleApplyColumnFilter("qtyInvoice", data)}
+                            onClear={() => handleClearColumnFilter("qtyInvoice")}
+                            onClose={() => setActiveFilterColKey(null)}
+                          />
+                        )}
+                      </th>
+
+                      {/* 12. CHỜ GIAO */}
+                      <th className="relative py-2.5 px-3 text-right text-purple-800">
+                        <div className="flex items-center justify-end space-x-1">
+                          <span>CHỜ GIAO</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveFilterColKey(activeFilterColKey === "qtyDelivery" ? null : "qtyDelivery");
+                            }}
+                            className={`p-1 rounded transition-colors cursor-pointer ${
+                              isColumnFiltered("qtyDelivery")
+                                ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                                : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
+                            }`}
+                            title="Lọc & sắp xếp cột Chờ giao"
+                          >
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("qtyDelivery") ? "fill-[#005a46]" : ""}`} />
+                          </button>
+                        </div>
+                        {activeFilterColKey === "qtyDelivery" && (
+                          <ColumnFilterPopover
+                            columnKey="qtyDelivery"
+                            columnTitle="SL Chờ Giao"
+                            columnType="select"
+                            uniqueValues={uniqueValuesMap.qtyDelivery}
+                            filterState={columnFilters.qtyDelivery}
+                            onApply={(data) => handleApplyColumnFilter("qtyDelivery", data)}
+                            onClear={() => handleClearColumnFilter("qtyDelivery")}
                             onClose={() => setActiveFilterColKey(null)}
                           />
                         )}
@@ -1476,19 +1636,42 @@ export default function CommercialInventoryPage() {
                             </span>
                           </td>
 
-                          {/* 8. SL Khả Dụng */}
-                          <td className="py-3 px-3 text-right whitespace-nowrap">
-                            {row.availableQty > 0 ? (
-                              <span className="font-mono font-bold text-emerald-700">{row.availableQty}</span>
+                          {/* 8. Tổng SL */}
+                          <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                            {row.totalQty}
+                          </td>
+
+                          {/* 9. Chờ phân bổ */}
+                          <td className="py-3 px-3 text-right font-mono font-bold text-amber-700 whitespace-nowrap">
+                            {row.qtyUnallocated > 0 ? (
+                              row.qtyUnallocated
                             ) : (
                               <span className="text-slate-300 font-normal select-none">—</span>
                             )}
                           </td>
 
-                          {/* 9. SL Đã Giữ Chỗ */}
-                          <td className="py-3 px-3 text-right whitespace-nowrap">
-                            {row.allocatedQty > 0 ? (
-                              <span className="font-mono font-bold text-purple-700">{row.allocatedQty}</span>
+                          {/* 10. Đã phân bổ */}
+                          <td className="py-3 px-3 text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
+                            {row.qtyAllocated > 0 ? (
+                              row.qtyAllocated
+                            ) : (
+                              <span className="text-slate-300 font-normal select-none">—</span>
+                            )}
+                          </td>
+
+                          {/* 11. Chờ lập HĐ */}
+                          <td className="py-3 px-3 text-right font-mono font-bold text-blue-700 whitespace-nowrap">
+                            {row.qtyInvoice > 0 ? (
+                              row.qtyInvoice
+                            ) : (
+                              <span className="text-slate-300 font-normal select-none">—</span>
+                            )}
+                          </td>
+
+                          {/* 12. Chờ giao */}
+                          <td className="py-3 px-3 text-right font-mono font-bold text-purple-700 whitespace-nowrap">
+                            {row.qtyDelivery > 0 ? (
+                              row.qtyDelivery
                             ) : (
                               <span className="text-slate-300 font-normal select-none">—</span>
                             )}
@@ -1568,17 +1751,28 @@ export default function CommercialInventoryPage() {
                       <td colSpan={8} className="py-2.5 px-3 text-right">
                         Tổng cộng ({filteredData.length} Lô):
                       </td>
-                      {/* Chân cột SL Khả Dụng */}
+                      {/* 1. Tổng của Tổng SL */}
+                      <td className="py-2.5 px-3 text-right font-mono text-slate-900 font-black whitespace-nowrap">
+                        {filteredData.reduce((s, r) => s + (r.totalQty || 0), 0)}
+                      </td>
+                      {/* 2. Tổng của Chờ phân bổ */}
+                      <td className="py-2.5 px-3 text-right font-mono text-amber-800 font-black whitespace-nowrap">
+                        {filteredData.reduce((s, r) => s + (r.qtyUnallocated || 0), 0) || "—"}
+                      </td>
+                      {/* 3. Tổng của Đã phân bổ */}
                       <td className="py-2.5 px-3 text-right font-mono text-emerald-800 font-black whitespace-nowrap">
-                        {filteredData.reduce((s, r) => s + (r.availableQty || 0), 0)}
+                        {filteredData.reduce((s, r) => s + (r.qtyAllocated || 0), 0) || "—"}
                       </td>
-                      {/* Chân cột SL Đã Giữ Chỗ */}
+                      {/* 4. Tổng của Chờ lập HĐ */}
+                      <td className="py-2.5 px-3 text-right font-mono text-blue-800 font-black whitespace-nowrap">
+                        {filteredData.reduce((s, r) => s + (r.qtyInvoice || 0), 0) || "—"}
+                      </td>
+                      {/* 5. Tổng của Chờ giao */}
                       <td className="py-2.5 px-3 text-right font-mono text-purple-800 font-black whitespace-nowrap">
-                        {filteredData.reduce((s, r) => s + (r.allocatedQty || 0), 0)}
+                        {filteredData.reduce((s, r) => s + (r.qtyDelivery || 0), 0) || "—"}
                       </td>
-                      {/* Chân cột Trạng Thái */}
                       <td className="py-2.5 px-3 text-center text-[10px] text-slate-500 whitespace-nowrap">
-                        {filteredData.filter((r) => r.status === "Chờ phân bổ").length} chờ phân bổ / {filteredData.filter((r) => r.status !== "Chờ phân bổ").length} đã gán
+                        {filteredData.filter((r) => r.status === "Chờ phân bổ").length} chờ PB / {filteredData.filter((r) => r.status !== "Chờ phân bổ").length} đã gán
                       </td>
                       {/* Tổng TL */}
                       <td className="py-2.5 px-3 text-right font-mono text-slate-900 whitespace-nowrap">
@@ -2259,16 +2453,20 @@ export default function CommercialInventoryPage() {
                   <strong className="font-mono text-slate-900 text-xs">{selectedLotForDrawer.totalQty} pcs</strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">SL Khả dụng:</span>
-                  <strong className="font-mono text-emerald-700 text-xs">
-                    {selectedLotForDrawer.availableQty > 0 ? `${selectedLotForDrawer.availableQty} pcs` : "—"}
-                  </strong>
+                  <span className="text-slate-400 block text-[10px]">SL Chờ phân bổ:</span>
+                  <strong className="font-mono text-amber-700 text-xs">{selectedLotForDrawer.qtyUnallocated > 0 ? `${selectedLotForDrawer.qtyUnallocated} pcs` : "—"}</strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">SL Đã giữ chỗ:</span>
-                  <strong className="font-mono text-purple-700 text-xs">
-                    {selectedLotForDrawer.allocatedQty > 0 ? `${selectedLotForDrawer.allocatedQty} pcs` : "—"}
-                  </strong>
+                  <span className="text-slate-400 block text-[10px]">SL Đã phân bổ:</span>
+                  <strong className="font-mono text-emerald-700 text-xs">{selectedLotForDrawer.qtyAllocated > 0 ? `${selectedLotForDrawer.qtyAllocated} pcs` : "—"}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">SL Chờ lập HĐ:</span>
+                  <strong className="font-mono text-blue-700 text-xs">{selectedLotForDrawer.qtyInvoice > 0 ? `${selectedLotForDrawer.qtyInvoice} pcs` : "—"}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">SL Chờ giao:</span>
+                  <strong className="font-mono text-purple-700 text-xs">{selectedLotForDrawer.qtyDelivery > 0 ? `${selectedLotForDrawer.qtyDelivery} pcs` : "—"}</strong>
                 </div>
               </div>
 
