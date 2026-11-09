@@ -81,14 +81,18 @@
 
 | Fields (Tên trường) | Type (Kiểu dữ liệu) | Required (Bắt buộc) | Default value (Giá trị mặc định) | Rules (Quy tắc & Nghiệp vụ) |
 | :--- | :--- | :---: | :--- | :--- |
+| **STT** | Integer | Có | Tự tăng | Số thứ tự dòng hiển thị |
+| **Mã Lô Mới** | Text / Font-mono | Có | Tự động sinh | Mã lô mới của đơn hàng mới (VD: `SO-261024-001`). Đưa lên trước để đối soát tác nghiệp. |
+| **Mã SO Mới** | Text / Link | Có | Kế thừa | Mã đơn hàng mới được gán (VD: `SO2608011`). Click mở chi tiết đơn trong QLĐH. |
+| **Khách Hàng Mới** | Text | Có | Kế thừa | Tên khách hàng đặt đơn mới. |
 | **Mã Item** | Text / Font-mono | Có | Kế thừa | Mã 30 ký tự định danh mẫu sản phẩm. |
 | **Chủng Loại** | Text | Có | Kế thừa | Nhẫn, Bông tai, Vòng tay, Mặt dây... |
 | **TL Metal (g)** | Decimal | Có | Kế thừa | Trọng lượng kim loại của 1 pcs (4 số lẻ). |
-| **TL Đá (g)** | Decimal | Có | Kế thừa | Trọng lượng đá của 1 pcs (4 số lẻ). |
+| **TL Đá (g)** | Decimal | Có | Kế thừa | Trọng lượng đá của 1 pcs (4 số lẻ, nếu 0 hiển thị `—`). |
 | **Tổng TL (g)** | Decimal | Có | Kế thừa | Tổng trọng lượng 1 pcs = TL Metal + TL Đá. |
-| **Mã Lô Mới** | Text / Font-mono | Có | Tự động sinh | Mã lô mới của đơn hàng mới (VD: `SO-261024-001`). |
-| **Mã SO Mới** | Text / Link | Có | Kế thừa | Mã đơn hàng mới được gán (VD: `SO2608011`). |
-| **Khách Hàng Mới** | Text | Có | Kế thừa | Tên khách hàng đặt đơn mới. |
+| **Mã Lô Cũ** | Text / Font-mono | Có | Kế thừa | Mã phôi cũ trong két kho CXLL (VD: `SO-260800061`). Chuyển về sau làm thông tin truy vết. |
+| **Mã SO Cũ** | Text / Font-mono | Có | Kế thừa | Mã đơn hàng cũ đã bị hủy. |
+| **Khách Hàng Cũ** | Text | Có | Kế thừa | Mã và tên khách hàng cũ của lô phôi hủy. |
 | **Trạng Thái** | Enum / Badge | Có | `Chờ chuyển bag` | `Chờ chuyển bag` (vàng) hoặc `Đã chuyển sang bag mới` (xanh ngọc). |
 | **Thao Tác** | Action / Button | — | — | Khi `Chờ chuyển bag`: Nút `[Cấp thành phẩm]`. Khi `Đã chuyển`: Nút `[In mã Bag]`. |
 

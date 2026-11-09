@@ -667,100 +667,100 @@ export default function FgIssueServePage() {
                       {/* 1. STT */}
                       <th className="py-2.5 px-3 w-12 text-center font-bold text-slate-800">STT</th>
 
-                      {/* 2. MÃ LÔ CŨ */}
+                      {/* 2. MÃ LÔ MỚI (Đưa lên trước theo chỉ đạo Chị đẹp) */}
                       <th className="relative py-2.5 px-3">
                         <div className="flex items-center justify-between space-x-1">
-                          <span>MÃ LÔ CŨ</span>
+                          <span className="text-teal-900 font-bold">MÃ LÔ MỚI</span>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveFilterColKey(activeFilterColKey === "expectedOldBagCode" ? null : "expectedOldBagCode");
+                              setActiveFilterColKey(activeFilterColKey === "newBagCode" ? null : "newBagCode");
                             }}
-                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("expectedOldBagCode")
+                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("newBagCode")
                                 ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                 : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                               }`}
-                            title="Lọc & sắp xếp cột Mã Lô Cũ"
+                            title="Lọc & sắp xếp cột Mã Lô Mới"
                           >
-                            <Filter className={`h-3 w-3 ${isColumnFiltered("expectedOldBagCode") ? "fill-[#005a46]" : ""}`} />
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("newBagCode") ? "fill-[#005a46]" : ""}`} />
                           </button>
                         </div>
-                        {activeFilterColKey === "expectedOldBagCode" && (
+                        {activeFilterColKey === "newBagCode" && (
                           <ColumnFilterPopover
-                            columnKey="expectedOldBagCode"
-                            columnTitle="Mã Lô Cũ"
+                            columnKey="newBagCode"
+                            columnTitle="Mã Lô Mới"
                             columnType="select"
-                            uniqueValues={uniqueValuesMap.expectedOldBagCode}
-                            filterState={columnFilters.expectedOldBagCode}
-                            onApply={(data) => handleApplyColumnFilter("expectedOldBagCode", data)}
-                            onClear={() => handleClearColumnFilter("expectedOldBagCode")}
+                            uniqueValues={uniqueValuesMap.newBagCode}
+                            filterState={columnFilters.newBagCode}
+                            onApply={(data) => handleApplyColumnFilter("newBagCode", data)}
+                            onClear={() => handleClearColumnFilter("newBagCode")}
                             onClose={() => setActiveFilterColKey(null)}
                           />
                         )}
                       </th>
 
-                      {/* 3. MÃ SO CŨ */}
+                      {/* 3. MÃ SO MỚI (Đưa lên trước theo chỉ đạo Chị đẹp) */}
                       <th className="relative py-2.5 px-3">
                         <div className="flex items-center justify-between space-x-1">
-                          <span className="text-rose-700 font-bold">MÃ SO CŨ</span>
+                          <span className="text-teal-800 font-bold">MÃ SO MỚI</span>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveFilterColKey(activeFilterColKey === "originalSoCode" ? null : "originalSoCode");
+                              setActiveFilterColKey(activeFilterColKey === "soCode" ? null : "soCode");
                             }}
-                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("originalSoCode")
+                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("soCode")
                                 ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                 : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                               }`}
-                            title="Lọc & sắp xếp cột Mã SO Cũ"
+                            title="Lọc & sắp xếp cột Mã SO Mới"
                           >
-                            <Filter className={`h-3 w-3 ${isColumnFiltered("originalSoCode") ? "fill-[#005a46]" : ""}`} />
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("soCode") ? "fill-[#005a46]" : ""}`} />
                           </button>
                         </div>
-                        {activeFilterColKey === "originalSoCode" && (
+                        {activeFilterColKey === "soCode" && (
                           <ColumnFilterPopover
-                            columnKey="originalSoCode"
-                            columnTitle="Mã SO Cũ"
+                            columnKey="soCode"
+                            columnTitle="Mã SO Mới"
                             columnType="select"
-                            uniqueValues={uniqueValuesMap.originalSoCode}
-                            filterState={columnFilters.originalSoCode}
-                            onApply={(data) => handleApplyColumnFilter("originalSoCode", data)}
-                            onClear={() => handleClearColumnFilter("originalSoCode")}
+                            uniqueValues={uniqueValuesMap.soCode}
+                            filterState={columnFilters.soCode}
+                            onApply={(data) => handleApplyColumnFilter("soCode", data)}
+                            onClear={() => handleClearColumnFilter("soCode")}
                             onClose={() => setActiveFilterColKey(null)}
                           />
                         )}
                       </th>
 
-                      {/* 4. KHÁCH HÀNG CŨ (MÃ-TÊN) */}
+                      {/* 4. KHÁCH HÀNG MỚI (Đưa lên trước theo chỉ đạo Chị đẹp) */}
                       <th className="relative py-2.5 px-3">
                         <div className="flex items-center justify-between space-x-1">
-                          <span>KHÁCH HÀNG CŨ (MÃ-TÊN)</span>
+                          <span>KHÁCH HÀNG MỚI</span>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveFilterColKey(activeFilterColKey === "oldCustomer" ? null : "oldCustomer");
+                              setActiveFilterColKey(activeFilterColKey === "customerName" ? null : "customerName");
                             }}
-                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("oldCustomer")
+                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("customerName")
                                 ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                 : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                               }`}
-                            title="Lọc & sắp xếp cột Khách Hàng Cũ"
+                            title="Lọc & sắp xếp cột Khách Hàng Mới"
                           >
-                            <Filter className={`h-3 w-3 ${isColumnFiltered("oldCustomer") ? "fill-[#005a46]" : ""}`} />
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("customerName") ? "fill-[#005a46]" : ""}`} />
                           </button>
                         </div>
-                        {activeFilterColKey === "oldCustomer" && (
+                        {activeFilterColKey === "customerName" && (
                           <ColumnFilterPopover
-                            columnKey="oldCustomer"
-                            columnTitle="Khách Hàng Cũ (Mã-Tên)"
+                            columnKey="customerName"
+                            columnTitle="Khách Hàng Mới"
                             columnType="select"
-                            uniqueValues={uniqueValuesMap.oldCustomer}
-                            filterState={columnFilters.oldCustomer}
-                            onApply={(data) => handleApplyColumnFilter("oldCustomer", data)}
-                            onClear={() => handleClearColumnFilter("oldCustomer")}
+                            uniqueValues={uniqueValuesMap.customerName}
+                            filterState={columnFilters.customerName}
+                            onApply={(data) => handleApplyColumnFilter("customerName", data)}
+                            onClear={() => handleClearColumnFilter("customerName")}
                             onClose={() => setActiveFilterColKey(null)}
                           />
                         )}
@@ -931,100 +931,100 @@ export default function FgIssueServePage() {
                         )}
                       </th>
 
-                      {/* 10. MÃ LÔ MỚI */}
+                      {/* 10. MÃ LÔ CŨ (Chuyển về sau theo chỉ đạo Chị đẹp) */}
                       <th className="relative py-2.5 px-3">
                         <div className="flex items-center justify-between space-x-1">
-                          <span className="text-teal-900 font-bold">MÃ LÔ MỚI</span>
+                          <span>MÃ LÔ CŨ</span>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveFilterColKey(activeFilterColKey === "newBagCode" ? null : "newBagCode");
+                              setActiveFilterColKey(activeFilterColKey === "expectedOldBagCode" ? null : "expectedOldBagCode");
                             }}
-                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("newBagCode")
+                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("expectedOldBagCode")
                                 ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                 : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                               }`}
-                            title="Lọc & sắp xếp cột Mã Lô Mới"
+                            title="Lọc & sắp xếp cột Mã Lô Cũ"
                           >
-                            <Filter className={`h-3 w-3 ${isColumnFiltered("newBagCode") ? "fill-[#005a46]" : ""}`} />
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("expectedOldBagCode") ? "fill-[#005a46]" : ""}`} />
                           </button>
                         </div>
-                        {activeFilterColKey === "newBagCode" && (
+                        {activeFilterColKey === "expectedOldBagCode" && (
                           <ColumnFilterPopover
-                            columnKey="newBagCode"
-                            columnTitle="Mã Lô Mới"
+                            columnKey="expectedOldBagCode"
+                            columnTitle="Mã Lô Cũ"
                             columnType="select"
-                            uniqueValues={uniqueValuesMap.newBagCode}
-                            filterState={columnFilters.newBagCode}
-                            onApply={(data) => handleApplyColumnFilter("newBagCode", data)}
-                            onClear={() => handleClearColumnFilter("newBagCode")}
+                            uniqueValues={uniqueValuesMap.expectedOldBagCode}
+                            filterState={columnFilters.expectedOldBagCode}
+                            onApply={(data) => handleApplyColumnFilter("expectedOldBagCode", data)}
+                            onClear={() => handleClearColumnFilter("expectedOldBagCode")}
                             onClose={() => setActiveFilterColKey(null)}
                           />
                         )}
                       </th>
 
-                      {/* 11. MÃ SO MỚI */}
+                      {/* 11. MÃ SO CŨ (Chuyển về sau theo chỉ đạo Chị đẹp) */}
                       <th className="relative py-2.5 px-3">
                         <div className="flex items-center justify-between space-x-1">
-                          <span>MÃ SO MỚI</span>
+                          <span className="text-rose-700 font-bold">MÃ SO CŨ</span>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveFilterColKey(activeFilterColKey === "soCode" ? null : "soCode");
+                              setActiveFilterColKey(activeFilterColKey === "originalSoCode" ? null : "originalSoCode");
                             }}
-                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("soCode")
+                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("originalSoCode")
                                 ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                 : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                               }`}
-                            title="Lọc & sắp xếp cột Mã SO Mới"
+                            title="Lọc & sắp xếp cột Mã SO Cũ"
                           >
-                            <Filter className={`h-3 w-3 ${isColumnFiltered("soCode") ? "fill-[#005a46]" : ""}`} />
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("originalSoCode") ? "fill-[#005a46]" : ""}`} />
                           </button>
                         </div>
-                        {activeFilterColKey === "soCode" && (
+                        {activeFilterColKey === "originalSoCode" && (
                           <ColumnFilterPopover
-                            columnKey="soCode"
-                            columnTitle="Mã SO Mới"
+                            columnKey="originalSoCode"
+                            columnTitle="Mã SO Cũ"
                             columnType="select"
-                            uniqueValues={uniqueValuesMap.soCode}
-                            filterState={columnFilters.soCode}
-                            onApply={(data) => handleApplyColumnFilter("soCode", data)}
-                            onClear={() => handleClearColumnFilter("soCode")}
+                            uniqueValues={uniqueValuesMap.originalSoCode}
+                            filterState={columnFilters.originalSoCode}
+                            onApply={(data) => handleApplyColumnFilter("originalSoCode", data)}
+                            onClear={() => handleClearColumnFilter("originalSoCode")}
                             onClose={() => setActiveFilterColKey(null)}
                           />
                         )}
                       </th>
 
-                      {/* 12. KHÁCH HÀNG MỚI */}
+                      {/* 12. KHÁCH HÀNG CŨ (MÃ-TÊN) (Chuyển về sau theo chỉ đạo Chị đẹp) */}
                       <th className="relative py-2.5 px-3">
                         <div className="flex items-center justify-between space-x-1">
-                          <span>KHÁCH HÀNG MỚI</span>
+                          <span>KHÁCH HÀNG CŨ (MÃ-TÊN)</span>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveFilterColKey(activeFilterColKey === "customerName" ? null : "customerName");
+                              setActiveFilterColKey(activeFilterColKey === "oldCustomer" ? null : "oldCustomer");
                             }}
-                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("customerName")
+                            className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("oldCustomer")
                                 ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                 : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                               }`}
-                            title="Lọc & sắp xếp cột Khách Hàng Mới"
+                            title="Lọc & sắp xếp cột Khách Hàng Cũ"
                           >
-                            <Filter className={`h-3 w-3 ${isColumnFiltered("customerName") ? "fill-[#005a46]" : ""}`} />
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("oldCustomer") ? "fill-[#005a46]" : ""}`} />
                           </button>
                         </div>
-                        {activeFilterColKey === "customerName" && (
+                        {activeFilterColKey === "oldCustomer" && (
                           <ColumnFilterPopover
-                            columnKey="customerName"
-                            columnTitle="Khách Hàng Mới"
+                            columnKey="oldCustomer"
+                            columnTitle="Khách Hàng Cũ (Mã-Tên)"
                             columnType="select"
-                            uniqueValues={uniqueValuesMap.customerName}
-                            filterState={columnFilters.customerName}
-                            onApply={(data) => handleApplyColumnFilter("customerName", data)}
-                            onClear={() => handleClearColumnFilter("customerName")}
+                            uniqueValues={uniqueValuesMap.oldCustomer}
+                            filterState={columnFilters.oldCustomer}
+                            onApply={(data) => handleApplyColumnFilter("oldCustomer", data)}
+                            onClear={() => handleClearColumnFilter("oldCustomer")}
                             onClose={() => setActiveFilterColKey(null)}
                           />
                         )}
@@ -1082,24 +1082,42 @@ export default function FgIssueServePage() {
                             {idx + 1}
                           </td>
 
-                          {/* 2. Mã Lô Cũ */}
+                          {/* 2. Mã Lô Mới (Đưa lên trước theo chỉ đạo Chị đẹp) */}
                           <td className="py-3 px-3">
-                            <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                              {so.expectedOldBagCode}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <strong className="font-mono text-xs text-teal-900 font-bold">
+                                {so.newBagCode}
+                              </strong>
+                              <button
+                                type="button"
+                                onClick={(e) => handleCopy(so.newBagCode, e)}
+                                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                                title="Sao chép mã lô mới"
+                              >
+                                {copiedCode === so.newBagCode ? (
+                                  <Check className="h-3 w-3 text-emerald-600" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </button>
+                            </div>
                           </td>
 
-                          {/* 3. Mã SO Cũ */}
+                          {/* 3. Mã SO Mới (Đưa lên trước theo chỉ đạo Chị đẹp) */}
                           <td className="py-3 px-3">
-                            <span className="font-mono font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                              {so.originalSoCode || "SO123456"}
-                            </span>
+                            <Link
+                              href={so.orderDetailUrl || "/orders/11"}
+                              className="font-mono font-bold text-teal-800 hover:text-teal-950 underline decoration-dotted"
+                              title="Xem chi tiết đơn hàng SO mới"
+                            >
+                              {so.soCode}
+                            </Link>
                           </td>
 
-                          {/* 4. Khách Hàng Cũ (Mã-Tên) */}
+                          {/* 4. Khách Hàng Mới (Đưa lên trước theo chỉ đạo Chị đẹp) */}
                           <td className="py-3 px-3">
-                            <span className="font-semibold text-slate-700 truncate block max-w-[220px]" title={so.oldCustomer || "2000071 - Công ty TNHH Vàng Bạc Kim Thành"}>
-                              {so.oldCustomer || "2000071 - Công ty TNHH Vàng Bạc Kim Thành"}
+                            <span className="font-semibold text-slate-800 truncate block max-w-[190px]" title={so.customerName}>
+                              {so.customerName}
                             </span>
                           </td>
 
@@ -1150,42 +1168,24 @@ export default function FgIssueServePage() {
                             {so.totalWeight.toFixed(4)}
                           </td>
 
-                          {/* 10. Mã Lô Mới (Đã bỏ dòng tên SP phụ bên dưới theo note đỏ) */}
+                          {/* 10. Mã Lô Cũ (Chuyển về sau theo chỉ đạo Chị đẹp) */}
                           <td className="py-3 px-3">
-                            <div className="flex items-center gap-1.5">
-                              <strong className="font-mono text-xs text-teal-900 font-bold">
-                                {so.newBagCode}
-                              </strong>
-                              <button
-                                type="button"
-                                onClick={(e) => handleCopy(so.newBagCode, e)}
-                                className="text-slate-400 hover:text-slate-600 cursor-pointer"
-                                title="Sao chép mã lô mới"
-                              >
-                                {copiedCode === so.newBagCode ? (
-                                  <Check className="h-3 w-3 text-emerald-600" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </button>
-                            </div>
+                            <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                              {so.expectedOldBagCode}
+                            </span>
                           </td>
 
-                          {/* 11. Mã SO Mới */}
+                          {/* 11. Mã SO Cũ (Chuyển về sau theo chỉ đạo Chị đẹp) */}
                           <td className="py-3 px-3">
-                            <Link
-                              href={so.orderDetailUrl || "/orders/11"}
-                              className="font-mono font-bold text-teal-800 hover:text-teal-950 underline decoration-dotted"
-                              title="Xem chi tiết đơn hàng SO mới"
-                            >
-                              {so.soCode}
-                            </Link>
+                            <span className="font-mono font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                              {so.originalSoCode || "SO123456"}
+                            </span>
                           </td>
 
-                          {/* 12. Khách Hàng Mới */}
+                          {/* 12. Khách Hàng Cũ (Mã-Tên) (Chuyển về sau theo chỉ đạo Chị đẹp) */}
                           <td className="py-3 px-3">
-                            <span className="font-semibold text-slate-800 truncate block max-w-[190px]" title={so.customerName}>
-                              {so.customerName}
+                            <span className="font-semibold text-slate-700 truncate block max-w-[220px]" title={so.oldCustomer || "2000071 - Công ty TNHH Vàng Bạc Kim Thành"}>
+                              {so.oldCustomer || "2000071 - Công ty TNHH Vàng Bạc Kim Thành"}
                             </span>
                           </td>
 
