@@ -289,7 +289,7 @@ export default function FgIssueServePage() {
       itemCode: Array.from(new Set(newSos.map((s) => s.itemCode))).sort(),
       category: Array.from(new Set(newSos.map((s) => s.category || s.itemName))).sort(),
       metalWeight: Array.from(new Set(newSos.map((s) => s.metalWeight.toFixed(4)))).sort(),
-      stoneWeight: Array.from(new Set(newSos.map((s) => s.stoneWeight > 0 ? s.stoneWeight.toFixed(4) : "—"))).sort(),
+      stoneWeight: Array.from(new Set(newSos.map((s) => (s.stoneWeight || 0).toFixed(4)))).sort(),
       totalWeight: Array.from(new Set(newSos.map((s) => s.totalWeight.toFixed(4)))).sort(),
       newBagCode: Array.from(new Set(newSos.map((s) => s.newBagCode))).sort(),
       soCode: Array.from(new Set(newSos.map((s) => s.soCode))).sort(),
@@ -392,7 +392,7 @@ export default function FgIssueServePage() {
         list = list.filter((item) => {
           let val = "";
           if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
-          else if (colKey === "stoneWeight") val = item.stoneWeight > 0 ? item.stoneWeight.toFixed(4) : "—";
+          else if (colKey === "stoneWeight") val = (item.stoneWeight || 0).toFixed(4);
           else if (colKey === "totalWeight") val = item.totalWeight.toFixed(4);
           else if (colKey === "originalSoCode") val = item.originalSoCode || "SO123456";
           else if (colKey === "oldCustomer") val = item.oldCustomer || "2000071 - Công ty TNHH Vàng Bạc Kim Thành";
@@ -409,7 +409,7 @@ export default function FgIssueServePage() {
         list = list.filter((item) => {
           let val = "";
           if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
-          else if (colKey === "stoneWeight") val = item.stoneWeight > 0 ? item.stoneWeight.toFixed(4) : "—";
+          else if (colKey === "stoneWeight") val = (item.stoneWeight || 0).toFixed(4);
           else if (colKey === "totalWeight") val = item.totalWeight.toFixed(4);
           else if (colKey === "originalSoCode") val = item.originalSoCode || "SO123456";
           else if (colKey === "oldCustomer") val = item.oldCustomer || "2000071 - Công ty TNHH Vàng Bạc Kim Thành";
@@ -1154,13 +1154,9 @@ export default function FgIssueServePage() {
                             {so.metalWeight.toFixed(4)}
                           </td>
 
-                          {/* 8. TL Đá - Số 0 hiển thị — */}
+                          {/* 8. TL Đá */}
                           <td className="py-3 px-3 text-right font-mono text-slate-800">
-                            {so.stoneWeight > 0 ? (
-                              so.stoneWeight.toFixed(4)
-                            ) : (
-                              <span className="text-slate-300 select-none">—</span>
-                            )}
+                            {(so.stoneWeight || 0).toFixed(4)}
                           </td>
 
                           {/* 9. Tổng TL */}
@@ -1613,10 +1609,10 @@ export default function FgIssueServePage() {
                         ➔
                       </td>
                       <td className="py-2 px-3 text-center font-mono text-emerald-700 font-bold">
-                        {isCurrentTransferred ? (currentStoneWeight > 0 ? `+${currentStoneWeight.toFixed(4)}` : "—") : "—"}
+                        {isCurrentTransferred ? `+${currentStoneWeight.toFixed(4)}` : "—"}
                       </td>
                       <td className="py-2 px-3 text-center font-mono text-slate-800 font-bold">
-                        {isCurrentTransferred ? (currentStoneWeight > 0 ? currentStoneWeight.toFixed(4) : "—") : "—"}
+                        {isCurrentTransferred ? currentStoneWeight.toFixed(4) : "—"}
                       </td>
                     </tr>
 
@@ -1715,22 +1711,22 @@ export default function FgIssueServePage() {
                         TL Đá
                       </td>
                       <td className="py-2.5 px-3 text-right text-slate-700">
-                        {currentStoneWeight > 0 ? currentStoneWeight.toFixed(4) : "—"}
+                        {currentStoneWeight.toFixed(4)}
                       </td>
                       <td className="py-2.5 px-3 text-right text-rose-600 font-bold">
-                        {isCurrentTransferred && currentStoneWeight > 0 ? `-${currentStoneWeight.toFixed(4)}` : "—"}
+                        {isCurrentTransferred ? `-${currentStoneWeight.toFixed(4)}` : "—"}
                       </td>
                       <td className="py-2.5 px-3 text-right text-slate-600 border-r border-slate-200">
-                        {isCurrentTransferred ? "—" : (currentStoneWeight > 0 ? currentStoneWeight.toFixed(4) : "—")}
+                        {isCurrentTransferred ? "0.0000" : currentStoneWeight.toFixed(4)}
                       </td>
                       <td className="py-2.5 px-3 text-right text-slate-400">
-                        —
+                        0.0000
                       </td>
                       <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">
-                        {isCurrentTransferred && currentStoneWeight > 0 ? `+${currentStoneWeight.toFixed(4)}` : "—"}
+                        {isCurrentTransferred ? `+${currentStoneWeight.toFixed(4)}` : "—"}
                       </td>
                       <td className="py-2.5 px-3 text-right font-black text-teal-950">
-                        {isCurrentTransferred && currentStoneWeight > 0 ? currentStoneWeight.toFixed(4) : "—"}
+                        {isCurrentTransferred ? currentStoneWeight.toFixed(4) : "—"}
                       </td>
                     </tr>
 

@@ -115,7 +115,7 @@ export default function ReprocessInventoryPage() {
       ).sort(),
       metalWeight: Array.from(new Set(MOCK_REPROCESS_ROWS.map((r) => r.metalWeight.toFixed(4)))).sort(),
       stoneWeight: Array.from(
-        new Set(MOCK_REPROCESS_ROWS.map((r) => (r.stoneWeight > 0 ? r.stoneWeight.toFixed(4) : "—")))
+        new Set(MOCK_REPROCESS_ROWS.map((r) => (r.stoneWeight || 0).toFixed(4)))
       ).sort(),
       totalWeight: Array.from(new Set(MOCK_REPROCESS_ROWS.map((r) => r.totalWeight.toFixed(4)))).sort()
     };
@@ -248,7 +248,7 @@ export default function ReprocessInventoryPage() {
           else if (colKey === "status") val = item.status;
           else if (colKey === "targetNewSoCode") val = item.targetNewSoCode || "—";
           else if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
-          else if (colKey === "stoneWeight") val = item.stoneWeight > 0 ? item.stoneWeight.toFixed(4) : "—";
+          else if (colKey === "stoneWeight") val = (item.stoneWeight || 0).toFixed(4);
           else if (colKey === "totalWeight") val = item.totalWeight.toFixed(4);
           else val = String(item[colKey] || "");
 
@@ -269,7 +269,7 @@ export default function ReprocessInventoryPage() {
           else if (colKey === "status") val = item.status;
           else if (colKey === "targetNewSoCode") val = `${item.targetNewSoCode || ""} ${item.newCustomerName || ""} ${item.targetNewBagCode || ""}`;
           else if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
-          else if (colKey === "stoneWeight") val = item.stoneWeight > 0 ? item.stoneWeight.toFixed(4) : "—";
+          else if (colKey === "stoneWeight") val = (item.stoneWeight || 0).toFixed(4);
           else if (colKey === "totalWeight") val = item.totalWeight.toFixed(4);
           else val = String(item[colKey] || "");
 
@@ -1069,13 +1069,9 @@ export default function ReprocessInventoryPage() {
                             {row.metalWeight.toFixed(4)}
                           </td>
 
-                          {/* 11. TL Đá (g) - Số 0 hiển thị — */}
+                          {/* 11. TL Đá (g) */}
                           <td className="py-3 px-3 text-right font-mono text-slate-800 whitespace-nowrap">
-                            {row.stoneWeight > 0 ? (
-                              row.stoneWeight.toFixed(4)
-                            ) : (
-                              <span className="text-slate-300 font-normal select-none">—</span>
-                            )}
+                            {(row.stoneWeight || 0).toFixed(4)}
                           </td>
 
                           {/* 12. Tổng TL (g) */}

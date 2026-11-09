@@ -138,22 +138,22 @@ export default function CommercialInventoryPage() {
       lop: Array.from(new Set(inventoryList.map((r) => r.lop))).sort(),
       totalQty: Array.from(new Set(inventoryList.map((r) => String(r.totalQty)))).sort((a, b) => Number(a) - Number(b)),
       qtyUnallocated: Array.from(
-        new Set(inventoryList.map((r) => (r.qtyUnallocated > 0 ? String(r.qtyUnallocated) : "—")))
-      ).sort(),
+        new Set(inventoryList.map((r) => String(r.qtyUnallocated || 0)))
+      ).sort((a, b) => Number(a) - Number(b)),
       qtyAllocated: Array.from(
-        new Set(inventoryList.map((r) => (r.qtyAllocated > 0 ? String(r.qtyAllocated) : "—")))
-      ).sort(),
+        new Set(inventoryList.map((r) => String(r.qtyAllocated || 0)))
+      ).sort((a, b) => Number(a) - Number(b)),
       qtyInvoice: Array.from(
-        new Set(inventoryList.map((r) => (r.qtyInvoice > 0 ? String(r.qtyInvoice) : "—")))
-      ).sort(),
+        new Set(inventoryList.map((r) => String(r.qtyInvoice || 0)))
+      ).sort((a, b) => Number(a) - Number(b)),
       qtyDelivery: Array.from(
-        new Set(inventoryList.map((r) => (r.qtyDelivery > 0 ? String(r.qtyDelivery) : "—")))
-      ).sort(),
+        new Set(inventoryList.map((r) => String(r.qtyDelivery || 0)))
+      ).sort((a, b) => Number(a) - Number(b)),
       status: Array.from(new Set(inventoryList.map((r) => r.status))).sort(),
       weight: Array.from(new Set(inventoryList.map((r) => r.weight.toFixed(4)))).sort(),
       metalWeight: Array.from(new Set(inventoryList.map((r) => r.metalWeight.toFixed(4)))).sort(),
       stoneWeight: Array.from(
-        new Set(inventoryList.map((r) => (r.stoneWeight > 0 ? r.stoneWeight.toFixed(4) : "—")))
+        new Set(inventoryList.map((r) => (r.stoneWeight || 0).toFixed(4)))
       ).sort(),
       createdBy: Array.from(new Set(inventoryList.map((r) => r.createdBy || "—"))).sort(),
       createdAt: Array.from(new Set(inventoryList.map((r) => r.createdAt || "—"))).sort(),
@@ -273,13 +273,13 @@ export default function CommercialInventoryPage() {
           let val = "";
           if (colKey === "category") val = item.category || item.itemName || "";
           else if (colKey === "totalQty") val = String(item.totalQty);
-          else if (colKey === "qtyUnallocated") val = item.qtyUnallocated > 0 ? String(item.qtyUnallocated) : "—";
-          else if (colKey === "qtyAllocated") val = item.qtyAllocated > 0 ? String(item.qtyAllocated) : "—";
-          else if (colKey === "qtyInvoice") val = item.qtyInvoice > 0 ? String(item.qtyInvoice) : "—";
-          else if (colKey === "qtyDelivery") val = item.qtyDelivery > 0 ? String(item.qtyDelivery) : "—";
+          else if (colKey === "qtyUnallocated") val = String(item.qtyUnallocated ?? 0);
+          else if (colKey === "qtyAllocated") val = String(item.qtyAllocated ?? 0);
+          else if (colKey === "qtyInvoice") val = String(item.qtyInvoice ?? 0);
+          else if (colKey === "qtyDelivery") val = String(item.qtyDelivery ?? 0);
           else if (colKey === "weight") val = item.weight.toFixed(4);
-          else if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
-          else if (colKey === "stoneWeight") val = item.stoneWeight > 0 ? item.stoneWeight.toFixed(4) : "—";
+          else if (colKey === "metalWeight") val = (item.metalWeight ?? 0).toFixed(4);
+          else if (colKey === "stoneWeight") val = (item.stoneWeight ?? 0).toFixed(4);
           else val = String(item[colKey] || "—");
 
           return f.selectedValues.has(val);
@@ -298,7 +298,7 @@ export default function CommercialInventoryPage() {
           else if (colKey === "qtyDelivery") val = String(item.qtyDelivery || "");
           else if (colKey === "weight") val = item.weight.toFixed(4);
           else if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
-          else if (colKey === "stoneWeight") val = item.stoneWeight > 0 ? item.stoneWeight.toFixed(4) : "—";
+          else if (colKey === "stoneWeight") val = (item.stoneWeight ?? 0).toFixed(4);
           else val = String(item[colKey] || "");
 
           return val.toLowerCase().includes(sq);
@@ -1643,38 +1643,22 @@ export default function CommercialInventoryPage() {
 
                           {/* 9. Chờ phân bổ */}
                           <td className="py-3 px-3 text-right font-mono font-bold text-amber-700 whitespace-nowrap">
-                            {row.qtyUnallocated > 0 ? (
-                              row.qtyUnallocated
-                            ) : (
-                              <span className="text-slate-300 font-normal select-none">—</span>
-                            )}
+                            {row.qtyUnallocated ?? 0}
                           </td>
 
                           {/* 10. Đã phân bổ */}
                           <td className="py-3 px-3 text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
-                            {row.qtyAllocated > 0 ? (
-                              row.qtyAllocated
-                            ) : (
-                              <span className="text-slate-300 font-normal select-none">—</span>
-                            )}
+                            {row.qtyAllocated ?? 0}
                           </td>
 
                           {/* 11. Chờ lập HĐ */}
                           <td className="py-3 px-3 text-right font-mono font-bold text-blue-700 whitespace-nowrap">
-                            {row.qtyInvoice > 0 ? (
-                              row.qtyInvoice
-                            ) : (
-                              <span className="text-slate-300 font-normal select-none">—</span>
-                            )}
+                            {row.qtyInvoice ?? 0}
                           </td>
 
                           {/* 12. Chờ giao */}
                           <td className="py-3 px-3 text-right font-mono font-bold text-purple-700 whitespace-nowrap">
-                            {row.qtyDelivery > 0 ? (
-                              row.qtyDelivery
-                            ) : (
-                              <span className="text-slate-300 font-normal select-none">—</span>
-                            )}
+                            {row.qtyDelivery ?? 0}
                           </td>
 
                           {/* 9. Trạng Thái Tồn */}
@@ -1689,16 +1673,12 @@ export default function CommercialInventoryPage() {
 
                           {/* 11. TL Kim Loại (g) */}
                           <td className="py-3 px-3 text-right font-mono text-slate-800 whitespace-nowrap">
-                            {row.metalWeight ? row.metalWeight.toFixed(4) : "—"}
+                            {(row.metalWeight ?? 0).toFixed(4)}
                           </td>
 
                           {/* 12. TL Đá (g) */}
                           <td className="py-3 px-3 text-right font-mono text-slate-800 whitespace-nowrap">
-                            {row.stoneWeight > 0 ? (
-                              row.stoneWeight.toFixed(4)
-                            ) : (
-                              <span className="text-slate-300 font-normal select-none">—</span>
-                            )}
+                            {(row.stoneWeight ?? 0).toFixed(4)}
                           </td>
 
                           {/* 13. Người Tạo */}
@@ -1757,19 +1737,19 @@ export default function CommercialInventoryPage() {
                       </td>
                       {/* 2. Tổng của Chờ phân bổ */}
                       <td className="py-2.5 px-3 text-right font-mono text-amber-800 font-black whitespace-nowrap">
-                        {filteredData.reduce((s, r) => s + (r.qtyUnallocated || 0), 0) || "—"}
+                        {filteredData.reduce((s, r) => s + (r.qtyUnallocated || 0), 0)}
                       </td>
                       {/* 3. Tổng của Đã phân bổ */}
                       <td className="py-2.5 px-3 text-right font-mono text-emerald-800 font-black whitespace-nowrap">
-                        {filteredData.reduce((s, r) => s + (r.qtyAllocated || 0), 0) || "—"}
+                        {filteredData.reduce((s, r) => s + (r.qtyAllocated || 0), 0)}
                       </td>
                       {/* 4. Tổng của Chờ lập HĐ */}
                       <td className="py-2.5 px-3 text-right font-mono text-blue-800 font-black whitespace-nowrap">
-                        {filteredData.reduce((s, r) => s + (r.qtyInvoice || 0), 0) || "—"}
+                        {filteredData.reduce((s, r) => s + (r.qtyInvoice || 0), 0)}
                       </td>
                       {/* 5. Tổng của Chờ giao */}
                       <td className="py-2.5 px-3 text-right font-mono text-purple-800 font-black whitespace-nowrap">
-                        {filteredData.reduce((s, r) => s + (r.qtyDelivery || 0), 0) || "—"}
+                        {filteredData.reduce((s, r) => s + (r.qtyDelivery || 0), 0)}
                       </td>
                       <td className="py-2.5 px-3 text-center text-[10px] text-slate-500 whitespace-nowrap">
                         {filteredData.filter((r) => r.status === "Chờ phân bổ").length} chờ PB / {filteredData.filter((r) => r.status !== "Chờ phân bổ").length} đã gán
@@ -2187,7 +2167,7 @@ export default function CommercialInventoryPage() {
                   <div className="bg-blue-50/70 border border-blue-200 p-2.5 rounded-lg">
                     <span className="text-[10px] text-blue-900 font-semibold block">TL Đá (Stamp)</span>
                     <strong className="font-mono text-blue-800 text-sm block mt-0.5">
-                      {modalCalculatedWeights.stoneWeight > 0 ? `${modalCalculatedWeights.stoneWeight.toFixed(4)} g` : "—"}
+                      {(modalCalculatedWeights.stoneWeight || 0).toFixed(4)} g
                     </strong>
                   </div>
 
@@ -2417,11 +2397,11 @@ export default function CommercialInventoryPage() {
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[10px]">TL Kim loại:</span>
-                    <strong className="font-mono text-slate-800">{selectedLotForDrawer.metalWeight?.toFixed(4) || "—"} g</strong>
+                    <strong className="font-mono text-slate-800">{(selectedLotForDrawer.metalWeight ?? 0).toFixed(4)} g</strong>
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[10px]">TL Đá:</span>
-                    <strong className="font-mono text-slate-800">{selectedLotForDrawer.stoneWeight > 0 ? `${selectedLotForDrawer.stoneWeight.toFixed(4)} g` : "—"}</strong>
+                    <strong className="font-mono text-slate-800">{(selectedLotForDrawer.stoneWeight ?? 0).toFixed(4)} g</strong>
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[10px]">Tổng trọng lượng:</span>
@@ -2454,19 +2434,19 @@ export default function CommercialInventoryPage() {
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[10px]">SL Chờ phân bổ:</span>
-                  <strong className="font-mono text-amber-700 text-xs">{selectedLotForDrawer.qtyUnallocated > 0 ? `${selectedLotForDrawer.qtyUnallocated} pcs` : "—"}</strong>
+                  <strong className="font-mono text-amber-700 text-xs">{selectedLotForDrawer.qtyUnallocated ?? 0} pcs</strong>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[10px]">SL Đã phân bổ:</span>
-                  <strong className="font-mono text-emerald-700 text-xs">{selectedLotForDrawer.qtyAllocated > 0 ? `${selectedLotForDrawer.qtyAllocated} pcs` : "—"}</strong>
+                  <strong className="font-mono text-emerald-700 text-xs">{selectedLotForDrawer.qtyAllocated ?? 0} pcs</strong>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[10px]">SL Chờ lập HĐ:</span>
-                  <strong className="font-mono text-blue-700 text-xs">{selectedLotForDrawer.qtyInvoice > 0 ? `${selectedLotForDrawer.qtyInvoice} pcs` : "—"}</strong>
+                  <strong className="font-mono text-blue-700 text-xs">{selectedLotForDrawer.qtyInvoice ?? 0} pcs</strong>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[10px]">SL Chờ giao:</span>
-                  <strong className="font-mono text-purple-700 text-xs">{selectedLotForDrawer.qtyDelivery > 0 ? `${selectedLotForDrawer.qtyDelivery} pcs` : "—"}</strong>
+                  <strong className="font-mono text-purple-700 text-xs">{selectedLotForDrawer.qtyDelivery ?? 0} pcs</strong>
                 </div>
               </div>
 

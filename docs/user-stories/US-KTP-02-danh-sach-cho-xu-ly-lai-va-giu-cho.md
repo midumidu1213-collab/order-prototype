@@ -100,7 +100,7 @@
   * Dòng ở trạng thái `Đã giữ chỗ` hoặc `Chờ chuyển bag`: Hiển thị trực tiếp mã SO mới (link click chuyển trang) kèm tên khách hàng mới và mã bag mới.
 * **BR-CXLL-04 (Quy chuẩn hiển thị số liệu):**
   * Bỏ toàn bộ chữ "pcs" trong các ô số lượng, chỉ hiển thị số nguyên thuần túy (VD: `3`, `4`, `1`).
-  * Trường hợp giá trị bằng 0 luôn hiển thị dấu gạch ngang mờ `—` (triệt tiêu rác thị giác).
+  * Đối với các vị trí có giá trị bằng 0: Hiển thị số `0` rõ ràng (đối với Số lượng: `0`; đối với Trọng lượng đá / kim loại: `0.0000`; tuyệt đối không để dấu `-` hay `—`).
 * **BR-CXLL-05 (Chốt chặn điều chuyển sang CXLL):** Chỉ các lô đang ở trạng thái `Chờ phân bổ` tại Kho Tồn Thành Phẩm mới được phép Chuyển CXLL. Các lô đang ở trạng thái `Chờ lập HĐ`, `Chờ giao`, `Đã phân bổ` bị chặn tuyệt đối.
 * **BR-CXLL-06 (Bảo toàn định danh và lịch sử gốc):** Toàn bộ thông số gốc của lô (Mã Item, Chủng loại, Mã SO cũ, Khách hàng cũ, Tuổi vàng) được bảo toàn lưu vết 100% trên mọi dòng tách của lô đó.
 
@@ -122,7 +122,7 @@
 | **Trạng Thái Kho** | Enum / Badge | Có | `Chờ gán đơn` | 1 trong 3 trạng thái: `Chờ gán đơn` (xanh lá) / `Đã giữ chỗ` (tím) / `Chờ chuyển bag` (xanh dương). |
 | **Mã Đơn Hàng Mới** | Text / Link | Không | `—` | Hiển thị link SO mới + KH mới + Bag mới nếu trạng thái là `Đã giữ chỗ` hoặc `Chờ chuyển bag`. Hiển thị `—` nếu `Chờ gán đơn`. |
 | **TL Vàng (L)** | Decimal | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Trọng lượng vàng của dòng (làm tròn đến 4 số thập phân, đơn vị: Lượng L). |
-| **TL Đá** | Decimal | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Trọng lượng đá của dòng (làm tròn đến 4 số thập phân). Nếu không có đá hiển thị dấu gạch ngang mờ `—`. |
+| **TL Đá** | Decimal | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Trọng lượng đá của dòng (làm tròn đến 4 số thập phân). Nếu không có đá hoặc = 0 hiển thị `0.0000` (tuyệt đối không để dấu - hay —). |
 | **Tổng TL** | Decimal | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Tổng trọng lượng toàn bộ sản phẩm của dòng (làm tròn đến 4 số thập phân). Công thức: `Tổng TL = TL Vàng + TL Đá`. |
 
 ---

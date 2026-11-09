@@ -109,15 +109,18 @@
 | **Chủng Loại** | Text | Có | Kế thừa từ SO | Chủng loại sản phẩm: Nhẫn, Bông tai, Vòng tay, Mặt dây... |
 | **Loại / Tuổi Vàng** | Text | Có | Kế thừa từ SO | Hàm lượng tuổi vàng (VD: `AU 61.00 Y`, `AU 75.00 W`). |
 | **Tổng SL** | Integer | Có | Kế thừa từ KHSX | Tổng số lượng pcs hoàn thiện trong lô (VD: `10`, `8`, `6`...). |
-| **Chờ Phân Bổ** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Chờ phân bổ` (sẵn sàng chuyển CXLL). Nếu = 0 hiển thị `—`. |
-| **Đã Phân Bổ** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Đã phân bổ` cho đơn hàng. Nếu = 0 hiển thị `—`. |
-| **Chờ Lập Hóa Đơn** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Chờ lập HĐ`. Nếu = 0 hiển thị `—`. |
-| **Chờ Giao** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Chờ giao` cho khách. Nếu = 0 hiển thị `—`. |
+| **Chờ Phân Bổ** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Chờ phân bổ` (sẵn sàng chuyển CXLL). Nếu = 0 hiển thị số `0` rõ ràng (không để dấu - hay —). |
+| **Đã Phân Bổ** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Đã phân bổ` cho đơn hàng. Nếu = 0 hiển thị số `0` rõ ràng (không để dấu - hay —). |
+| **Chờ Lập Hóa Đơn** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Chờ lập HĐ`. Nếu = 0 hiển thị số `0` rõ ràng (không để dấu - hay —). |
+| **Chờ Giao** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Chờ giao` cho khách. Nếu = 0 hiển thị số `0` rõ ràng (không để dấu - hay —). |
 | **Trạng Thái** | Enum / Badge | Có | `Chờ phân bổ` | Giá trị: `Chờ phân bổ`, `Đã phân bổ`, `Chờ lập HĐ`, `Chờ giao`. |
+| **Tổng TL (g)** | Decimal | Có | Kế thừa từ KHSX | Tổng trọng lượng cân được (VD: `5.0000`). |
+| **TL Kim Loại (g)** | Decimal | Có | Kế thừa / Tính toán | Trọng lượng kim loại của lô. Nếu = 0 hiển thị `0.0000`. |
+| **TL Đá (g)** | Decimal | Có | Kế thừa từ KHSX | Trọng lượng đá của lô. Nếu không có đá hoặc = 0 hiển thị `0.0000` (tuyệt đối không để dấu - hay —). |
 | **SL Chuyển (Modal)** | Integer | Có | Bằng Tổng SL | Cho phép nhập số lượng lẻ cần chuyển (1 ≤ SL ≤ Tổng SL), phục vụ AC 4. |
 | **Check Series (Modal)** | Boolean | Có | Tự động nhận | Nhận diện lô có series hay không. Nếu có: chọn mã series. Nếu không: cân lại Tổng TL và chọn Stamp. |
 | **TL Kim Loại (Modal)** | Decimal | Có | Tự động tính | Trọng lượng kim loại của phôi chuyển: `TL Kim loại = Tổng TL - TL Đá`. |
-| **TL Đá / Stamp (Modal)** | Decimal | Có | Kế thừa / Tính theo Stamp | Trọng lượng đá của phôi chuyển (lấy từ series hoặc tính từ nhóm stamp khai báo). |
+| **TL Đá / Stamp (Modal)** | Decimal | Có | Kế thừa / Tính theo Stamp | Trọng lượng đá của phôi chuyển (lấy từ series hoặc tính từ nhóm stamp khai báo). Nếu = 0 hiển thị `0.0000`. |
 | **Tổng TL (Modal)** | Decimal | Có | Kế thừa / Cân lại | Tổng trọng lượng cân lại thực tế của phôi chuyển. |
 | **Thao Tác** | Action / Button | — | — | Nút `[Chuyển CXLL]`. Active khi trạng thái là `Chờ phân bổ`; Vô hiệu hóa (disabled) khi ở trạng thái khác. |
 
