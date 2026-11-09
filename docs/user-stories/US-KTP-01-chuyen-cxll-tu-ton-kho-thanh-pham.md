@@ -47,15 +47,32 @@
   * **Khi (When):** Thủ kho mở modal chuyển CXLL và nhập số lượng lẻ cần chuyển (VD: nhập 2 pcs).
   * **Thì (Then):** Hệ thống tách lô: 2 pcs được chuyển sang Kho CXLL (`Tồn khả dụng = 2 pcs`), và 2 pcs còn lại tiếp tục lưu giữ tại Tồn kho TP sẵn sàng giao theo đơn hàng.
 
+* **AC 5: Kiểm tra Lô có Series hay Không khi Chuyển CXLL**
+  * **Biết rằng (Given):** Thủ kho mở modal Chuyển CXLL cho một lô hàng `Chờ phân bổ`.
+  * **Khi (When):** Hệ thống kiểm tra đặc tính quản lý series của lô:
+    * **Trường hợp 1 (Lô có Series):** 
+      * Hệ thống hiển thị danh sách các mã series thuộc lô, mỗi mã series hiển thị đầy đủ: `Mã Series`, `TL Kim loại`, `TL Đá (Mã Stamp)`, `Tổng TL`.
+      * Thủ kho chọn đúng số lượng mã series cần chuyển (khớp với số lượng chuyển đã nhập).
+      * Hệ thống tự động tổng hợp trọng lượng từ các series được chọn: `Tổng TL`, `TL Đá`, và `TL Kim loại = Tổng TL - TL Đá`.
+    * **Trường hợp 2 (Lô không có Series):**
+      * Bắt buộc Thủ kho phải **cân lại Tổng trọng lượng (Tổng TL)** thực tế và nhập vào hệ thống.
+      * Bắt buộc **chọn loại Stamp (trọng lượng đá)**: Quy tắc 1 pcs tương ứng với 1 stamp; có thể nhiều pcs có cùng 1 stamp (chọn loại Stamp + nhập số lượng pcs, tổng số lượng pcs các stamp phải bằng đúng số lượng chuyển).
+      * Hệ thống tự động tính toán: `TL Kim loại = Tổng TL - TL Đá`.
+  * **Thì (Then):** Bảng tóm tắt modal hiển thị rõ ràng **3 field tách biệt**: `TL Kim loại`, `TL Đá (Stamp)`, `Tổng TL`. Không còn hiển thị trường `Vị trí lưu kho`.
+
 ---
 
 ## 3. THIẾT KẾ (UX/UI) *
 
 * **Link Figma / Prototype:** [Màn hình Danh Sách Tồn Kho Thành Phẩm: /inventory](http://localhost:3000/inventory)
 * **Ảnh đính kèm:**
-  * Bảng danh sách Tồn kho thành phẩm với cột tiêu đề **`MÃ LÔ`**, nút `[Chuyển CXLL]` active chỉ với lô `Chờ phân bổ` và disabled với các trạng thái còn lại:
+  * Bảng danh sách Tồn kho thành phẩm với cột tiêu đề **`MÃ LÔ`**, nút `[Chuyển CXLL]` active chỉ với lô `Chờ phân bổ`:
 
-![Giao diện Tồn kho thành phẩm chuẩn hóa](file:///C:/Users/PowerBI/.gemini/antigravity/brain/b922bdcc-9a9f-48b7-9859-3d492213dc67/.user_uploaded/media_1794195686999_da48f531.jpg)
+    ![Giao diện Tồn kho thành phẩm chuẩn hóa](file:///C:/Users/PowerBI/.gemini/antigravity/brain/b922bdcc-9a9f-48b7-9859-3d492213dc67/.user_uploaded/media_1794195686999_da48f531.jpg)
+
+  * Modal Xác nhận chuyển CXLL với cơ chế check có series / không có series, bỏ trường vị trí lưu kho, tách rõ 3 field trọng lượng:
+
+    ![Modal Chuyển CXLL Phân Tách Series & 3 Field TL](file:///C:/Users/PowerBI/.gemini/antigravity/brain/b922bdcc-9a9f-48b7-9859-3d492213dc67/.user_uploaded/media_1794197255974_3926b253.jpg)
 
 ---
 
@@ -65,8 +82,15 @@
 * **BR-KTP-02 (Vô hiệu hóa thao tác tại giao diện):**
   * Đối với các dòng không phải `Chờ phân bổ`: Nút `[Chuyển CXLL]` hiển thị ở trạng thái disabled kèm tooltip cảnh báo, Checkbox bị disable không cho chọn.
   * Trong Drawer chi tiết: Nút thao tác chuyển cũng bị disable và hiển thị Alert Box cảnh báo.
-* **BR-KTP-03 (Trạng thái đích tại Kho CXLL):** Lô sau khi chuyển thành công sẽ xuất hiện tại DS Chờ xử lý lại với trạng thái `Chờ gán đơn mới` và `Tồn khả dụng = SL đã chuyển`. Đồng thời giảm tồn kho thành phẩm sẵn sàng giao tương ứng.
+* **BR-KTP-03 (Trạng thái đích tại Kho CXLL):** Lô sau khi chuyển thành công sẽ xuất hiện tại DS Chờ xử lý lại với trạng thái `Chờ gán đơn` và `SL = SL đã chuyển`. Đồng thời giảm tồn kho thành phẩm sẵn sàng giao tương ứng.
 * **BR-KTP-04 (Tách lô khi chuyển SL lẻ):** Khi chuyển số lượng nhỏ hơn tổng tồn của lô (M < Tổng SL), hệ thống tự động trừ tồn lô gốc tại Kho TP và tạo bản ghi phôi mới tại Kho CXLL với số lượng đúng bằng M.
+* **BR-KTP-05 (Cơ chế phân tách Series vs Non-Series):**
+  * **Lô có Series:** Thừa hưởng trực tiếp trọng lượng từng series có sẵn trên hệ thống. Số lượng series được chọn phải khớp chính xác với số lượng chuyển.
+  * **Lô không có Series (Hàng xá):** Bắt buộc cân lại Tổng TL thực tế và khai báo phân bổ Stamp cho từng pcs (chọn loại Stamp + nhập SL pcs, bảo đảm tổng SL pcs các stamp bằng số lượng chuyển).
+* **BR-KTP-06 (Bảo toàn công thức tính 3 chỉ tiêu trọng lượng):**
+  * Luôn tách bạch 3 field: `TL Kim Loại`, `TL Đá (Stamp)`, `Tổng TL`.
+  * Công thức bảo toàn: `TL Kim loại = Tổng TL - TL Đá`. Tuyệt đối không cho phép xác nhận chuyển nếu TL Kim loại tính ra bị âm (TL đá > Tổng TL).
+* **BR-KTP-07 (Tối giản giao diện modal):** Loại bỏ hoàn toàn trường `Vị trí lưu kho` trên modal xác nhận chuyển CXLL để tập trung vào số lượng và đối soát trọng lượng.
 
 ---
 
@@ -87,6 +111,10 @@
 | **Tổng SL** | Integer | Có | Kế thừa từ KHSX | Số lượng pcs hoàn thiện trong lô (VD: `10 psc`, `8 psc`). |
 | **Trạng Thái** | Enum / Badge | Có | `Chờ phân bổ` | Giá trị: `Chờ phân bổ`, `Đã phân bổ`, `Chờ lập HĐ`, `Chờ giao`. |
 | **SL Chuyển (Modal)** | Integer | Có | Bằng Tổng SL | Cho phép nhập số lượng lẻ cần chuyển (1 ≤ SL ≤ Tổng SL), phục vụ AC 4. |
+| **Check Series (Modal)** | Boolean | Có | Tự động nhận | Nhận diện lô có series hay không. Nếu có: chọn mã series. Nếu không: cân lại Tổng TL và chọn Stamp. |
+| **TL Kim Loại (Modal)** | Decimal | Có | Tự động tính | Trọng lượng kim loại của phôi chuyển: `TL Kim loại = Tổng TL - TL Đá`. |
+| **TL Đá / Stamp (Modal)** | Decimal | Có | Kế thừa / Tính theo Stamp | Trọng lượng đá của phôi chuyển (lấy từ series hoặc tính từ nhóm stamp khai báo). |
+| **Tổng TL (Modal)** | Decimal | Có | Kế thừa / Cân lại | Tổng trọng lượng cân lại thực tế của phôi chuyển. |
 | **Thao Tác** | Action / Button | — | — | Nút `[Chuyển CXLL]`. Active khi trạng thái là `Chờ phân bổ`; Vô hiệu hóa (disabled) khi ở trạng thái khác. |
 
 ---

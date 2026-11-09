@@ -20,11 +20,16 @@ import {
   Calendar,
   Layers,
   ArrowRight,
-  ShieldAlert
+  ShieldAlert,
+  Scale,
+  Gem,
+  Hash,
+  Plus,
+  Trash2
 } from "lucide-react";
 import InventorySidebar from "@/components/inventory/InventorySidebar";
 import ColumnFilterPopover from "@/components/orders/ColumnFilterPopover";
-import { MOCK_COMMERCIAL_INVENTORY } from "@/data/inventoryMockData";
+import { MOCK_COMMERCIAL_INVENTORY, MOCK_STAMP_OPTIONS } from "@/data/inventoryMockData";
 
 export default function CommercialInventoryPage() {
   const [inventoryList, setInventoryList] = useState(MOCK_COMMERCIAL_INVENTORY);
@@ -43,6 +48,14 @@ export default function CommercialInventoryPage() {
   const [isBatchTransferModalOpen, setIsBatchTransferModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const [copiedCode, setCopiedCode] = useState(null);
+
+  // State chuyên sâu cho Modal Chuyển CXLL: Check có Series vs Không có Series (Cân lại & Chọn Stamp)
+  const [transferIsSeries, setTransferIsSeries] = useState(true);
+  const [transferSelectedSeriesNos, setTransferSelectedSeriesNos] = useState(new Set());
+  const [transferWeighedWeight, setTransferWeighedWeight] = useState(0);
+  const [transferStampAllocations, setTransferStampAllocations] = useState([
+    { id: 1, stampCode: "ST-015", qty: 10 }
+  ]);
 
   // Bộ lọc / sắp xếp trực tiếp trên từng cột (Tham khảo chuẩn DS Đơn hàng ERP)
   const [columnFilters, setColumnFilters] = useState({
@@ -288,15 +301,161 @@ export default function CommercialInventoryPage() {
       return;
     }
     setLotToTransferCxll(row);
-    setTransferQty(row.totalQty); // Mặc định chuyển hết lô, cho phép chỉnh lẻ (AC 4)
+    const initialQty = row.totalQty;
+    setTransferQty(initialQty);
+
+    // 1. Kiểm tra lô có Series hay không
+    const hasSer = Boolean(row.hasSeries ?? (row.series && row.series.length > 0));
+    setTransferIsSeries(hasSer);
+
+    if (hasSer && row.series && row.series.length > 0) {
+      // Mặc định chọn tất cả series của lô
+      const selectedSet = new Set(row.series.slice(0, initialQty).map((s) => s.seriNo));
+      setTransferSelectedSeriesNos(selectedSet);
+    } else {
+      setTransferSelectedSeriesNos(new Set());
+    }
+
+    // 2. Khởi tạo trọng lượng cân lại Tổng TL (cho lô không có series)
+    setTransferWeighedWeight(row.weight);
+
+    // 3. Khởi tạo phân bổ Stamp ban đầu cho lô không có series
+    if (row.stoneWeight > 0) {
+      const avgStonePerPcs = row.stoneWeight / row.totalQty;
+      const matched = MOCK_STAMP_OPTIONS.find((s) => Math.abs(s.stoneWeightPerPcs - avgStonePerPcs) < 0.003) || MOCK_STAMP_OPTIONS[3];
+      setTransferStampAllocations([{ id: 1, stampCode: matched.code, qty: initialQty }]);
+    } else {
+      setTransferStampAllocations([{ id: 1, stampCode: "ST-000", qty: initialQty }]);
+    }
   };
 
-  // Xác nhận chuyển lô sang kho CXLL (Hỗ trợ chuyển SL lẻ - AC 4)
+  // Helper toggle chọn/bỏ chọn mã series
+  const handleToggleSeriesNo = (seriNo) => {
+    setTransferSelectedSeriesNos((prev) => {
+      const next = new Set(prev);
+      if (next.has(seriNo)) {
+        next.delete(seriNo);
+      } else {
+        if (next.size < transferQty) {
+          next.add(seriNo);
+        }
+      }
+      return next;
+    });
+  };
+
+  // Helper chọn nhanh N mã series đầu tiên
+  const handleQuickSelectSeries = (count) => {
+    if (!lotToTransferCxll?.series) return;
+    const targetCount = Math.min(count, lotToTransferCxll.series.length);
+    const nextSet = new Set(lotToTransferCxll.series.slice(0, targetCount).map((s) => s.seriNo));
+    setTransferSelectedSeriesNos(nextSet);
+  };
+
+  // Helper thêm dòng phân bổ Stamp (khi không có series)
+  const handleAddStampRow = () => {
+    setTransferStampAllocations((prev) => [
+      ...prev,
+      { id: Date.now(), stampCode: "ST-010", qty: 1 }
+    ]);
+  };
+
+  // Helper xóa dòng phân bổ Stamp
+  const handleRemoveStampRow = (id) => {
+    setTransferStampAllocations((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  // Helper cập nhật dòng phân bổ Stamp
+  const handleUpdateStampRow = (id, field, value) => {
+    setTransferStampAllocations((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          return {
+            ...item,
+            [field]: field === "qty" ? Math.max(0, parseInt(value) || 0) : value
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Tính toán động 3 trường Trọng lượng (TL Kim Loại, TL Đá, Tổng TL) cho Modal Chuyển CXLL
+  const modalCalculatedWeights = useMemo(() => {
+    if (!lotToTransferCxll) return { metalWeight: 0, stoneWeight: 0, totalWeight: 0, isValid: true, error: "" };
+
+    if (transferIsSeries) {
+      // TRƯỜNG HỢP 1: LÔ CÓ SERIES -> TÍNH TỔNG TỪ CÁC SERIES ĐƯỢC CHỌN
+      const seriesList = lotToTransferCxll.series || [];
+      const selectedItems = seriesList.filter((s) => transferSelectedSeriesNos.has(s.seriNo));
+
+      const stoneW = selectedItems.reduce((acc, s) => acc + (s.stoneWeight ?? 0), 0);
+      const totalW = selectedItems.reduce((acc, s) => acc + (s.weight ?? 0), 0);
+      const metalW = selectedItems.reduce((acc, s) => acc + (s.metalWeight ?? (s.weight - (s.stoneWeight ?? 0))), 0);
+
+      const isMatchQty = selectedItems.length === transferQty && transferQty > 0;
+      let error = "";
+      if (selectedItems.length !== transferQty) {
+        error = `Đã chọn ${selectedItems.length}/${transferQty} mã series. Vui lòng chọn đúng ${transferQty} series tương ứng số lượng chuyển.`;
+      }
+
+      return {
+        metalWeight: Number(metalW.toFixed(4)),
+        stoneWeight: Number(stoneW.toFixed(4)),
+        totalWeight: Number(totalW.toFixed(4)),
+        selectedCount: selectedItems.length,
+        isValid: isMatchQty,
+        error
+      };
+    } else {
+      // TRƯỜNG HỢP 2: LÔ KHÔNG CÓ SERIES -> CÂN LẠI TỔNG TL + CHỌN STAMP
+      const totalW = Number(transferWeighedWeight) || 0;
+
+      // Tính tổng TL đá từ danh sách Stamp phân bổ
+      let totalStoneW = 0;
+      let allocatedPcs = 0;
+      transferStampAllocations.forEach((item) => {
+        const stampDef = MOCK_STAMP_OPTIONS.find((s) => s.code === item.stampCode);
+        const pcsQty = Number(item.qty) || 0;
+        allocatedPcs += pcsQty;
+        if (stampDef) {
+          totalStoneW += pcsQty * stampDef.stoneWeightPerPcs;
+        }
+      });
+
+      const metalW = totalW - totalStoneW;
+      let isValid = true;
+      let error = "";
+
+      if (totalW <= 0) {
+        isValid = false;
+        error = "Bắt buộc cân lại: Vui lòng nhập Tổng trọng lượng cân được (> 0).";
+      } else if (allocatedPcs !== transferQty) {
+        isValid = false;
+        error = `Tổng số lượng pcs phân bổ Stamp (${allocatedPcs} pcs) chưa khớp với Số lượng chuyển (${transferQty} pcs).`;
+      } else if (metalW < 0) {
+        isValid = false;
+        error = "Trọng lượng đá khai báo vượt quá Tổng trọng lượng cân được! Vui lòng chọn lại Stamp.";
+      }
+
+      return {
+        metalWeight: Number(Math.max(0, metalW).toFixed(4)),
+        stoneWeight: Number(totalStoneW.toFixed(4)),
+        totalWeight: Number(totalW.toFixed(4)),
+        allocatedPcs,
+        isValid,
+        error
+      };
+    }
+  }, [lotToTransferCxll, transferIsSeries, transferSelectedSeriesNos, transferQty, transferWeighedWeight, transferStampAllocations]);
+
+  // Xác nhận chuyển lô sang kho CXLL (Hỗ trợ chuyển SL lẻ - AC 4 & bảo toàn 3 trường trọng lượng)
   const handleConfirmTransferToCxll = () => {
-    if (!lotToTransferCxll) return;
+    if (!lotToTransferCxll || !modalCalculatedWeights.isValid) return;
 
     const qtyToTransfer = Math.max(1, Math.min(lotToTransferCxll.totalQty, transferQty));
     const isPartial = qtyToTransfer < lotToTransferCxll.totalQty;
+    const { metalWeight: transferredMetal, stoneWeight: transferredStone, totalWeight: transferredTotal } = modalCalculatedWeights;
 
     if (isPartial) {
       // Tách lô: giảm số lượng trên lô gốc tại Kho TP
@@ -304,13 +463,21 @@ export default function CommercialInventoryPage() {
         prev.map((item) => {
           if (item.id === lotToTransferCxll.id) {
             const remain = item.totalQty - qtyToTransfer;
-            const ratio = remain / item.totalQty;
+            const remainMetal = Math.max(0, item.metalWeight - transferredMetal);
+            const remainStone = Math.max(0, item.stoneWeight - transferredStone);
+            const remainTotal = Math.max(0, item.weight - transferredTotal);
+
+            const remainSeries = transferIsSeries && item.series
+              ? item.series.filter((s) => !transferSelectedSeriesNos.has(s.seriNo))
+              : item.series;
+
             return {
               ...item,
               totalQty: remain,
-              weight: item.weight * ratio,
-              metalWeight: item.metalWeight * ratio,
-              stoneWeight: item.stoneWeight * ratio
+              weight: Number(remainTotal.toFixed(4)),
+              metalWeight: Number(remainMetal.toFixed(4)),
+              stoneWeight: Number(remainStone.toFixed(4)),
+              series: remainSeries
             };
           }
           return item;
@@ -325,9 +492,10 @@ export default function CommercialInventoryPage() {
     }
 
     const transferredBag = lotToTransferCxll.bagCode;
+    const modeLabel = transferIsSeries ? "có Series" : "không có Series (đã cân lại & gán Stamp)";
     const transferredText = isPartial 
-      ? `Đã chuyển lẻ ${qtyToTransfer}/${lotToTransferCxll.totalQty} psc của lô ${transferredBag} sang Kho CXLL.`
-      : `Lô ${transferredBag} (${qtyToTransfer} psc) đã được đưa vào Kho Chờ Xử Lý Lại (CXLL) với trạng thái 'Chờ gán đơn mới'.`;
+      ? `Đã chuyển lẻ ${qtyToTransfer}/${lotToTransferCxll.totalQty} psc [${modeLabel}] của lô ${transferredBag} sang Kho CXLL. TL: ${transferredMetal.toFixed(4)}L kim loại / ${transferredStone.toFixed(4)}L đá / Tổng: ${transferredTotal.toFixed(4)}L.`
+      : `Lô ${transferredBag} (${qtyToTransfer} psc) [${modeLabel}] đã đưa vào Kho CXLL thành công. TL: ${transferredMetal.toFixed(4)}L kim loại / ${transferredStone.toFixed(4)}L đá / Tổng: ${transferredTotal.toFixed(4)}L.`;
 
     setLotToTransferCxll(null);
 
@@ -1379,9 +1547,9 @@ export default function CommercialInventoryPage() {
       {/* 3. MODAL XÁC NHẬN CHUYỂN SANG KHO CHỜ XỬ LÝ LẠI (CXLL) */}
       {lotToTransferCxll && (
         <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-2xl max-w-xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="px-5 py-4 bg-rose-50 border-b border-rose-200 flex items-center justify-between">
+            <div className="px-5 py-4 bg-rose-50 border-b border-rose-200 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5 text-rose-900 font-bold text-sm">
                 <div className="w-8 h-8 rounded-lg bg-rose-100 border border-rose-300 text-rose-700 flex items-center justify-center shrink-0">
                   <RotateCcw className="h-4.5 w-4.5" />
@@ -1396,33 +1564,33 @@ export default function CommercialInventoryPage() {
               <button
                 type="button"
                 onClick={() => setLotToTransferCxll(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-5 space-y-4 text-xs">
-              {/* Cảnh báo chặn chuyển nếu khác Chờ phân bổ (AC 2) */}
+            <div className="p-5 space-y-4 text-xs overflow-y-auto flex-1">
+              {/* Cảnh báo trạng thái */}
               {lotToTransferCxll.status !== "Chờ phân bổ" ? (
                 <div className="p-3 bg-rose-50 border border-rose-300 rounded-xl flex items-start gap-2.5 text-rose-900">
                   <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
                   <div className="text-[11px] leading-relaxed">
                     <strong className="text-rose-950 block mb-0.5">CHẶN CHUYỂN: Lô đang dính chứng từ giao hàng</strong>
-                    Lô <strong>{lotToTransferCxll.bagCode}</strong> hiện đang ở trạng thái <strong>"{lotToTransferCxll.status}"</strong> (đang liên kết với Phiếu giao hàng DO hoặc Invoice). Vui lòng gỡ hoặc hủy chứng từ giao hàng trước khi chuyển sang Kho CXLL!
+                    Lô <strong>{lotToTransferCxll.bagCode}</strong> hiện đang ở trạng thái <strong>"{lotToTransferCxll.status}"</strong>. Chỉ lô ở trạng thái "Chờ phân bổ" mới có thể Chuyển CXLL!
                   </div>
                 </div>
               ) : (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-amber-900">
                   <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                   <div className="text-[11px] leading-relaxed">
-                    Lô <strong>{lotToTransferCxll.bagCode}</strong> (Đơn hàng: <strong>{lotToTransferCxll.soCode || "SO"}</strong>) thuộc đơn hàng bị hủy trước khi xuất giao. Sau khi chuyển, lô này sẽ được đưa vào <strong>Kho Chờ Xử Lý Lại (CXLL)</strong> với trạng thái <em>Chờ gán đơn mới</em> để Kinh doanh pick chọn làm mới cho đơn hàng mới.
+                    Lô <strong>{lotToTransferCxll.bagCode}</strong> (Đơn hàng: <strong>{lotToTransferCxll.soCode || "SO"}</strong>) thuộc đơn hàng bị hủy trước khi xuất giao. Sau khi chuyển, lô này sẽ đưa vào <strong>Kho Chờ Xử Lý Lại (CXLL)</strong> để Kinh doanh pick chọn làm mới cho đơn hàng mới.
                   </div>
                 </div>
               )}
 
-              {/* Ô tùy chọn chuyển SL lẻ (AC 4) */}
+              {/* Ô chọn Số lượng chuyển sang CXLL */}
               {lotToTransferCxll.status === "Chờ phân bổ" && (
                 <div className="space-y-2">
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
@@ -1436,11 +1604,24 @@ export default function CommercialInventoryPage() {
                         min="1"
                         max={lotToTransferCxll.totalQty}
                         value={transferQty}
-                        onChange={(e) =>
-                          setTransferQty(
-                            Math.max(1, Math.min(lotToTransferCxll.totalQty, parseInt(e.target.value) || 1))
-                          )
-                        }
+                        onChange={(e) => {
+                          const newQty = Math.max(1, Math.min(lotToTransferCxll.totalQty, parseInt(e.target.value) || 1));
+                          setTransferQty(newQty);
+                          // Đồng bộ gợi ý số lượng cho Series hoặc Stamp
+                          if (transferIsSeries && lotToTransferCxll.series) {
+                            handleQuickSelectSeries(newQty);
+                          } else {
+                            // Cập nhật lại số lượng cho stamp đầu tiên
+                            setTransferStampAllocations((prev) => {
+                              if (prev.length === 1) {
+                                return [{ ...prev[0], qty: newQty }];
+                              }
+                              return prev;
+                            });
+                            // Gợi ý lại cân nặng theo tỷ lệ
+                            setTransferWeighedWeight(Number((lotToTransferCxll.weight * (newQty / lotToTransferCxll.totalQty)).toFixed(4)));
+                          }
+                        }}
                         className="w-20 text-center font-bold text-sm font-mono bg-white border border-slate-300 rounded-lg py-1 text-slate-900 focus:ring-1 focus:ring-rose-500"
                       />
                       <span className="text-xs text-slate-500 font-mono">/ {lotToTransferCxll.totalQty} psc</span>
@@ -1459,14 +1640,52 @@ export default function CommercialInventoryPage() {
                 </div>
               )}
 
-              {/* Thông số chi tiết lô hàng */}
+              {/* Thông tin đối soát phôi cơ bản (ĐÃ BỎ TRƯỜNG VỊ TRÍ LƯU KHO THEO CHỈ ĐẠO CHỊ ĐẸP) */}
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  Thông tin đối soát phôi:
+                <div className="flex items-center justify-between pb-1 border-b border-slate-200/60">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Thông tin đối soát phôi:
+                  </span>
+                  {/* Badge & Toggle kiểm tra Lô có Series hay không */}
+                  <div className="flex items-center gap-1.5 bg-white p-0.5 rounded-lg border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTransferIsSeries(true);
+                        if (lotToTransferCxll.series) handleQuickSelectSeries(transferQty);
+                      }}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                        transferIsSeries
+                          ? "bg-teal-700 text-white shadow-2xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                      title="Chuyển chế độ: Lô có quản lý Series"
+                    >
+                      <Hash className="w-3 h-3" />
+                      <span>Có Series</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTransferIsSeries(false);
+                        setTransferWeighedWeight(Number((lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)).toFixed(4)));
+                      }}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                        !transferIsSeries
+                          ? "bg-purple-700 text-white shadow-2xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                      title="Chuyển chế độ: Lô không có Series (Hàng xá)"
+                    >
+                      <Boxes className="w-3 h-3" />
+                      <span>Không có Series</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/60">
+
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Mã Lô:</span>
+                    <span className="text-slate-400 block text-[10px]">Mã Lô (Bag):</span>
                     <strong className="font-mono text-teal-900 text-xs">{lotToTransferCxll.bagCode}</strong>
                   </div>
                   <div>
@@ -1487,28 +1706,264 @@ export default function CommercialInventoryPage() {
                     <span className="text-slate-400 block text-[10px]">Tuổi vàng:</span>
                     <strong className="text-amber-900">{lotToTransferCxll.lop}</strong>
                   </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">Tổng trọng lượng:</span>
-                    <strong className="font-mono text-slate-900">{lotToTransferCxll.weight.toFixed(4)} g</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">Vị trí lưu kho:</span>
-                    <strong className="text-indigo-800">{lotToTransferCxll.location}</strong>
-                  </div>
                 </div>
               </div>
 
-              {/* Tóm tắt số lượng seri thuộc lô */}
-              {lotToTransferCxll.series?.length > 0 && (
-                <div className="text-[11px] text-slate-500 flex items-center justify-between px-1">
-                  <span>Bao gồm <strong>{lotToTransferCxll.series.length} mã seri</strong> thuộc lô này</span>
-                  <span className="text-[10px] text-teal-700 font-mono font-bold">Trạng thái: {lotToTransferCxll.status}</span>
+              {/* ========================================================================= */}
+              {/* TRƯỜNG HỢP 1: NẾU LÔ CÓ SERIES -> CHỌN MÃ SERIES                          */}
+              {/* ========================================================================= */}
+              {transferIsSeries && (
+                <div className="bg-white border border-teal-200 rounded-xl p-3.5 space-y-2.5 shadow-2xs">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-teal-100">
+                    <div className="flex items-center gap-1.5">
+                      <Hash className="w-4 h-4 text-teal-700" />
+                      <span className="font-bold text-teal-950 text-xs">
+                        Chọn mã Series ({modalCalculatedWeights.selectedCount}/{transferQty} series):
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickSelectSeries(transferQty)}
+                      className="text-[10px] font-bold text-teal-700 hover:text-teal-900 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 cursor-pointer"
+                    >
+                      Chọn nhanh {transferQty} series đầu
+                    </button>
+                  </div>
+
+                  {lotToTransferCxll.series && lotToTransferCxll.series.length > 0 ? (
+                    <div className="max-h-48 overflow-y-auto space-y-1 pr-1 divide-y divide-slate-100">
+                      {lotToTransferCxll.series.map((ser, sIdx) => {
+                        const isSelected = transferSelectedSeriesNos.has(ser.seriNo);
+                        const sMetal = ser.metalWeight ?? (ser.weight - (ser.stoneWeight ?? 0));
+                        const sStone = ser.stoneWeight ?? 0;
+
+                        return (
+                          <div
+                            key={sIdx}
+                            onClick={() => handleToggleSeriesNo(ser.seriNo)}
+                            className={`p-2 rounded-lg flex items-center justify-between transition-all cursor-pointer text-[11px] ${
+                              isSelected
+                                ? "bg-teal-50/80 border border-teal-300 shadow-2xs"
+                                : "bg-slate-50/60 border border-transparent hover:bg-slate-100"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {}}
+                                className="w-3.5 h-3.5 text-teal-700 rounded border-slate-300 focus:ring-teal-500 cursor-pointer"
+                              />
+                              <span className="font-mono font-bold text-slate-800">{ser.seriNo}</span>
+                            </div>
+                            <div className="flex items-center gap-3 font-mono text-[10px]">
+                              <span className="text-amber-900" title="TL Kim loại">
+                                Vàng: <strong>{sMetal.toFixed(4)}</strong>g
+                              </span>
+                              <span className="text-blue-700" title="TL Đá / Stamp">
+                                Đá: <strong>{sStone.toFixed(4)}</strong>g
+                              </span>
+                              <span className="text-slate-900 font-bold" title="Tổng TL">
+                                Tổng: <strong>{ser.weight.toFixed(4)}</strong>g
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-3 text-center text-slate-500 text-[11px] bg-slate-50 rounded-lg">
+                      Lô này chưa có danh sách series chi tiết trong hệ thống. Vui lòng chuyển sang chế độ <strong>Không có Series</strong> để cân lại trọng lượng và chọn Stamp.
+                    </div>
+                  )}
                 </div>
               )}
+
+              {/* ========================================================================= */}
+              {/* TRƯỜNG HỢP 2: NẾU LÔ KHÔNG CÓ SERIES -> CÂN LẠI TỔNG TL & CHỌN STAMP      */}
+              {/* ========================================================================= */}
+              {!transferIsSeries && (
+                <div className="bg-white border border-purple-200 rounded-xl p-3.5 space-y-3 shadow-2xs">
+                  <div className="flex items-center gap-1.5 pb-1 border-b border-purple-100 text-purple-950 font-bold text-xs">
+                    <Scale className="w-4 h-4 text-purple-700" />
+                    <span>Lô không có Series: Bắt buộc cân lại Tổng TL & Chọn Stamp</span>
+                  </div>
+
+                  {/* 1. Ô Cân lại Tổng trọng lượng (Tổng TL) */}
+                  <div className="bg-purple-50/50 border border-purple-200 rounded-lg p-2.5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-purple-950 flex items-center gap-1">
+                        <Scale className="w-3.5 h-3.5 text-purple-700" />
+                        <span>Cân lại Tổng trọng lượng (Tổng TL) *</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTransferWeighedWeight(
+                            Number((lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)).toFixed(4))
+                          )
+                        }
+                        className="text-[10px] text-purple-700 hover:underline cursor-pointer"
+                      >
+                        Gợi ý định mức: {(lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)).toFixed(4)} g
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        step="0.0001"
+                        min="0"
+                        value={transferWeighedWeight || ""}
+                        onChange={(e) => setTransferWeighedWeight(parseFloat(e.target.value) || 0)}
+                        placeholder="Nhập số cân thực tế..."
+                        className="flex-1 px-3 py-1.5 bg-white border border-purple-300 rounded-lg font-mono font-bold text-slate-900 text-xs focus:ring-1 focus:ring-purple-600 focus:outline-none"
+                      />
+                      <span className="text-xs font-bold text-slate-500">gam (g)</span>
+                    </div>
+                  </div>
+
+                  {/* 2. Chọn Stamp (Trọng lượng đá / pcs) & nhập số lượng pcs */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-slate-800 flex items-center gap-1">
+                        <Gem className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Chọn Stamp (Trọng lượng đá) - 1 pcs tương ứng 1 Stamp:</span>
+                      </label>
+                      <div className="text-[10px]">
+                        Đã phân bổ:{" "}
+                        <strong
+                          className={
+                            modalCalculatedWeights.allocatedPcs === transferQty
+                              ? "text-emerald-700 font-bold"
+                              : "text-amber-700 font-bold"
+                          }
+                        >
+                          {modalCalculatedWeights.allocatedPcs} / {transferQty} pcs
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {transferStampAllocations.map((alloc) => {
+                        const stampInfo = MOCK_STAMP_OPTIONS.find((s) => s.code === alloc.stampCode);
+                        const subStoneW = (stampInfo?.stoneWeightPerPcs || 0) * (alloc.qty || 0);
+
+                        return (
+                          <div
+                            key={alloc.id}
+                            className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 text-[11px]"
+                          >
+                            <div className="flex-1">
+                              <select
+                                value={alloc.stampCode}
+                                onChange={(e) => handleUpdateStampRow(alloc.id, "stampCode", e.target.value)}
+                                className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[11px] font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-600"
+                              >
+                                {MOCK_STAMP_OPTIONS.map((st) => (
+                                  <option key={st.code} value={st.code}>
+                                    {st.code} - {st.name} ({st.stoneWeightPerPcs.toFixed(4)} g/pcs)
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="w-24 flex items-center gap-1">
+                              <input
+                                type="number"
+                                min="0"
+                                max={transferQty}
+                                value={alloc.qty}
+                                onChange={(e) => handleUpdateStampRow(alloc.id, "qty", e.target.value)}
+                                placeholder="SL pcs"
+                                className="w-full bg-white border border-slate-300 rounded px-1.5 py-1 text-center font-mono font-bold text-slate-900 text-[11px] focus:outline-none focus:ring-1 focus:ring-purple-600"
+                              />
+                              <span className="text-[10px] text-slate-500">pcs</span>
+                            </div>
+                            <div className="w-24 text-right font-mono text-blue-700 font-bold text-[10px]">
+                              {subStoneW.toFixed(4)} g
+                            </div>
+                            {transferStampAllocations.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveStampRow(alloc.id)}
+                                className="text-slate-400 hover:text-rose-600 p-1"
+                                title="Xóa dòng stamp này"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAddStampRow}
+                      className="text-[10px] text-purple-700 hover:text-purple-900 font-bold flex items-center gap-1 py-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Thêm loại Stamp khác (khi trong lô có nhiều quy cách đá)</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ========================================================================= */}
+              {/* TÁCH THÀNH 3 FIELD TRỌNG LƯỢNG RÕ RÀNG THEO CHÚ THÍCH ĐỎ TRONG ẢNH        */}
+              {/* ========================================================================= */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                    Trọng lượng phôi chuyển sang CXLL (3 Field Chuẩn Hóa):
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Áp dụng cho {transferQty} pcs
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                  {/* Field 1: TL Kim loại */}
+                  <div className="bg-amber-50/70 border border-amber-200 p-2.5 rounded-lg">
+                    <span className="text-[10px] text-amber-900 font-semibold block">TL Kim Loại</span>
+                    <strong className="font-mono text-amber-900 text-sm block mt-0.5">
+                      {modalCalculatedWeights.metalWeight.toFixed(4)} g
+                    </strong>
+                  </div>
+
+                  {/* Field 2: TL Đá (Stamp) */}
+                  <div className="bg-blue-50/70 border border-blue-200 p-2.5 rounded-lg">
+                    <span className="text-[10px] text-blue-900 font-semibold block">TL Đá (Stamp)</span>
+                    <strong className="font-mono text-blue-800 text-sm block mt-0.5">
+                      {modalCalculatedWeights.stoneWeight > 0 ? `${modalCalculatedWeights.stoneWeight.toFixed(4)} g` : "—"}
+                    </strong>
+                  </div>
+
+                  {/* Field 3: Tổng TL */}
+                  <div className="bg-white border border-slate-300 p-2.5 rounded-lg shadow-2xs">
+                    <span className="text-[10px] text-slate-600 font-semibold block">Tổng TL (Cân lại)</span>
+                    <strong className="font-mono text-slate-900 text-sm font-black block mt-0.5">
+                      {modalCalculatedWeights.totalWeight.toFixed(4)} g
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Dòng công thức tính toán minh bạch */}
+                <div className="text-[10px] text-slate-500 bg-white p-2 rounded border border-slate-200/80 text-center font-mono">
+                  Công thức: <strong>TL Kim loại</strong> ({modalCalculatedWeights.metalWeight.toFixed(4)}g) = <strong>Tổng TL</strong> ({modalCalculatedWeights.totalWeight.toFixed(4)}g) - <strong>TL Đá</strong> ({modalCalculatedWeights.stoneWeight.toFixed(4)}g)
+                </div>
+
+                {/* Cảnh báo lỗi validate nếu chưa hợp lệ */}
+                {!modalCalculatedWeights.isValid && (
+                  <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 text-[11px] flex items-center gap-2 animate-in fade-in">
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                    <span>{modalCalculatedWeights.error}</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
+            <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5 shrink-0">
               <button
                 type="button"
                 onClick={() => setLotToTransferCxll(null)}
@@ -1520,7 +1975,13 @@ export default function CommercialInventoryPage() {
                 <button
                   type="button"
                   onClick={handleConfirmTransferToCxll}
-                  className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                  disabled={!modalCalculatedWeights.isValid}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 ${
+                    modalCalculatedWeights.isValid
+                      ? "bg-rose-600 hover:bg-rose-700 text-white cursor-pointer"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed opacity-70"
+                  }`}
+                  title={modalCalculatedWeights.isValid ? "Xác nhận chuyển sang Kho CXLL" : modalCalculatedWeights.error}
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   <span>Xác nhận chuyển {transferQty} psc sang CXLL</span>

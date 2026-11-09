@@ -5,6 +5,16 @@
 // - Sau đó đi các công đoạn làm mới lại (tẩy xi, khắc logo mới, xi lại) và nhập lại kho thành phẩm để giao hàng.
 // =============================================================================
 
+// Danh mục các loại Stamp (Trọng lượng đá / pcs) chuẩn nhà máy kim hoàn
+export const MOCK_STAMP_OPTIONS = [
+  { code: "ST-000", name: "Không đá (Trơn)", stoneWeightPerPcs: 0.0000 },
+  { code: "ST-005", name: "Đá tấm 1.0ly - 1.2ly", stoneWeightPerPcs: 0.0050 },
+  { code: "ST-010", name: "Đá tấm 1.3ly - 1.5ly", stoneWeightPerPcs: 0.0100 },
+  { code: "ST-015", name: "Đá CZ tròn 2.0ly", stoneWeightPerPcs: 0.0150 },
+  { code: "ST-020", name: "Đá CZ tròn 2.5ly", stoneWeightPerPcs: 0.0200 },
+  { code: "ST-030", name: "Đá chủ 3.0ly", stoneWeightPerPcs: 0.0300 },
+];
+
 // 1. DANH SÁCH TỒN KHO THÀNH PHẨM SẴN SÀNG BÁN (LOẠI TRỪ 100% HÀNG CHỜ XỬ LÝ LẠI - US-08.1)
 // Trạng thái tồn chuẩn: Chờ phân bổ | Đã phân bổ | Chờ lập HĐ | Chờ giao
 export const MOCK_COMMERCIAL_INVENTORY = [
@@ -22,23 +32,24 @@ export const MOCK_COMMERCIAL_INVENTORY = [
     totalQty: 10,
     status: "Chờ phân bổ", // CHỜ PHÂN BỔ: NÚT "CHUYỂN CHỜ XỬ LÝ LẠI" ACTIVE!
     weight: 5.0000,
-    metalWeight: 5.0000,
-    stoneWeight: 0,
+    metalWeight: 4.8500,
+    stoneWeight: 0.1500,
     createdBy: "Nguyễn Thị Mỹ Dung",
     createdAt: "22/08/2026",
     dateIn: "24/08/2026",
     location: "Két K1 - Ngăn A01",
+    hasSeries: true, // LÔ CÓ QUẢN LÝ SERIES CHI TIẾT
     series: [
-      { seriNo: "SR-2608001-01", status: "Chờ phân bổ", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-02", status: "Chờ phân bổ", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-03", status: "Chờ phân bổ", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-04", status: "Chờ phân bổ", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-05", status: "Chờ phân bổ", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-06", status: "Chờ phân bổ", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-07", status: "Chờ phân bổ", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-08", status: "Chờ phân bổ", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-09", status: "Chờ phân bổ", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-10", status: "Chờ phân bổ", weight: 0.5000, location: "Khay A1" }
+      { seriNo: "SR-2608001-01", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-02", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-03", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-04", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-05", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-06", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-07", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-08", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-09", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-10", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" }
     ]
   },
   {
@@ -176,14 +187,8 @@ export const MOCK_COMMERCIAL_INVENTORY = [
     createdAt: "26/08/2026",
     dateIn: "29/08/2026",
     location: "Két K1 - Ngăn A04",
-    series: [
-      { seriNo: "SR-2608006-01", status: "Chờ phân bổ", weight: 0.4500, location: "Khay A2" },
-      { seriNo: "SR-2608006-02", status: "Chờ phân bổ", weight: 0.4500, location: "Khay A2" },
-      { seriNo: "SR-2608006-03", status: "Chờ phân bổ", weight: 0.4500, location: "Khay A2" },
-      { seriNo: "SR-2608006-04", status: "Chờ phân bổ", weight: 0.4500, location: "Khay A2" },
-      { seriNo: "SR-2608006-05", status: "Chờ phân bổ", weight: 0.4500, location: "Khay A2" },
-      { seriNo: "SR-2608006-06", status: "Chờ phân bổ", weight: 0.4500, location: "Khay A2" }
-    ]
+    hasSeries: false, // LÔ KHÔNG QUẢN LÝ SERIES (HÀNG XÁ - YÊU CẦU CÂN LẠI & CHỌN STAMP)
+    series: []
   },
   {
     id: "LOT-07",
