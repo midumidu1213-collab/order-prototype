@@ -30,6 +30,8 @@ export const MOCK_COMMERCIAL_INVENTORY = [
     category: "Bông tai",
     lop: "AU 61.00 Y",
     totalQty: 10,
+    availableQty: 10, // SL Khả dụng (chưa phân bổ cho đơn, có thể chuyển CXLL)
+    allocatedQty: 0,  // SL Đã giữ chỗ
     status: "Chờ phân bổ", // CHỜ PHÂN BỔ: NÚT "CHUYỂN CHỜ XỬ LÝ LẠI" ACTIVE!
     weight: 5.0000,
     metalWeight: 4.8500,
@@ -64,6 +66,8 @@ export const MOCK_COMMERCIAL_INVENTORY = [
     category: "Nhẫn",
     lop: "AU 61.00 Y",
     totalQty: 8,
+    availableQty: 0,
+    allocatedQty: 8,
     status: "Chờ lập HĐ", // KHÔNG PHẢI CHỜ PHÂN BỔ: NÚT DISABLED
     weight: 3.6000,
     metalWeight: 3.4800,
@@ -95,6 +99,8 @@ export const MOCK_COMMERCIAL_INVENTORY = [
     category: "Vòng tay",
     lop: "AU 61.00 Y",
     totalQty: 6,
+    availableQty: 0,
+    allocatedQty: 6,
     status: "Chờ giao", // KHÔNG PHẢI CHỜ PHÂN BỔ: NÚT DISABLED
     weight: 3.0000,
     metalWeight: 2.9100,
@@ -124,6 +130,8 @@ export const MOCK_COMMERCIAL_INVENTORY = [
     category: "Nhẫn",
     lop: "AU 75.00 Y",
     totalQty: 12,
+    availableQty: 0,
+    allocatedQty: 12,
     status: "Đã phân bổ", // ĐÃ PHÂN BỔ: NÚT DISABLED
     weight: 9.6000,
     metalWeight: 9.4200,
@@ -151,6 +159,8 @@ export const MOCK_COMMERCIAL_INVENTORY = [
     category: "Bông tai",
     lop: "AU 61.00 Y",
     totalQty: 5,
+    availableQty: 0,
+    allocatedQty: 5,
     status: "Chờ lập HĐ", // KHÔNG PHẢI CHỜ PHÂN BỔ: NÚT DISABLED
     weight: 7.5000,
     metalWeight: 7.3500,
@@ -179,6 +189,8 @@ export const MOCK_COMMERCIAL_INVENTORY = [
     category: "Nhẫn",
     lop: "AU 61.00 Y",
     totalQty: 6,
+    availableQty: 6,
+    allocatedQty: 0,
     status: "Chờ phân bổ", // CHỜ PHÂN BỔ: NÚT "CHUYỂN CHỜ XỬ LÝ LẠI" ACTIVE!
     weight: 2.7000,
     metalWeight: 2.6100,
@@ -202,6 +214,8 @@ export const MOCK_COMMERCIAL_INVENTORY = [
     category: "Vòng tay",
     lop: "AU 61.00 Y",
     totalQty: 4,
+    availableQty: 0,
+    allocatedQty: 4,
     status: "Đã phân bổ", // ĐÃ PHÂN BỔ: NÚT DISABLED
     weight: 2.0000,
     metalWeight: 2.0000,

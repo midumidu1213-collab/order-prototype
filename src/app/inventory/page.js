@@ -66,7 +66,8 @@ export default function CommercialInventoryPage() {
     itemCode: { sort: null, selectedValues: null, searchQuery: "" },
     category: { sort: null, selectedValues: null, searchQuery: "" },
     lop: { sort: null, selectedValues: null, searchQuery: "" },
-    totalQty: { sort: null, selectedValues: null, searchQuery: "" },
+    availableQty: { sort: null, selectedValues: null, searchQuery: "" },
+    allocatedQty: { sort: null, selectedValues: null, searchQuery: "" },
     status: { sort: null, selectedValues: null, searchQuery: "" },
     weight: { sort: null, selectedValues: null, searchQuery: "" },
     metalWeight: { sort: null, selectedValues: null, searchQuery: "" },
@@ -97,7 +98,8 @@ export default function CommercialInventoryPage() {
       itemCode: Array.from(new Set(inventoryList.map((r) => r.itemCode))).sort(),
       category: Array.from(new Set(inventoryList.map((r) => r.category || r.itemName))).sort(),
       lop: Array.from(new Set(inventoryList.map((r) => r.lop))).sort(),
-      totalQty: Array.from(new Set(inventoryList.map((r) => `${r.totalQty} psc`))).sort(),
+      availableQty: Array.from(new Set(inventoryList.map((r) => (r.availableQty > 0 ? String(r.availableQty) : "—")))).sort(),
+      allocatedQty: Array.from(new Set(inventoryList.map((r) => (r.allocatedQty > 0 ? String(r.allocatedQty) : "—")))).sort(),
       status: Array.from(new Set(inventoryList.map((r) => r.status))).sort(),
       weight: Array.from(new Set(inventoryList.map((r) => r.weight.toFixed(4)))).sort(),
       metalWeight: Array.from(new Set(inventoryList.map((r) => r.metalWeight.toFixed(4)))).sort(),
@@ -217,6 +219,8 @@ export default function CommercialInventoryPage() {
         list = list.filter((item) => {
           let val = "";
           if (colKey === "category") val = item.category || item.itemName || "";
+          else if (colKey === "availableQty") val = item.availableQty > 0 ? String(item.availableQty) : "—";
+          else if (colKey === "allocatedQty") val = item.allocatedQty > 0 ? String(item.allocatedQty) : "—";
           else if (colKey === "totalQty") val = `${item.totalQty} psc`;
           else if (colKey === "weight") val = item.weight.toFixed(4);
           else if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
@@ -232,6 +236,8 @@ export default function CommercialInventoryPage() {
         list = list.filter((item) => {
           let val = "";
           if (colKey === "category") val = `${item.category || ""} ${item.itemName || ""}`;
+          else if (colKey === "availableQty") val = item.availableQty > 0 ? String(item.availableQty) : "";
+          else if (colKey === "allocatedQty") val = item.allocatedQty > 0 ? String(item.allocatedQty) : "";
           else if (colKey === "totalQty") val = `${item.totalQty}`;
           else if (colKey === "weight") val = item.weight.toFixed(4);
           else if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
@@ -1059,35 +1065,69 @@ export default function CommercialInventoryPage() {
                         )}
                       </th>
 
-                      {/* 8. TỔNG SL */}
+                      {/* 8. SL KHẢ DỤNG */}
                       <th className="relative py-2.5 px-3 text-right">
                         <div className="flex items-center justify-end space-x-1">
-                          <span>TỔNG SL</span>
+                          <span>SL KHẢ DỤNG</span>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveFilterColKey(activeFilterColKey === "totalQty" ? null : "totalQty");
+                              setActiveFilterColKey(activeFilterColKey === "availableQty" ? null : "availableQty");
                             }}
                             className={`p-1 rounded transition-colors cursor-pointer ${
-                              isColumnFiltered("totalQty")
+                              isColumnFiltered("availableQty")
                                 ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                 : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                             }`}
-                            title="Lọc & sắp xếp cột Tổng SL"
+                            title="Lọc & sắp xếp cột SL Khả Dụng"
                           >
-                            <Filter className={`h-3 w-3 ${isColumnFiltered("totalQty") ? "fill-[#005a46]" : ""}`} />
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("availableQty") ? "fill-[#005a46]" : ""}`} />
                           </button>
                         </div>
-                        {activeFilterColKey === "totalQty" && (
+                        {activeFilterColKey === "availableQty" && (
                           <ColumnFilterPopover
-                            columnKey="totalQty"
-                            columnTitle="Tổng Số Lượng"
+                            columnKey="availableQty"
+                            columnTitle="SL Khả Dụng"
                             columnType="select"
-                            uniqueValues={uniqueValuesMap.totalQty}
-                            filterState={columnFilters.totalQty}
-                            onApply={(data) => handleApplyColumnFilter("totalQty", data)}
-                            onClear={() => handleClearColumnFilter("totalQty")}
+                            uniqueValues={uniqueValuesMap.availableQty}
+                            filterState={columnFilters.availableQty}
+                            onApply={(data) => handleApplyColumnFilter("availableQty", data)}
+                            onClear={() => handleClearColumnFilter("availableQty")}
+                            onClose={() => setActiveFilterColKey(null)}
+                          />
+                        )}
+                      </th>
+
+                      {/* 9. SL ĐÃ GIỮ CHỖ */}
+                      <th className="relative py-2.5 px-3 text-right">
+                        <div className="flex items-center justify-end space-x-1">
+                          <span>SL ĐÃ GIỮ CHỖ</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveFilterColKey(activeFilterColKey === "allocatedQty" ? null : "allocatedQty");
+                            }}
+                            className={`p-1 rounded transition-colors cursor-pointer ${
+                              isColumnFiltered("allocatedQty")
+                                ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
+                                : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
+                            }`}
+                            title="Lọc & sắp xếp cột SL Đã Giữ Chỗ"
+                          >
+                            <Filter className={`h-3 w-3 ${isColumnFiltered("allocatedQty") ? "fill-[#005a46]" : ""}`} />
+                          </button>
+                        </div>
+                        {activeFilterColKey === "allocatedQty" && (
+                          <ColumnFilterPopover
+                            columnKey="allocatedQty"
+                            columnTitle="SL Đã Giữ Chỗ"
+                            columnType="select"
+                            uniqueValues={uniqueValuesMap.allocatedQty}
+                            filterState={columnFilters.allocatedQty}
+                            onApply={(data) => handleApplyColumnFilter("allocatedQty", data)}
+                            onClear={() => handleClearColumnFilter("allocatedQty")}
                             onClose={() => setActiveFilterColKey(null)}
                           />
                         )}
@@ -1436,9 +1476,22 @@ export default function CommercialInventoryPage() {
                             </span>
                           </td>
 
-                          {/* 8. Tổng SL */}
-                          <td className="py-3 px-3 text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
-                            {row.totalQty} psc
+                          {/* 8. SL Khả Dụng */}
+                          <td className="py-3 px-3 text-right whitespace-nowrap">
+                            {row.availableQty > 0 ? (
+                              <span className="font-mono font-bold text-emerald-700">{row.availableQty}</span>
+                            ) : (
+                              <span className="text-slate-300 font-normal select-none">—</span>
+                            )}
+                          </td>
+
+                          {/* 9. SL Đã Giữ Chỗ */}
+                          <td className="py-3 px-3 text-right whitespace-nowrap">
+                            {row.allocatedQty > 0 ? (
+                              <span className="font-mono font-bold text-purple-700">{row.allocatedQty}</span>
+                            ) : (
+                              <span className="text-slate-300 font-normal select-none">—</span>
+                            )}
                           </td>
 
                           {/* 9. Trạng Thái Tồn */}
@@ -1515,9 +1568,15 @@ export default function CommercialInventoryPage() {
                       <td colSpan={8} className="py-2.5 px-3 text-right">
                         Tổng cộng ({filteredData.length} Lô):
                       </td>
+                      {/* Chân cột SL Khả Dụng */}
                       <td className="py-2.5 px-3 text-right font-mono text-emerald-800 font-black whitespace-nowrap">
-                        {filteredData.reduce((s, r) => s + r.totalQty, 0)} psc
+                        {filteredData.reduce((s, r) => s + (r.availableQty || 0), 0)}
                       </td>
+                      {/* Chân cột SL Đã Giữ Chỗ */}
+                      <td className="py-2.5 px-3 text-right font-mono text-purple-800 font-black whitespace-nowrap">
+                        {filteredData.reduce((s, r) => s + (r.allocatedQty || 0), 0)}
+                      </td>
+                      {/* Chân cột Trạng Thái */}
                       <td className="py-2.5 px-3 text-center text-[10px] text-slate-500 whitespace-nowrap">
                         {filteredData.filter((r) => r.status === "Chờ phân bổ").length} chờ phân bổ / {filteredData.filter((r) => r.status !== "Chờ phân bổ").length} đã gán
                       </td>
@@ -2197,7 +2256,19 @@ export default function CommercialInventoryPage() {
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[10px]">Tổng số lượng:</span>
-                  <strong className="font-mono text-emerald-700 text-xs">{selectedLotForDrawer.totalQty} psc</strong>
+                  <strong className="font-mono text-slate-900 text-xs">{selectedLotForDrawer.totalQty} pcs</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">SL Khả dụng:</span>
+                  <strong className="font-mono text-emerald-700 text-xs">
+                    {selectedLotForDrawer.availableQty > 0 ? `${selectedLotForDrawer.availableQty} pcs` : "—"}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">SL Đã giữ chỗ:</span>
+                  <strong className="font-mono text-purple-700 text-xs">
+                    {selectedLotForDrawer.allocatedQty > 0 ? `${selectedLotForDrawer.allocatedQty} pcs` : "—"}
+                  </strong>
                 </div>
               </div>
 

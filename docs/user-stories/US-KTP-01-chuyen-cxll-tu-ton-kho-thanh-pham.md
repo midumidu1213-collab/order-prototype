@@ -108,7 +108,8 @@
 | **Mã Item** | Text / Font-mono | Có | Kế thừa từ SO | Mã sản phẩm 30 ký tự định danh mẫu (SKU). |
 | **Chủng Loại** | Text | Có | Kế thừa từ SO | Chủng loại sản phẩm: Nhẫn, Bông tai, Vòng tay, Mặt dây... |
 | **Loại / Tuổi Vàng** | Text | Có | Kế thừa từ SO | Hàm lượng tuổi vàng (VD: `AU 61.00 Y`, `AU 75.00 W`). |
-| **Tổng SL** | Integer | Có | Kế thừa từ KHSX | Số lượng pcs hoàn thiện trong lô (VD: `10 psc`, `8 psc`). |
+| **SL Khả Dụng** | Integer | Có | Kế thừa / Tính theo trạng thái | Số lượng phôi sẵn sàng gán hoặc chuyển CXLL (lô Chờ phân bổ: SL khả dụng = Tổng SL; các lô khác: hiển thị `—`). |
+| **SL Đã Giữ Chỗ** | Integer | Có | Kế thừa / Tính theo trạng thái | Số lượng phôi đã được gán vào đơn hàng / phân bổ giao (lô Đã phân bổ, Chờ lập HĐ, Chờ giao: SL = Tổng SL; lô Chờ phân bổ: hiển thị `—`). |
 | **Trạng Thái** | Enum / Badge | Có | `Chờ phân bổ` | Giá trị: `Chờ phân bổ`, `Đã phân bổ`, `Chờ lập HĐ`, `Chờ giao`. |
 | **SL Chuyển (Modal)** | Integer | Có | Bằng Tổng SL | Cho phép nhập số lượng lẻ cần chuyển (1 ≤ SL ≤ Tổng SL), phục vụ AC 4. |
 | **Check Series (Modal)** | Boolean | Có | Tự động nhận | Nhận diện lô có series hay không. Nếu có: chọn mã series. Nếu không: cân lại Tổng TL và chọn Stamp. |
