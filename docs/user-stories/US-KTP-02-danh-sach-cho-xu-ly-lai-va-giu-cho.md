@@ -14,97 +14,95 @@
 * **Là một (As a):** Quản lý Kho thành phẩm
 * **Tôi muốn (I want):**
     1. Quản lý toàn bộ danh sách các lô có nguồn gốc từ các đơn hàng đã bị hủy tại màn hình **Danh Sách Lô Chờ Xử Lý Lại**.
-    2. Theo dõi 2 chỉ tiêu số lượng của từng lô:
-       * `SL khả dụng`: Số lượng pcs còn tự do trong két kho, sẵn sàng để gán cho đơn hàng khác.
-       * `SL đã gán`: Tổng số lượng pcs đã có chủ (bao gồm cả đang giữ chỗ chờ duyệt và đã chuyển sang Bag mới làm mới).
-       * *Công thức bảo toàn:* `Tổng SL = SL khả dụng + SL đã gán`.
-    3. Trạng thái kho của lô tự động xác định theo **trạng thái thấp nhất của các pcs trong lô**:
-       * `Chờ gán đơn mới`: Lô còn ít nhất 1 pcs khả dụng để gán tiếp (`SL khả dụng > 0`).
-       * `Đã giữ chỗ`: Toàn bộ pcs của lô đã được gán hết vào đơn mới và đang giữ chỗ (`SL khả dụng = 0` và có pcs giữ chỗ).
-       * `Đã chuyển đơn`: Toàn bộ pcs trong lô đã hoàn tất Cấp thành phẩm sang Bag mới.
-    4. Quản lý thông tin đơn hàng mới một cách rõ ràng: Hiển thị trực tiếp mã đơn hàng mới nếu gán 1 đơn, hoặc hiển thị Badge tổng hợp khi 1 lô gán cho từ 2 đơn hàng trở lên.
-* **Để (So that):** Ngăn chặn tuyệt đối việc gán trùng một lô cho nhiều đơn hàng khác nhau, tối ưu hóa việc tái sử dụng phôi theo từng pcs lẻ và giữ giao diện bảng luôn tinh gọn, chuẩn xác.
+    2. Theo dõi số lượng thông qua **1 cột `SL` duy nhất**, phản ánh chính xác số lượng cho trạng thái của lô trên từng dòng.
+    3. Trường hợp 1 lô có nhiều trạng thái (ví dụ tổng 10 pcs gồm: 3 pcs chờ gán đơn, 3 pcs đã giữ chỗ, 4 pcs chờ chuyển bag), hệ thống tự động **tách làm 3 dòng riêng biệt** với 3 trạng thái tương ứng.
+    4. Trực tiếp theo dõi đơn hàng mới được gán (Mã SO mới, Khách hàng mới, Mã Bag mới) trên từng dòng đã giữ chỗ hoặc chờ chuyển bag.
+* **Để (So that):** Ngăn chặn tuyệt đối việc pick trùng một lô cho nhiều đơn hàng khác nhau, loại bỏ hoàn toàn ô dữ liệu phức tạp/popover, giữ giao diện bảng luôn phẳng, tinh gọn và đối soát số lượng tức thì.
 
 ---
 
 ## 2. TIÊU CHÍ CHẤP NHẬN (ACCEPTANCE CRITERIA - AC) *
 
-* **AC 1: Hiển thị danh sách và 2 cột số lượng tinh gọn**
+* **AC 1: Hiển thị danh sách với 1 cột SL duy nhất và cơ chế tách dòng theo trạng thái**
   * **Given (Biết rằng):** Thủ kho truy cập màn hình `DS Chờ xử lý lại` (`/inventory/reprocess`).
-  * **Then (Thì):** Bảng dữ liệu hiển thị rõ ràng 2 cột số lượng:
-    * `SL KHẢ DỤNG`: Số pcs còn có thể gán cho đơn khác (nếu = 0 hiển thị dấu `—`).
-    * `SL ĐÃ GÁN`: Tổng số pcs đã có chủ (gồm đang giữ chỗ + đã chuyển, nếu = 0 hiển thị dấu `—`).
-  * **And (Và):** Ô dữ liệu chỉ hiển thị số nguyên thuần túy (không đính kèm chữ "pcs"). Dấu gạch ngang `—` mờ khi giá trị = 0.
+  * **Then (Thì):** Hệ thống hiển thị 4 Tabs trạng thái trên thanh công cụ: `Tất cả`, `Chờ gán đơn`, `Đã giữ chỗ`, `Chờ chuyển bag`.
+  * **And (Và):** Bảng dữ liệu chỉ có **1 cột `SL` duy nhất**, hiển thị số lượng pcs của trạng thái trên dòng đó.
+  * **And (Và):** Nếu 1 lô phôi có các pcs ở nhiều trạng thái khác nhau (ví dụ: một phần còn chờ gán đơn, một phần đã giữ chỗ cho đơn mới, một phần đã duyệt KHSX chờ chuyển bag), hệ thống tự động tách thành các dòng độc lập tương ứng với từng trạng thái.
 
-* **AC 2: Trạng thái lô bắt theo trạng thái thấp nhất của pcs trong lô**
-  * **Biết rằng (Given):** Lô phôi có tổng cộng N pcs nằm tại Kho CXLL.
-  * **Khi (When):** Các pcs trong lô có trạng thái khác nhau:
-    * Nếu trong lô còn ít nhất 1 pcs khả dụng (`SL khả dụng > 0`): Trạng thái của lô hiển thị là **`Chờ gán đơn mới`** (badge xanh lá tươi).
-    * Nếu lô hết pcs khả dụng (`SL khả dụng = 0`) nhưng có pcs đang giữ chỗ: Trạng thái của lô hiển thị là **`Đã giữ chỗ`** (badge tím hoàng gia).
-    * Nếu toàn bộ pcs trong lô đã được duyệt KHSX và chuyển bag: Trạng thái của lô hiển thị là **`Đã chuyển đơn`** (badge xanh dương đậm).
-  * **Thì (Then):** Người dùng luôn nhận diện chính xác lô nào còn có thể khai thác tiếp chỉ bằng việc nhìn vào màu sắc và trạng thái.
+* **AC 2: Chuẩn hóa 3 trạng thái kho và màu sắc trực quan**
+  * **Given (Biết rằng):** Mỗi dòng hiển thị một trạng thái kho cụ thể:
+    * **`Chờ gán đơn`** (Badge xanh lá `bg-emerald-50 text-emerald-700 border-emerald-200`): Pcs phôi còn tự do trong két kho, sẵn sàng để QLĐH pick vào đơn hàng mới.
+    * **`Đã giữ chỗ`** (Badge tím `bg-purple-50 text-purple-700 border-purple-200`): Pcs phôi đã được pick vào đơn hàng mới và đang khóa giữ chỗ (chờ duyệt KHSX).
+    * **`Chờ chuyển bag`** (Badge xanh dương `bg-blue-50 text-blue-700 border-blue-200`): Pcs phôi đã được duyệt KHSX, sẵn sàng xuất phôi tại Trạm Cấp TP để làm mới.
+  * **Then (Thì):** Thủ kho nhận biết ngay tiến độ xử lý của từng phần phôi mà không cần bấm mở chi tiết.
 
-* **AC 3: Xử lý hiển thị tại cột Mã Đơn Hàng Mới**
-  * **Biết rằng (Given):** Lô phôi đã có pcs được gán vào đơn hàng mới (`SL đã gán > 0`).
-  * **Khi (When):** 
-    * Nếu lô được gán cho **1 đơn hàng duy nhất**: Cột `MÃ ĐƠN HÀNG MỚI` hiển thị link `SO...` kèm tên khách hàng mới và mã bag mới.
-    * Nếu lô được gán cho **≥ 2 đơn hàng khác nhau**: Cột `MÃ ĐƠN HÀNG MỚI` hiển thị Badge **`N Đơn hàng ↗`** (màu tím).
-  * **Thì (Then):** 
-    * Khi rê chuột (hover) vào Badge: Hiển thị Popover tóm tắt danh sách các đơn hàng kèm số lượng pcs từng đơn.
-    * Khi click vào dòng: Mở Drawer chi tiết hiển thị đầy đủ thông tin chi tiết từng đơn hàng. Ô dữ liệu không bị vỡ dòng hoặc đội chiều cao.
+* **AC 3: Hiển thị trực tiếp tại cột Mã Đơn Hàng Mới**
+  * **Given (Biết rằng):** Mỗi dòng đã gắn liền với 1 trạng thái và 1 đơn hàng mới (nếu có):
+    * Dòng ở trạng thái **`Chờ gán đơn`**: Cột `MÃ ĐƠN HÀNG MỚI` hiển thị dấu gạch ngang mờ `—`.
+    * Dòng ở trạng thái **`Đã giữ chỗ`** hoặc **`Chờ chuyển bag`**: Cột `MÃ ĐƠN HÀNG MỚI` hiển thị trực tiếp link `SO...` (click mở chi tiết đơn trong QLĐH) kèm tên khách hàng mới và mã bag mới.
+  * **Then (Thì):** Bảng dữ liệu phẳng 100%, không bị vỡ dòng, không cần popover đa đơn hàng.
 
-* **AC 4: Tự động khóa giữ chỗ khi QLĐH gán đơn mới**
-  * **Biết rằng (Given):** Lô đang có `SL khả dụng = K` tại Kho CXLL.
-  * **Khi (When):** QLĐH chọn pick M pcs (với M ≤ K) từ lô này vào đơn hàng mới (tại `/orders/create` hoặc `/orders/[id]`).
-  * **Thì (Then):** Hệ thống tự động trừ M pcs khỏi `SL khả dụng` và cộng M pcs vào `SL đã gán`.
-  * **And (Và):** Trạng thái của lô tự động cập nhật lại theo quy tắc pcs thấp nhất.
+* **AC 4: Tự động khóa giữ chỗ khi QLĐH pick phôi**
+  * **Given (Biết rằng):** Dòng phôi đang ở trạng thái `Chờ gán đơn` với số lượng K pcs.
+  * **When (Khi):** Nhân viên kinh doanh / QLĐH chọn pick M pcs (với M ≤ K) vào đơn hàng mới (tại `/orders/create` hoặc `/orders/[id]`).
+  * **Then (Thì):** 
+    * Nếu M = K (pick hết cả dòng): Dòng này chuyển trạng thái từ `Chờ gán đơn` sang `Đã giữ chỗ`, hiển thị link SO mới và khách hàng mới.
+    * Nếu M < K (pick một phần): Dòng này tự động tách thành 2 dòng: 1 dòng `Đã giữ chỗ` với M pcs (gắn SO mới) và 1 dòng `Chờ gán đơn` với (K - M) pcs còn lại.
 
 * **AC 5: Chống pick trùng tuyệt đối**
-  * **Biết rằng (Given):** Lô phôi có `SL khả dụng = 0` (đã gán hết).
-  * **When (Khi):** QLĐH mở popup đồng bộ DS tồn khả dụng CXLL để gán vào đơn mới.
-  * **Then (Thì):** Hệ thống không hiển thị lô này trong danh sách gợi ý khả dụng, ngăn chặn hoàn toàn việc gán vượt quá số lượng tồn.
+  * **Given (Biết rằng):** Các dòng phôi ở trạng thái `Đã giữ chỗ` hoặc `Chờ chuyển bag`.
+  * **When (Khi):** QLĐH đồng bộ danh sách tồn khả dụng CXLL để gán vào đơn hàng khác.
+  * **Then (Thì):** Hệ thống chỉ đồng bộ các dòng ở trạng thái `Chờ gán đơn`. Các dòng đã giữ chỗ hoặc chờ chuyển bag tuyệt đối không hiển thị, ngăn chặn triệt để việc gán trùng.
 
-* **AC 6: Hoàn lại SL khả dụng nếu Đơn hàng mới bị hủy (trước khi chuyển KHSX)**
-  * **Biết rằng (Given):** Lô phôi đang có M pcs đã gán (đang giữ chỗ) cho đơn hàng mới.
-  * **Khi (When):** Đơn hàng mới bị hủy bỏ hoặc xóa dòng hàng trước khi bấm Chuyển KHSX.
-  * **Thì (Then):** Hệ thống tự động trừ M pcs khỏi `SL đã gán` và hoàn nhập M pcs về `SL khả dụng`. Trạng thái của lô tự động cập nhật lại theo quy tắc pcs thấp nhất.
+* **AC 6: Tự động hoàn nhập khi đơn hàng mới bị hủy (trước khi chuyển KHSX)**
+  * **Given (Biết rằng):** Dòng phôi đang ở trạng thái `Đã giữ chỗ` cho đơn hàng mới.
+  * **When (Khi):** Đơn hàng mới bị hủy bỏ hoặc xóa dòng hàng trước khi bấm Chuyển KHSX.
+  * **Then (Thì):** Dòng phôi tự động chuyển trạng thái hoàn nhập về `Chờ gán đơn`, xóa liên kết với đơn hàng mới, giải phóng phôi để các đơn hàng khác có thể pick lại. Nếu lô gốc đã có dòng `Chờ gán đơn`, hệ thống tự động gộp số lượng lại thành 1 dòng.
 
-* **AC 7: Điều chuyển sang Trạm Cấp TP khi duyệt KHSX**
-  * **Biết rằng (Given):** Lô phôi có pcs đang giữ chỗ cho đơn hàng mới.
-  * **Khi (When):** Đơn hàng mới được bấm `[Xác nhận chuyển KHSX]`.
-  * **Thì (Then):** Các pcs đã gán được tự động chuyển sang trạm **Cấp TP (Serve FG)** (`/inventory/reprocess/serve`) để thực hiện chuyển Bag cũ sang Bag mới.
+* **AC 7: Chốt chặn điều chuyển từ Kho Tồn Thành Phẩm sang CXLL**
+  * **Given (Biết rằng):** Thủ kho thao tác tại màn hình Tồn kho thành phẩm (`/inventory`).
+  * **When (Khi):** Thủ kho chọn một hoặc nhiều lô để Chuyển CXLL.
+  * **Then (Thì):** Chỉ cho phép bấm `[Chuyển CXLL]` đối với các lô đang ở trạng thái **`Chờ phân bổ`**. Các lô ở trạng thái khác (`Chờ lập HĐ`, `Chờ giao`, `Đã phân bổ`) bị khóa nút và checkbox, ngăn chặn việc chuyển nhầm hàng đang trong quy trình xuất bán.
 
 ---
 
 ## 3. THIẾT KẾ (UX/UI) *
 
-* **Link Figma / Prototype:** [Màn hình Danh Sách Chờ Xử Lý Lại: /inventory/reprocess](http://localhost:3000/inventory/reprocess)
-* **Ảnh đính kèm:**
-  * *Giao diện bảng danh sách lô phôi chuẩn hóa 13 cột với 2 cột SL khả dụng & SL đã gán, xử lý đa đơn hàng dạng Badge Popover và 3 gam màu trạng thái tương phản cao:*
-
-    ![Giao diện DS Chờ Xử Lý Lại Tinh Gọn](file:///C:/Users/PowerBI/.gemini/antigravity/brain/b922bdcc-9a9f-48b7-9859-3d492213dc67/.user_uploaded/media_1793760387959_6aa3e568.jpg)
+* **Link Prototype:** [Màn hình Danh Sách Chờ Xử Lý Lại: /inventory/reprocess](http://localhost:3000/inventory/reprocess)
+* **Quy chuẩn bố cục bảng (12 cột chuẩn hóa):**
+  1. `MÃ LÔ`: Mã phôi gốc (Font-mono, copy 1-click).
+  2. `MÃ ITEM`: Mã 30 ký tự định danh mẫu sản phẩm (Font-mono, copy 1-click).
+  3. `CHỦNG LOẠI`: Nhẫn, Bông tai, Vòng tay, Dây chuyền...
+  4. `MÃ SO CŨ`: Mã đơn hàng cũ bị hủy (Font-mono).
+  5. `KHÁCH HÀNG CŨ`: Tên khách hàng của đơn cũ (giữ nguyên vết truy xuất).
+  6. `TUỔI VÀNG`: Hàm lượng tuổi vàng (VD: `AU 61.00 Y`, `AU 75.00 Y`).
+  7. `SL`: Chỉ 1 cột duy nhất, hiển thị số lượng pcs của trạng thái trên dòng đó.
+  8. `TRẠNG THÁI KHO`: 3 trạng thái chuẩn hóa (`Chờ gán đơn`, `Đã giữ chỗ`, `Chờ chuyển bag`).
+  9. `MÃ ĐƠN HÀNG MỚI`: Hiển thị SO + KH mới + Bag mới nếu có, hoặc `—` nếu Chờ gán đơn.
+  10. `TL VÀNG (L)`: Trọng lượng vàng phân bổ cho dòng (4 số thập phân, đơn vị: Lượng L).
+  11. `TL ĐÁ`: Trọng lượng đá phân bổ cho dòng (4 số thập phân, nếu không có đá hiển thị `—`).
+  12. `TỔNG TL`: Tổng trọng lượng của dòng (= TL Vàng + TL Đá).
 
 ---
 
 ## 4. QUY TẮC NGHIỆP VỤ (BUSINESS RULES) *
 
-* **BR-CXLL-01 (Cơ cấu số lượng lô):** Bảng danh sách chính thể hiện 2 chỉ tiêu số lượng cốt lõi:
-  * `SL khả dụng`: Số lượng pcs phôi còn tự do trong két kho, có thể gán cho đơn khác.
-  * `SL đã gán`: Tổng số lượng pcs phôi đã có chủ (gồm cả đang giữ chỗ chờ duyệt và đã chuyển bag làm mới).
-  * *Công thức bảo toàn:* `Tổng SL = SL khả dụng + SL đã gán`.
-  * *Bóc tách chi tiết:* Chi tiết số lượng đang giữ chỗ và số lượng đã chuyển sang Bag mới được hiển thị tại Drawer chi tiết khi click dòng.
-* **BR-CXLL-02 (Quy tắc xác định trạng thái theo pcs thấp nhất):** Trạng thái hiển thị của lô được xác định theo trạng thái thấp nhất của các pcs bên trong (Thứ bậc từ thấp đến cao: `Chờ gán đơn mới` < `Đã giữ chỗ` < `Đã chuyển đơn`):
-  * `SL khả dụng > 0` → Trạng thái lô = **`Chờ gán đơn mới`** (Badge xanh lá tươi `bg-emerald-50 text-emerald-700`).
-  * `SL khả dụng = 0` và có pcs đang giữ chỗ → Trạng thái lô = **`Đã giữ chỗ`** (Badge tím hoàng gia `bg-purple-50 text-purple-700`).
-  * `SL khả dụng = 0` và toàn bộ pcs đã chuyển đơn → Trạng thái lô = **`Đã chuyển đơn`** (Badge xanh dương đậm `bg-blue-50 text-blue-700`).
-* **BR-CXLL-03 (Quy chuẩn hiển thị đơn hàng mới):** Khi 1 lô được chia gán cho đơn hàng mới:
-  * Gán 1 đơn: Hiển thị trực tiếp link SO mới kèm tên khách hàng mới và mã bag mới.
-  * Gán từ 2 đơn trở lên: Cột *Mã Đơn Hàng Mới* hiển thị Badge tổng hợp **`N Đơn hàng ↗`** để giữ nguyên chiều cao dòng và cấu trúc phẳng của bảng. Hover chuột vào Badge hiển thị Popover tóm tắt danh sách SO và số lượng pcs. Click vào dòng hiển thị chi tiết trong Drawer bên phải.
-* **BR-CXLL-04 (Quy chuẩn hiển thị số liệu):** Bỏ toàn bộ chữ "pcs" trong các ô số lượng trên bảng danh sách, chỉ hiển thị số nguyên thuần túy (VD: `2`, `4`, `1`). Trường hợp giá trị bằng 0 luôn hiển thị dấu gạch ngang mờ `—` (triệt tiêu rác thị giác).
-* **BR-CXLL-05 (Cơ chế khóa giữ chỗ):** Khi gán vào SO mới, chỉ được phép gán số lượng ≤ `SL khả dụng`. Hệ thống lập tức khóa giữ chỗ và trừ tồn khả dụng tương ứng trong thời gian thực.
-* **BR-CXLL-06 (Hoàn nhập tồn khi hủy SO mới):** Nếu đơn hàng mới bị hủy bỏ trước khi chuyển KHSX, toàn bộ số lượng pcs đã giữ chỗ được tự động hoàn nhập về `SL khả dụng`.
-* **BR-CXLL-07 (Điều chuyển sang Trạm Cấp TP khi duyệt KHSX):** Khi đơn hàng mới được bấm `[Xác nhận chuyển KHSX]` (luồng Làm mới), các pcs đã gán được tự động đồng bộ sang màn hình **Cấp TP (Serve FG)** (`/inventory/reprocess/serve`) để chuyển Bag cũ sang Bag mới.
-* **BR-CXLL-08 (Bảo toàn định danh và trọng lượng phôi):** Toàn bộ thông số gốc của lô (Mã Item, Chủng loại, Mã SO cũ, Khách hàng cũ, Tuổi vàng, TL Vàng, TL Đá, Tổng TL) được bảo toàn lưu vết 100% để phục vụ đối soát hao hụt và tính toán nguyên phụ liệu làm mới.
+* **BR-CXLL-01 (Cơ chế 1 cột SL và tách dòng theo trạng thái):**
+  * Bảng danh sách sử dụng duy nhất 1 cột `SL` để phản ánh số lượng cho trạng thái của lô trên dòng đó.
+  * Trường hợp 1 lô gồm các pcs ở nhiều trạng thái khác nhau (ví dụ tổng 10 pcs: 3 pcs chờ gán đơn, 3 pcs đã giữ chỗ, 4 pcs chờ chuyển bag), hệ thống tự động tách làm các dòng độc lập với trạng thái tương ứng.
+  * Trọng lượng kim loại và trọng lượng đá của từng dòng tách được phân bổ theo tỷ lệ: `SL_dong ÷ Tong_SL_lo`, đảm bảo tổng trọng lượng các dòng luôn bằng chính xác trọng lượng lô gốc.
+* **BR-CXLL-02 (Chuẩn hóa 3 trạng thái kho):**
+  * `Chờ gán đơn`: Phôi tự do trong két kho, sẵn sàng gán cho đơn hàng mới (`SL` > 0).
+  * `Đã giữ chỗ`: Đã được QLĐH pick vào đơn mới và đang khóa chờ duyệt KHSX.
+  * `Chờ chuyển bag`: Đơn mới đã duyệt KHSX, sẵn sàng chuyển Bag mới tại Trạm Cấp TP.
+* **BR-CXLL-03 (Quy chuẩn hiển thị đơn hàng mới):**
+  * Dòng ở trạng thái `Chờ gán đơn`: Hiển thị dấu gạch ngang mờ `—`.
+  * Dòng ở trạng thái `Đã giữ chỗ` hoặc `Chờ chuyển bag`: Hiển thị trực tiếp mã SO mới (link click chuyển trang) kèm tên khách hàng mới và mã bag mới.
+* **BR-CXLL-04 (Quy chuẩn hiển thị số liệu):**
+  * Bỏ toàn bộ chữ "pcs" trong các ô số lượng, chỉ hiển thị số nguyên thuần túy (VD: `3`, `4`, `1`).
+  * Trường hợp giá trị bằng 0 luôn hiển thị dấu gạch ngang mờ `—` (triệt tiêu rác thị giác).
+* **BR-CXLL-05 (Chốt chặn điều chuyển sang CXLL):** Chỉ các lô đang ở trạng thái `Chờ phân bổ` tại Kho Tồn Thành Phẩm mới được phép Chuyển CXLL. Các lô đang ở trạng thái `Chờ lập HĐ`, `Chờ giao`, `Đã phân bổ` bị chặn tuyệt đối.
+* **BR-CXLL-06 (Bảo toàn định danh và lịch sử gốc):** Toàn bộ thông số gốc của lô (Mã Item, Chủng loại, Mã SO cũ, Khách hàng cũ, Tuổi vàng) được bảo toàn lưu vết 100% trên mọi dòng tách của lô đó.
 
 ---
 
@@ -114,19 +112,18 @@
 
 | Fields (Tên trường) | Type (Kiểu dữ liệu) | Required (Bắt buộc) | Default value (Giá trị mặc định) | Rules (Quy tắc & Nghiệp vụ) |
 | :--- | :--- | :---: | :--- | :--- |
-| **Mã Lô** | Text / Font-mono | Có | Kế thừa từ Kho TP | Mã định danh duy nhất của lô/bag phôi (VD: `SO-260800061`). Có icon copy 1-click. |
-| **Mã Item** | Text / Font-mono | Có | Kế thừa từ Kho TP | Mã 30 ký tự định danh mẫu sản phẩm. |
+| **Mã Lô** | Text / Font-mono | Có | Kế thừa từ Kho TP | Mã định danh duy nhất của lô/bag phôi (VD: `SO-260800065`). Có icon copy 1-click. |
+| **Mã Item** | Text / Font-mono | Có | Kế thừa từ Kho TP | Mã 30 ký tự định danh mẫu sản phẩm. Có icon copy 1-click. |
 | **Chủng Loại** | Text | Có | Kế thừa từ Kho TP | Nhẫn, Bông tai, Vòng tay, Mặt dây... |
 | **Mã SO Cũ** | Text / Font-mono | Có | Kế thừa từ Kho TP | Mã đơn hàng cũ đã bị hủy (VD: `SO123456`). |
 | **Khách Hàng Cũ** | Text | Có | Kế thừa từ Kho TP | Tên khách hàng của đơn cũ đã hủy. |
 | **Tuổi Vàng** | Text | Có | Kế thừa từ Kho TP | Hàm lượng tuổi vàng (VD: `AU 61.00 Y`, `AU 75.00 Y`). |
-| **SL Khả Dụng** | Integer | Có | Kế thừa (= SL Chuyển CXLL) | Số lượng pcs trong lô còn tự do, có thể gán cho đơn hàng khác. Chỉ hiển thị số nguyên, nếu = 0 hiển thị dấu gạch ngang mờ `—`. |
-| **SL Đã Gán** | Integer | Có | `0` | Tổng số lượng pcs đã có chủ (giữ chỗ + đã chuyển sang bag mới). Chỉ hiển thị số nguyên, nếu = 0 hiển thị dấu gạch ngang mờ `—`. |
-| **Trạng Thái Kho** | Enum / Badge | Có | `Chờ gán đơn mới` | Bắt theo trạng thái thấp nhất của pcs trong lô: `Chờ gán đơn mới` (xanh lá) / `Đã giữ chỗ` (tím) / `Đã chuyển đơn` (xanh dương). |
-| **Mã Đơn Hàng Mới** | Text / Link / Badge | Không | `—` | Nếu gán 1 đơn: Hiển thị link SO mới. Nếu gán ≥ 2 đơn: Hiển thị Badge `N Đơn hàng ↗` kèm Popover. |
-| **TL Vàng (L)** | Decimal | Có | Kế thừa từ Kho TP | Trọng lượng vàng của lô (làm tròn đến 4 số thập phân, đơn vị: Lượng L). |
-| **TL Đá** | Decimal | Có | Kế thừa từ Kho TP | Trọng lượng đá của lô (làm tròn đến 4 số thập phân). Nếu lô không gắn đá thì hiển thị dấu gạch ngang `—`. |
-| **Tổng TL** | Decimal | Có | Kế thừa từ Kho TP | Tổng trọng lượng toàn bộ sản phẩm trong lô (làm tròn đến 4 số thập phân). Công thức: `Tổng TL = TL Vàng + TL Đá`. |
+| **SL** | Integer | Có | Kế thừa | Số lượng pcs cho trạng thái của lô trên dòng đó. Chỉ hiển thị số nguyên. |
+| **Trạng Thái Kho** | Enum / Badge | Có | `Chờ gán đơn` | 1 trong 3 trạng thái: `Chờ gán đơn` (xanh lá) / `Đã giữ chỗ` (tím) / `Chờ chuyển bag` (xanh dương). |
+| **Mã Đơn Hàng Mới** | Text / Link | Không | `—` | Hiển thị link SO mới + KH mới + Bag mới nếu trạng thái là `Đã giữ chỗ` hoặc `Chờ chuyển bag`. Hiển thị `—` nếu `Chờ gán đơn`. |
+| **TL Vàng (L)** | Decimal | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Trọng lượng vàng của dòng (làm tròn đến 4 số thập phân, đơn vị: Lượng L). |
+| **TL Đá** | Decimal | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Trọng lượng đá của dòng (làm tròn đến 4 số thập phân). Nếu không có đá hiển thị dấu gạch ngang mờ `—`. |
+| **Tổng TL** | Decimal | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Tổng trọng lượng toàn bộ sản phẩm của dòng (làm tròn đến 4 số thập phân). Công thức: `Tổng TL = TL Vàng + TL Đá`. |
 
 ---
 
@@ -134,47 +131,41 @@
 
 ```mermaid
 flowchart TD
-    Start([Lô hàng chuyển từ Tồn kho TP vào Kho CXLL]) --> InitStatus["Khởi tạo dữ liệu lô:<br>SL Khả dụng = SL Chuyển CXLL<br>SL Đã gán = 0<br>Trạng thái lô: Chờ gán đơn mới"]
+    Start([Lô hàng Chờ phân bổ được chuyển sang Kho CXLL]) --> SplitRow["Khởi tạo 1 dòng ban đầu:<br>Trạng thái: Chờ gán đơn<br>SL = Toàn bộ SL lô"]
     
-    InitStatus --> ActionKD{QLĐH pick phôi vào đơn SO mới}
-    ActionKD -->|Không pick| StayFree["Lưu kho CXLL: SL Khả dụng giữ nguyên"]
-    ActionKD -->|Pick M pcs vào SO mới| UpdateQty["Cập nhật số lượng:<br>SL Khả dụng = SL Khả dụng - M<br>SL Đã gán = SL Đã gán + M"]
+    SplitRow --> ActionKD{QLĐH pick phôi vào đơn SO mới?}
+    ActionKD -->|Không pick| StayFree["Lưu kho CXLL: Trạng thái Chờ gán đơn"]
     
-    UpdateQty --> CheckMulti{Số lượng đơn hàng được gán?}
-    CheckMulti -->|Gán 1 đơn| SingleSO["Hiển thị: Link SO kèm tên KH mới và Bag mới"]
-    CheckMulti -->|Gán ≥ 2 đơn| MultiSO["Hiển thị: Badge N Đơn hàng kèm Popover xem nhanh"]
+    ActionKD -->|Pick hết toàn bộ SL lô| ChangeAll["Chuyển trạng thái dòng sang: Đã giữ chỗ<br>Gán mã SO mới + KH mới"]
+    ActionKD -->|Pick một phần SL lô| SplitState["Tách lô thành 2 dòng riêng biệt:<br>1. Dòng Đã giữ chỗ: SL = SL đã pick (gắn SO mới)<br>2. Dòng Chờ gán đơn: SL = SL còn lại"]
     
-    SingleSO --> EvaluateStatus{Kiểm tra SL Khả dụng}
-    MultiSO --> EvaluateStatus
+    ChangeAll --> KHSXAction{Đơn hàng mới duyệt KHSX?}
+    SplitState --> KHSXAction
     
-    EvaluateStatus -->|SL Khả dụng > 0| StatusFree["Trạng thái lô: Chờ gán đơn mới<br>(Còn pcs khả dụng cho đơn khác)"]
-    EvaluateStatus -->|SL Khả dụng = 0| StatusLock["Trạng thái lô: Đã giữ chỗ<br>(Khóa cứng - Chống pick trùng)"]
-    
-    StatusFree --> DecisionSO{Trạng thái Đơn hàng Mới}
-    StatusLock --> DecisionSO
-    
-    DecisionSO -->|Hủy SO mới / Xóa dòng hàng| Rollback["Tự động hoàn trả tồn:<br>SL Khả dụng = SL Khả dụng + M<br>SL Đã gán = SL Đã gán - M"]
-    DecisionSO -->|Xác nhận chuyển KHSX| TransferServe["Đồng bộ sang Trạm Cấp TP (/serve)<br>Thủ kho quét Bag cũ -> Đóng gói Bag mới"]
-    TransferServe --> CompleteAll["Toàn bộ pcs hoàn tất cấp TP<br>Trạng thái lô: Đã chuyển đơn"]
+    KHSXAction -->|Hủy SO mới trước khi duyệt| Rollback["Tự động hoàn nhập dòng về Chờ gán đơn<br>(Gộp lại nếu cùng lô)"]
+    KHSXAction -->|Bấm Xác nhận chuyển KHSX| TransferBag["Dòng chuyển trạng thái: Chờ chuyển bag<br>Đồng bộ sang Trạm Cấp TP (/serve) để xuất phôi"]
 ```
 
 ---
 
 ## 7. GHI CHÚ KỸ THUẬT & VALIDATION (TECH NOTES)
 
-1. **Thuật toán Xác định Trạng thái Lô (Status Resolution Algorithm):**
+1. **Thuật toán Tách Dòng theo Trạng thái (Row Splitting Algorithm):**
    ```text
-   Hàm resolveLotStatus(availableQty, holdQty, servedQty):
-     Nếu availableQty > 0:
-       Trả về "Chờ gán đơn mới"   // Ưu tiên thấp nhất (còn hàng khả dụng để pick)
-     Nếu holdQty > 0:
-       Trả về "Đã giữ chỗ"        // Ưu tiên trung gian (toàn bộ đã gán, đang chờ KHSX duyệt)
-     Trả về "Đã chuyển đơn"       // Ưu tiên cao nhất (toàn bộ đã chuyển sang Bag mới làm mới)
+   Mỗi lô phôi (lot) có tổng số lượng totalQty và 3 chỉ tiêu:
+     - availableQty: Số pcs chờ gán đơn
+     - holdQty: Số pcs đã giữ chỗ
+     - servedQty: Số pcs chờ chuyển bag
+   
+   Quy tắc tạo dòng hiển thị:
+     1. Nếu servedQty > 0: Tạo 1 dòng với status = "Chờ chuyển bag", qty = servedQty, tỷ lệ TL = servedQty / totalQty.
+     2. Nếu holdQty > 0: Tạo 1 dòng với status = "Đã giữ chỗ", qty = holdQty, tỷ lệ TL = holdQty / totalQty.
+     3. Nếu availableQty > 0: Tạo 1 dòng với status = "Chờ gán đơn", qty = availableQty, tỷ lệ TL = availableQty / totalQty.
    ```
 2. **Quy chuẩn Định dạng Hiển thị Số liệu & Màu sắc:**
-   - **Số lượng:** Chỉ hiển thị số nguyên (VD: `2`, `4`, `1`). Số 0 luôn hiển thị dấu gạch ngang mờ `—` để triệt tiêu rác thị giác.
-   - **Bảng màu Badge:**
-     - Xanh lá tươi (`bg-emerald-50 text-emerald-700 border-emerald-200`): Chờ gán đơn mới
-     - Tím hoàng gia (`bg-purple-50 text-purple-700 border-purple-200`): Đã giữ chỗ
-     - Xanh dương đậm (`bg-blue-50 text-blue-700 border-blue-200`): Đã chuyển đơn
-   - **Định dạng công thức:** Sử dụng Plain text và ký hiệu Unicode (`=`, `+`, `-`, `—`, `≤`, `≥`), tuyệt đối không dùng mã LaTeX.
+   - **Số lượng (SL):** Chỉ hiển thị số nguyên thuần túy (VD: `3`, `4`, `1`). Tuyệt đối không hiển thị chữ "pcs" trong ô bảng.
+   - **Bảng màu Badge Trạng Thái Kho:**
+     - Xanh lá (`bg-emerald-50 text-emerald-700 border-emerald-200`): Chờ gán đơn
+     - Tím (`bg-purple-50 text-purple-700 border-purple-200`): Đã giữ chỗ
+     - Xanh dương (`bg-blue-50 text-blue-700 border-blue-200`): Chờ chuyển bag
+   - **Định dạng công thức:** Sử dụng Plain text và ký hiệu Unicode (`=`, `+`, `-`, `—`, `≤`, `≥`, `÷`), tuyệt đối không dùng mã LaTeX.

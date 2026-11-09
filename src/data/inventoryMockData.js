@@ -310,10 +310,16 @@ export const MOCK_REPROCESS_LOTS = Array.from({ length: 40 }, (_, i) => {
     availableQty = 0;
     holdQty = 4;
     servedQty = 0;
-  } else if (index === 5 || index === 6) {
+  } else if (index === 5) {
+    // Demo chuẩn theo yêu cầu Chị đẹp: 1 lô tổng 10 pcs gồm 3 pcs Chờ gán đơn, 3 pcs Đã giữ chỗ, 4 pcs Chờ chuyển bag
+    totalQty = 10;
+    availableQty = 3; // 3 pcs Chờ gán đơn
+    holdQty = 3;      // 3 pcs Đã giữ chỗ
+    servedQty = 4;    // 4 pcs Chờ chuyển bag
+  } else if (index === 6) {
     totalQty = 4;
-    availableQty = 2; // Còn 2 pcs khả dụng để gán cho đơn khác!
-    holdQty = 2;      // Đã giữ chỗ 2 pcs cho SO2608011
+    availableQty = 2; // 2 pcs Chờ gán đơn
+    holdQty = 2;      // 2 pcs Đã giữ chỗ
     servedQty = 0;
   } else if (index === 7 || index === 8) {
     totalQty = 1;
@@ -337,42 +343,51 @@ export const MOCK_REPROCESS_LOTS = Array.from({ length: 40 }, (_, i) => {
     servedQty = 0;
   }
 
-  // QUY TẮC CỐT LÕI: Trạng thái lô bắt theo trạng thái THẤP NHẤT của pcs trong lô
-  // Thứ tự ưu tiên từ thấp đến cao: Chờ gán đơn mới < Đã giữ chỗ < Đã chuyển đơn
-  let status = "Chờ gán đơn mới";
+  // 3 Trạng thái kho chuẩn hóa: Chờ gán đơn / Đã giữ chỗ / Chờ chuyển bag
+  let status = "Chờ gán đơn";
   if (availableQty > 0) {
-    status = "Chờ gán đơn mới"; // Nếu còn ít nhất 1 pcs khả dụng -> trạng thái lô là Chờ gán đơn mới
+    status = "Chờ gán đơn";
   } else if (holdQty > 0) {
-    status = "Đã giữ chỗ";      // Không còn pcs khả dụng, còn pcs đang giữ chỗ -> Đã giữ chỗ
+    status = "Đã giữ chỗ";
   } else {
-    status = "Đã chuyển đơn";   // Tất cả pcs trong lô đã hoàn tất chuyển đơn -> Đã chuyển đơn
+    status = "Chờ chuyển bag";
   }
 
-  const isAlreadyServed = status === "Đã chuyển đơn";
+  const isAlreadyServed = servedQty > 0;
   const serveStatus = isAlreadyServed 
-    ? "Đã chuyển sang bag mới" 
-    : holdQty > 0 
     ? "Chờ chuyển bag" 
+    : holdQty > 0 
+    ? "Đã giữ chỗ" 
     : "Chưa chuyển";
 
-  // Danh sách các đơn hàng mới đã được gán (Hỗ trợ trường hợp 1 lô gán cho 2 hoặc nhiều đơn hàng khác nhau)
+  // Danh sách các đơn hàng mới đã được gán
   let assignedOrders = [];
   if (index === 5) {
-    // Demo 1 lô gán cho 2 đơn hàng khác nhau: SO2608011 (1 pcs) và SO2608025 (1 pcs)
+    // Lô 5 gán cho SO2608011: 3 pcs giữ chỗ và 4 pcs chờ chuyển bag
     assignedOrders = [
       {
         soCode: "SO2608011",
         customerName: "DNTN Ý NGỌC",
-        qty: 1,
+        qty: 3,
         bagCode: "SO-261024-005",
-        status: "Đang giữ chỗ"
+        status: "Đã giữ chỗ"
       },
       {
-        soCode: "SO2608025",
-        customerName: "Tiệm Vàng Kim Yến",
-        qty: 1,
-        bagCode: "SO-261024-009",
-        status: "Đang giữ chỗ"
+        soCode: "SO2608011",
+        customerName: "DNTN Ý NGỌC",
+        qty: 4,
+        bagCode: "SO-261024-006",
+        status: "Chờ chuyển bag"
+      }
+    ];
+  } else if (index === 6) {
+    assignedOrders = [
+      {
+        soCode: "SO2608011",
+        customerName: "DNTN Ý NGỌC",
+        qty: 2,
+        bagCode: "SO-261024-007",
+        status: "Đã giữ chỗ"
       }
     ];
   } else if (isAssigned) {
@@ -382,7 +397,7 @@ export const MOCK_REPROCESS_LOTS = Array.from({ length: 40 }, (_, i) => {
         customerName: newCustomerName,
         qty: holdQty || servedQty || 1,
         bagCode: targetNewBagCode,
-        status: isAlreadyServed ? "Đã chuyển đơn" : "Đang giữ chỗ"
+        status: servedQty > 0 ? "Chờ chuyển bag" : "Đã giữ chỗ"
       }
     ];
   }
@@ -449,6 +464,134 @@ export const MOCK_REPROCESS_LOTS = Array.from({ length: 40 }, (_, i) => {
     location: `Kho CXLL - Hộc B${String((index % 8) + 1).padStart(2, "0")}`
   };
 });
+
+/**
+ * Tách các lô phôi có nhiều trạng thái thành các dòng riêng biệt theo chỉ đạo Chị đẹp:
+ * - 1 cột SL duy nhất phản ánh số lượng cho trạng thái của dòng đó
+ * - Nếu 1 lô có nhiều trạng thái (ví dụ tổng 10 pcs: 3 chờ gán đơn, 3 đã giữ chỗ, 4 chờ chuyển bag) -> tách làm 3 dòng
+ */
+export function buildReprocessDisplayRows(lots) {
+  const rows = [];
+  lots.forEach((lot) => {
+    const statusesCount = (lot.availableQty > 0 ? 1 : 0) + (lot.holdQty > 0 ? 1 : 0) + (lot.servedQty > 0 ? 1 : 0);
+    const isSplit = statusesCount > 1;
+
+    // 1. Phân đoạn "Chờ chuyển bag" (nếu có pcs)
+    if (lot.servedQty > 0) {
+      const servedOrder = lot.assignedOrders?.find(o => o.status === "Chờ chuyển bag" || o.status === "Đã chuyển đơn") || {
+        soCode: lot.targetNewSoCode,
+        customerName: lot.newCustomerName,
+        bagCode: lot.targetNewBagCode,
+        qty: lot.servedQty
+      };
+      const ratio = lot.servedQty / lot.totalQty;
+      rows.push({
+        id: `${lot.id}-served`,
+        lotId: lot.id,
+        stt: rows.length + 1,
+        bagCode: lot.bagCode,
+        itemCode: lot.itemCode,
+        category: lot.category || lot.itemName,
+        originalSoCode: lot.originalSoCode || "SO123456",
+        oldCustomerName: lot.oldCustomerName,
+        oldCustomerCode: lot.oldCustomerCode,
+        lop: lot.lop,
+        qty: lot.servedQty, // Cột SL duy nhất
+        status: "Chờ chuyển bag",
+        targetNewSoCode: servedOrder.soCode,
+        targetNewBagCode: servedOrder.bagCode,
+        newCustomerName: servedOrder.customerName,
+        metalWeight: Number((lot.metalWeight * ratio).toFixed(4)),
+        stoneWeight: Number((lot.stoneWeight * ratio).toFixed(4)),
+        totalWeight: Number((lot.totalWeight * ratio).toFixed(4)),
+        dateIn: lot.dateIn,
+        location: lot.location,
+        isSplit,
+        lotTotalQty: lot.totalQty,
+        lotAvailableQty: lot.availableQty,
+        lotHoldQty: lot.holdQty,
+        lotServedQty: lot.servedQty,
+        rawLot: lot
+      });
+    }
+
+    // 2. Phân đoạn "Đã giữ chỗ" (nếu có pcs)
+    if (lot.holdQty > 0) {
+      const holdOrder = lot.assignedOrders?.find(o => o.status === "Đã giữ chỗ" || o.status === "Đang giữ chỗ") || {
+        soCode: lot.targetNewSoCode,
+        customerName: lot.newCustomerName,
+        bagCode: lot.targetNewBagCode,
+        qty: lot.holdQty
+      };
+      const ratio = lot.holdQty / lot.totalQty;
+      rows.push({
+        id: `${lot.id}-hold`,
+        lotId: lot.id,
+        stt: rows.length + 1,
+        bagCode: lot.bagCode,
+        itemCode: lot.itemCode,
+        category: lot.category || lot.itemName,
+        originalSoCode: lot.originalSoCode || "SO123456",
+        oldCustomerName: lot.oldCustomerName,
+        oldCustomerCode: lot.oldCustomerCode,
+        lop: lot.lop,
+        qty: lot.holdQty, // Cột SL duy nhất
+        status: "Đã giữ chỗ",
+        targetNewSoCode: holdOrder.soCode,
+        targetNewBagCode: holdOrder.bagCode,
+        newCustomerName: holdOrder.customerName,
+        metalWeight: Number((lot.metalWeight * ratio).toFixed(4)),
+        stoneWeight: Number((lot.stoneWeight * ratio).toFixed(4)),
+        totalWeight: Number((lot.totalWeight * ratio).toFixed(4)),
+        dateIn: lot.dateIn,
+        location: lot.location,
+        isSplit,
+        lotTotalQty: lot.totalQty,
+        lotAvailableQty: lot.availableQty,
+        lotHoldQty: lot.holdQty,
+        lotServedQty: lot.servedQty,
+        rawLot: lot
+      });
+    }
+
+    // 3. Phân đoạn "Chờ gán đơn" (nếu có pcs)
+    if (lot.availableQty > 0) {
+      const ratio = lot.availableQty / lot.totalQty;
+      rows.push({
+        id: `${lot.id}-available`,
+        lotId: lot.id,
+        stt: rows.length + 1,
+        bagCode: lot.bagCode,
+        itemCode: lot.itemCode,
+        category: lot.category || lot.itemName,
+        originalSoCode: lot.originalSoCode || "SO123456",
+        oldCustomerName: lot.oldCustomerName,
+        oldCustomerCode: lot.oldCustomerCode,
+        lop: lot.lop,
+        qty: lot.availableQty, // Cột SL duy nhất
+        status: "Chờ gán đơn",
+        targetNewSoCode: null,
+        targetNewBagCode: null,
+        newCustomerName: null,
+        metalWeight: Number((lot.metalWeight * ratio).toFixed(4)),
+        stoneWeight: Number((lot.stoneWeight * ratio).toFixed(4)),
+        totalWeight: Number((lot.totalWeight * ratio).toFixed(4)),
+        dateIn: lot.dateIn,
+        location: lot.location,
+        isSplit,
+        lotTotalQty: lot.totalQty,
+        lotAvailableQty: lot.availableQty,
+        lotHoldQty: lot.holdQty,
+        lotServedQty: lot.servedQty,
+        rawLot: lot
+      });
+    }
+  });
+
+  return rows;
+}
+
+export const MOCK_REPROCESS_ROWS = buildReprocessDisplayRows(MOCK_REPROCESS_LOTS);
 
 // 3. DANH SÁCH 8 LÔ ĐÃ ĐƯỢC GÁN ĐƠN MỚI CHO TRẠM CẤP TP / XUẤT XƯỞNG LÀM MỚI (US-09)
 export const MOCK_NEW_SO_TARGETS = Array.from({ length: 8 }, (_, i) => {

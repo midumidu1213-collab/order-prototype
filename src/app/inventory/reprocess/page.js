@@ -29,18 +29,18 @@ import InventorySidebar from "@/components/inventory/InventorySidebar";
 import InteractiveWorkflowDiagram from "@/components/inventory/InteractiveWorkflowDiagram";
 import ColumnFilterPopover from "@/components/orders/ColumnFilterPopover";
 import ProductionBagPrintModal from "@/components/inventory/ProductionBagPrintModal";
-import { MOCK_REPROCESS_LOTS } from "@/data/inventoryMockData";
+import { MOCK_REPROCESS_ROWS, MOCK_REPROCESS_LOTS } from "@/data/inventoryMockData";
 
 export default function ReprocessInventoryPage() {
-  const [activeTab, setActiveTab] = useState("all"); // 'all' | 'unassigned' | 'assigned' | 'workflow'
+  const [activeTab, setActiveTab] = useState("all"); // 'all' | 'unassigned' | 'holding' | 'serving'
   const [printBagTarget, setPrintBagTarget] = useState(null);
 
-  // Bắt query param ?tab=workflow từ URL để chuyển tab tự động
+  // Bắt query param ?tab=... từ URL để chuyển tab tự động
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get("tab");
-      if (tabParam && ["all", "unassigned", "assigned"].includes(tabParam)) {
+      if (tabParam && ["all", "unassigned", "holding", "serving"].includes(tabParam)) {
         setActiveTab(tabParam);
       }
     }
@@ -70,7 +70,7 @@ export default function ReprocessInventoryPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Quản lý bộ lọc / sắp xếp trực tiếp trên từng cột (Tham khảo chuẩn DS Đơn hàng ERP - Ảnh 2)
+  // Quản lý bộ lọc / sắp xếp trực tiếp trên từng cột (Chỉ 1 cột SL duy nhất theo chỉ đạo Chị đẹp)
   const [columnFilters, setColumnFilters] = useState({
     bagCode: { sort: null, selectedValues: null, searchQuery: "" },
     itemCode: { sort: null, selectedValues: null, searchQuery: "" },
@@ -78,8 +78,7 @@ export default function ReprocessInventoryPage() {
     originalSoCode: { sort: null, selectedValues: null, searchQuery: "" },
     oldCustomerName: { sort: null, selectedValues: null, searchQuery: "" },
     lop: { sort: null, selectedValues: null, searchQuery: "" },
-    availableQty: { sort: null, selectedValues: null, searchQuery: "" },
-    assignedQty: { sort: null, selectedValues: null, searchQuery: "" },
+    qty: { sort: null, selectedValues: null, searchQuery: "" },
     status: { sort: null, selectedValues: null, searchQuery: "" },
     targetNewSoCode: { sort: null, selectedValues: null, searchQuery: "" },
     metalWeight: { sort: null, selectedValues: null, searchQuery: "" },
@@ -101,27 +100,24 @@ export default function ReprocessInventoryPage() {
   // 1. Unique Values Map cho từng cột để truyền vào ColumnFilterPopover
   const uniqueValuesMap = useMemo(() => {
     return {
-      bagCode: Array.from(new Set(MOCK_REPROCESS_LOTS.map((r) => r.bagCode))).sort(),
-      itemCode: Array.from(new Set(MOCK_REPROCESS_LOTS.map((r) => r.itemCode))).sort(),
-      category: Array.from(new Set(MOCK_REPROCESS_LOTS.map((r) => r.category || r.itemName))).sort(),
-      originalSoCode: Array.from(new Set(MOCK_REPROCESS_LOTS.map((r) => r.originalSoCode || "SO123456"))).sort(),
-      oldCustomerName: Array.from(new Set(MOCK_REPROCESS_LOTS.map((r) => r.oldCustomerName || "—"))).sort(),
-      lop: Array.from(new Set(MOCK_REPROCESS_LOTS.map((r) => r.lop))).sort(),
-      availableQty: Array.from(
-        new Set(MOCK_REPROCESS_LOTS.map((r) => (r.availableQty > 0 ? `${r.availableQty}` : "—")))
-      ).sort(),
-      assignedQty: Array.from(
-        new Set(MOCK_REPROCESS_LOTS.map((r) => (r.assignedQty > 0 ? `${r.assignedQty}` : "—")))
-      ).sort(),
-      status: ["Chờ gán đơn mới", "Đã giữ chỗ", "Đã chuyển đơn"],
+      bagCode: Array.from(new Set(MOCK_REPROCESS_ROWS.map((r) => r.bagCode))).sort(),
+      itemCode: Array.from(new Set(MOCK_REPROCESS_ROWS.map((r) => r.itemCode))).sort(),
+      category: Array.from(new Set(MOCK_REPROCESS_ROWS.map((r) => r.category || r.itemName))).sort(),
+      originalSoCode: Array.from(new Set(MOCK_REPROCESS_ROWS.map((r) => r.originalSoCode || "SO123456"))).sort(),
+      oldCustomerName: Array.from(new Set(MOCK_REPROCESS_ROWS.map((r) => r.oldCustomerName || "—"))).sort(),
+      lop: Array.from(new Set(MOCK_REPROCESS_ROWS.map((r) => r.lop))).sort(),
+      qty: Array.from(
+        new Set(MOCK_REPROCESS_ROWS.map((r) => String(r.qty)))
+      ).sort((a, b) => Number(a) - Number(b)),
+      status: ["Chờ gán đơn", "Đã giữ chỗ", "Chờ chuyển bag"],
       targetNewSoCode: Array.from(
-        new Set(MOCK_REPROCESS_LOTS.map((r) => r.targetNewSoCode || "—"))
+        new Set(MOCK_REPROCESS_ROWS.map((r) => r.targetNewSoCode || "—"))
       ).sort(),
-      metalWeight: Array.from(new Set(MOCK_REPROCESS_LOTS.map((r) => r.metalWeight.toFixed(4)))).sort(),
+      metalWeight: Array.from(new Set(MOCK_REPROCESS_ROWS.map((r) => r.metalWeight.toFixed(4)))).sort(),
       stoneWeight: Array.from(
-        new Set(MOCK_REPROCESS_LOTS.map((r) => (r.stoneWeight > 0 ? r.stoneWeight.toFixed(4) : "—")))
+        new Set(MOCK_REPROCESS_ROWS.map((r) => (r.stoneWeight > 0 ? r.stoneWeight.toFixed(4) : "—")))
       ).sort(),
-      totalWeight: Array.from(new Set(MOCK_REPROCESS_LOTS.map((r) => r.totalWeight.toFixed(4)))).sort()
+      totalWeight: Array.from(new Set(MOCK_REPROCESS_ROWS.map((r) => r.totalWeight.toFixed(4)))).sort()
     };
   }, []);
 
@@ -173,8 +169,7 @@ export default function ReprocessInventoryPage() {
       originalSoCode: { sort: null, selectedValues: null, searchQuery: "" },
       oldCustomerName: { sort: null, selectedValues: null, searchQuery: "" },
       lop: { sort: null, selectedValues: null, searchQuery: "" },
-      availableQty: { sort: null, selectedValues: null, searchQuery: "" },
-      assignedQty: { sort: null, selectedValues: null, searchQuery: "" },
+      qty: { sort: null, selectedValues: null, searchQuery: "" },
       status: { sort: null, selectedValues: null, searchQuery: "" },
       targetNewSoCode: { sort: null, selectedValues: null, searchQuery: "" },
       metalWeight: { sort: null, selectedValues: null, searchQuery: "" },
@@ -188,13 +183,15 @@ export default function ReprocessInventoryPage() {
 
   // Filter & Search
   const filteredData = useMemo(() => {
-    let list = [...MOCK_REPROCESS_LOTS];
+    let list = [...MOCK_REPROCESS_ROWS];
 
-    // 1. Lọc theo Tab trạng thái
+    // 1. Lọc theo Tab trạng thái kho
     if (activeTab === "unassigned") {
-      list = list.filter((r) => r.status === "Chờ gán đơn mới");
-    } else if (activeTab === "assigned") {
-      list = list.filter((r) => r.status === "Đã giữ chỗ" || r.status === "Đã chuyển đơn");
+      list = list.filter((r) => r.status === "Chờ gán đơn");
+    } else if (activeTab === "holding") {
+      list = list.filter((r) => r.status === "Đã giữ chỗ");
+    } else if (activeTab === "serving") {
+      list = list.filter((r) => r.status === "Chờ chuyển bag");
     }
 
     // 2. Lọc theo từ khóa tìm kiếm chung
@@ -210,8 +207,7 @@ export default function ReprocessInventoryPage() {
           (r.targetNewSoCode && r.targetNewSoCode.toLowerCase().includes(q)) ||
           (r.newCustomerName && r.newCustomerName.toLowerCase().includes(q)) ||
           r.itemCode.toLowerCase().includes(q) ||
-          r.category.toLowerCase().includes(q) ||
-          (r.itemName && r.itemName.toLowerCase().includes(q))
+          r.category.toLowerCase().includes(q)
       );
     }
 
@@ -245,11 +241,10 @@ export default function ReprocessInventoryPage() {
         list = list.filter((item) => {
           let val = "";
           if (colKey === "itemCode") val = item.itemCode || "";
-          else if (colKey === "category") val = item.category || item.itemName || "";
+          else if (colKey === "category") val = item.category || "";
           else if (colKey === "originalSoCode") val = item.originalSoCode || "SO123456";
           else if (colKey === "oldCustomerName") val = item.oldCustomerName || "—";
-          else if (colKey === "availableQty") val = item.availableQty > 0 ? `${item.availableQty}` : "—";
-          else if (colKey === "assignedQty") val = item.assignedQty > 0 ? `${item.assignedQty}` : "—";
+          else if (colKey === "qty") val = String(item.qty);
           else if (colKey === "status") val = item.status;
           else if (colKey === "targetNewSoCode") val = item.targetNewSoCode || "—";
           else if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
@@ -267,11 +262,10 @@ export default function ReprocessInventoryPage() {
         list = list.filter((item) => {
           let val = "";
           if (colKey === "itemCode") val = item.itemCode || "";
-          else if (colKey === "category") val = `${item.category || ""} ${item.itemName || ""}`;
+          else if (colKey === "category") val = item.category || "";
           else if (colKey === "originalSoCode") val = item.originalSoCode || "SO123456";
           else if (colKey === "oldCustomerName") val = item.oldCustomerName || "";
-          else if (colKey === "availableQty") val = `${item.availableQty}`;
-          else if (colKey === "assignedQty") val = `${item.assignedQty}`;
+          else if (colKey === "qty") val = String(item.qty);
           else if (colKey === "status") val = item.status;
           else if (colKey === "targetNewSoCode") val = `${item.targetNewSoCode || ""} ${item.newCustomerName || ""} ${item.targetNewBagCode || ""}`;
           else if (colKey === "metalWeight") val = item.metalWeight.toFixed(4);
@@ -314,8 +308,9 @@ export default function ReprocessInventoryPage() {
     }
   };
 
-  const unassignedCount = MOCK_REPROCESS_LOTS.filter((r) => r.status === "Chờ gán đơn mới").length;
-  const assignedCount = MOCK_REPROCESS_LOTS.length - unassignedCount;
+  const unassignedCount = useMemo(() => MOCK_REPROCESS_ROWS.filter((r) => r.status === "Chờ gán đơn").length, []);
+  const holdingCount = useMemo(() => MOCK_REPROCESS_ROWS.filter((r) => r.status === "Đã giữ chỗ").length, []);
+  const servingCount = useMemo(() => MOCK_REPROCESS_ROWS.filter((r) => r.status === "Chờ chuyển bag").length, []);
 
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans antialiased text-slate-800 overflow-hidden">
@@ -363,27 +358,37 @@ export default function ReprocessInventoryPage() {
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                       }`}
                   >
-                    Tất cả ({MOCK_REPROCESS_LOTS.length})
+                    Tất cả ({MOCK_REPROCESS_ROWS.length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab("unassigned")}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === "unassigned"
-                        ? "bg-amber-600 text-white shadow-xs font-bold"
+                        ? "bg-emerald-700 text-white shadow-xs font-bold"
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                       }`}
                   >
-                    Chờ gán đơn mới ({unassignedCount})
+                    Chờ gán đơn ({unassignedCount})
                   </button>
                   <button
                     type="button"
-                    onClick={() => setActiveTab("assigned")}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === "assigned"
-                        ? "bg-teal-700 text-white shadow-xs font-bold"
+                    onClick={() => setActiveTab("holding")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === "holding"
+                        ? "bg-purple-700 text-white shadow-xs font-bold"
                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                       }`}
                   >
-                    Đã gán đơn mới ({assignedCount})
+                    Đã giữ chỗ ({holdingCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("serving")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === "serving"
+                        ? "bg-blue-700 text-white shadow-xs font-bold"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      }`}
+                  >
+                    Chờ chuyển bag ({servingCount})
                   </button>
                 </div>
 
@@ -740,67 +745,34 @@ export default function ReprocessInventoryPage() {
                           )}
                         </th>
 
-                        {/* 7. SL KHẢ DỤNG (Có thể gán cho đơn khác) */}
+                        {/* 7. SL (Chỉ có 1 cột SL theo chỉ đạo Chị đẹp) */}
                         <th className="relative py-2.5 px-3 text-right">
                           <div className="flex items-center justify-end space-x-1">
-                            <span>SL KHẢ DỤNG</span>
+                            <span>SL</span>
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setActiveFilterColKey(activeFilterColKey === "availableQty" ? null : "availableQty");
+                                setActiveFilterColKey(activeFilterColKey === "qty" ? null : "qty");
                               }}
-                              className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("availableQty")
+                              className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("qty")
                                   ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                   : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                                 }`}
-                              title="Lọc & sắp xếp cột SL Khả dụng (có thể gán cho đơn khác)"
+                              title="Lọc & sắp xếp cột SL"
                             >
-                              <Filter className={`h-3 w-3 ${isColumnFiltered("availableQty") ? "fill-[#005a46]" : ""}`} />
+                              <Filter className={`h-3 w-3 ${isColumnFiltered("qty") ? "fill-[#005a46]" : ""}`} />
                             </button>
                           </div>
-                          {activeFilterColKey === "availableQty" && (
+                          {activeFilterColKey === "qty" && (
                             <ColumnFilterPopover
-                              columnKey="availableQty"
-                              columnTitle="SL Khả Dụng"
+                              columnKey="qty"
+                              columnTitle="SL"
                               columnType="select"
-                              uniqueValues={uniqueValuesMap.availableQty}
-                              filterState={columnFilters.availableQty}
-                              onApply={(data) => handleApplyColumnFilter("availableQty", data)}
-                              onClear={() => handleClearColumnFilter("availableQty")}
-                              onClose={() => setActiveFilterColKey(null)}
-                            />
-                          )}
-                        </th>
-
-                        {/* 8. SL ĐÃ GÁN (Phương án B - Gộp giữ chỗ & đã chuyển) */}
-                        <th className="relative py-2.5 px-3 text-right">
-                          <div className="flex items-center justify-end space-x-1">
-                            <span>SL ĐÃ GÁN</span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveFilterColKey(activeFilterColKey === "assignedQty" ? null : "assignedQty");
-                              }}
-                              className={`p-1 rounded transition-colors cursor-pointer ${isColumnFiltered("assignedQty")
-                                  ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
-                                  : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
-                                }`}
-                              title="Lọc & sắp xếp cột SL Đã gán (gồm giữ chỗ và đã chuyển)"
-                            >
-                              <Filter className={`h-3 w-3 ${isColumnFiltered("assignedQty") ? "fill-[#005a46]" : ""}`} />
-                            </button>
-                          </div>
-                          {activeFilterColKey === "assignedQty" && (
-                            <ColumnFilterPopover
-                              columnKey="assignedQty"
-                              columnTitle="SL Đã Gán"
-                              columnType="select"
-                              uniqueValues={uniqueValuesMap.assignedQty}
-                              filterState={columnFilters.assignedQty}
-                              onApply={(data) => handleApplyColumnFilter("assignedQty", data)}
-                              onClear={() => handleClearColumnFilter("assignedQty")}
+                              uniqueValues={uniqueValuesMap.qty}
+                              filterState={columnFilters.qty}
+                              onApply={(data) => handleApplyColumnFilter("qty", data)}
+                              onClear={() => handleClearColumnFilter("qty")}
                               onClose={() => setActiveFilterColKey(null)}
                             />
                           )}
@@ -1043,83 +1015,38 @@ export default function ReprocessInventoryPage() {
                             </span>
                           </td>
 
-                          {/* 7. SL Khả dụng (bỏ pcs theo chỉ đạo Chị đẹp) */}
+                          {/* 7. SL (Chỉ 1 cột SL duy nhất theo chỉ đạo Chị đẹp) */}
                           <td className="py-3 px-3 text-right font-mono font-bold whitespace-nowrap">
-                            {row.availableQty > 0 ? (
-                              <span className="text-emerald-700 font-bold text-xs">{row.availableQty}</span>
-                            ) : (
-                              <span className="text-slate-300 font-normal select-none">—</span>
-                            )}
+                            <span className="text-slate-900 font-bold text-xs">{row.qty}</span>
                           </td>
 
-                          {/* 8. SL Đã gán (Gộp giữ chỗ & đã chuyển theo Phương án B) */}
-                          <td className="py-3 px-3 text-right font-mono font-bold whitespace-nowrap">
-                            {row.assignedQty > 0 ? (
-                              <span className="text-purple-700 font-bold text-xs">{row.assignedQty}</span>
-                            ) : (
-                              <span className="text-slate-300 font-normal select-none">—</span>
-                            )}
-                          </td>
-
-                          {/* 9. Trạng thái kho: Quy chuẩn lại 3 màu sắc tương phản rõ nét theo chỉ đạo Chị đẹp */}
+                          {/* 8. Trạng thái kho: 3 trạng thái chuẩn hóa (Chờ gán đơn, Đã giữ chỗ, Chờ chuyển bag) */}
                           <td className="py-3 px-3 text-center whitespace-nowrap">
-                            {row.status === "Đã chuyển đơn" ? (
-                              <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5">
+                            {row.status === "Chờ chuyển bag" ? (
+                              <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 shadow-2xs">
                                 <CheckCircle2 className="w-3 h-3 text-blue-600" />
-                                <span>Đã chuyển đơn</span>
+                                <span>Chờ chuyển bag</span>
                               </span>
                             ) : row.status === "Đã giữ chỗ" ? (
-                              <span className="bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5">
+                              <span className="bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 shadow-2xs">
                                 <span className="w-1.5 h-1.5 rounded-full bg-purple-600"></span>
                                 <span>Đã giữ chỗ</span>
                               </span>
                             ) : (
-                              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5">
+                              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 shadow-2xs">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                <span>Chờ gán đơn mới</span>
+                                <span>Chờ gán đơn</span>
                               </span>
                             )}
                           </td>
 
-                          {/* 10. Mã Đơn Hàng Mới (Xử lý thông minh khi 1 lô gán cho 2 hoặc nhiều đơn) */}
+                          {/* 9. Mã Đơn Hàng Mới (Trực tiếp SO + Bag mới khi Đã giữ chỗ hoặc Chờ chuyển bag) */}
                           <td className="py-3 px-3">
-                            {row.assignedOrders && row.assignedOrders.length > 1 ? (
-                              <div className="relative group/multi inline-block">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedLotForDrawer(row);
-                                  }}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-[11px] cursor-pointer hover:bg-indigo-100 transition-colors"
-                                  title="Lô gán cho nhiều đơn - Click xem chi tiết"
-                                >
-                                  <span>{row.assignedOrders.length} Đơn hàng</span>
-                                  <ExternalLink className="h-2.5 w-2.5 text-indigo-500" />
-                                </button>
-                                {/* Popover Tooltip khi hover */}
-                                <div className="absolute left-0 top-full mt-1 w-60 bg-white border border-slate-200 rounded-lg shadow-xl p-2.5 hidden group-hover/multi:block z-30 text-left animate-in fade-in zoom-in-95 duration-100">
-                                  <div className="text-[10px] font-bold text-slate-500 uppercase pb-1 mb-1.5 border-b border-slate-100 flex justify-between">
-                                    <span>Đơn hàng đã gán ({row.assignedOrders.length}):</span>
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    {row.assignedOrders.map((ord, oIdx) => (
-                                      <div key={oIdx} className="text-[11px] bg-slate-50 p-1.5 rounded border border-slate-100">
-                                        <div className="flex items-center justify-between font-mono font-bold text-teal-800">
-                                          <span>{ord.soCode}</span>
-                                          <span className="text-[10px] font-sans font-bold text-indigo-700 bg-indigo-50 px-1 rounded">{ord.qty} pcs</span>
-                                        </div>
-                                        <div className="text-[10px] text-slate-600 truncate">{ord.customerName}</div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            ) : row.isAssigned ? (
+                            {row.targetNewSoCode ? (
                               <div>
                                 <div className="flex items-center gap-1.5">
                                   <Link
-                                    href={row.orderDetailUrl || "#"}
+                                    href={`/orders/${row.targetNewSoCode}`}
                                     onClick={(e) => e.stopPropagation()}
                                     className="font-mono font-bold text-teal-800 hover:text-teal-950 hover:underline text-xs flex items-center gap-1"
                                     title="Xem chi tiết đơn hàng mới trong QLĐH"
@@ -1128,7 +1055,7 @@ export default function ReprocessInventoryPage() {
                                     <ExternalLink className="h-3 w-3 text-teal-600" />
                                   </Link>
                                 </div>
-                                <div className="text-[10px] text-slate-500 font-medium truncate max-w-[180px]">
+                                <div className="text-[10px] text-slate-500 font-medium truncate max-w-[190px]">
                                   {row.newCustomerName} {row.targetNewBagCode ? `• Bag: ${row.targetNewBagCode}` : ""}
                                 </div>
                               </div>
@@ -1159,35 +1086,31 @@ export default function ReprocessInventoryPage() {
                       ))}
                     </tbody>
 
-                    {/* Footer Tổng Trang (13 cột chuẩn xác) */}
+                    {/* Footer Tổng Trang (12 cột chuẩn xác) */}
                     <tfoot className="bg-slate-50 font-bold text-slate-700 border-t border-slate-200 text-[11px]">
                       <tr>
                         <td colSpan={6} className="py-2.5 px-3 text-right">
-                          Tổng ({filteredData.length} Lô):
+                          Tổng ({filteredData.length} Dòng):
                         </td>
-                        {/* 7. Tổng SL Khả Dụng */}
-                        <td className="py-2.5 px-3 text-right font-mono text-emerald-800 font-black whitespace-nowrap">
-                          {filteredData.reduce((s, r) => s + r.availableQty, 0)}
+                        {/* 7. Tổng SL */}
+                        <td className="py-2.5 px-3 text-right font-mono text-slate-900 font-black whitespace-nowrap">
+                          {filteredData.reduce((s, r) => s + r.qty, 0)}
                         </td>
-                        {/* 8. Tổng SL Đã Gán (Phương án B) */}
-                        <td className="py-2.5 px-3 text-right font-mono text-purple-900 font-black whitespace-nowrap">
-                          {filteredData.reduce((s, r) => s + (r.assignedQty || 0), 0)}
-                        </td>
-                        {/* 9. Thống kê theo Trạng thái thấp nhất */}
+                        {/* 8. Thống kê theo Trạng thái */}
                         <td className="py-2.5 px-3 text-center text-[10px] text-slate-500 whitespace-nowrap">
-                          {filteredData.filter((r) => r.status === "Chờ gán đơn mới").length} chờ gán / {filteredData.filter((r) => r.status === "Đã giữ chỗ").length} giữ chỗ / {filteredData.filter((r) => r.status === "Đã chuyển đơn").length} đã chuyển
+                          {filteredData.filter((r) => r.status === "Chờ gán đơn").length} chờ gán / {filteredData.filter((r) => r.status === "Đã giữ chỗ").length} giữ chỗ / {filteredData.filter((r) => r.status === "Chờ chuyển bag").length} chờ chuyển bag
                         </td>
-                        {/* 10. Mã đơn hàng mới */}
-                        <td></td>
-                        {/* 11. Tổng TL Vàng */}
+                        {/* 9. Trống cột Đơn hàng mới */}
+                        <td className="py-2.5 px-3 text-center text-slate-400">—</td>
+                        {/* 10. Tổng TL Vàng */}
                         <td className="py-2.5 px-3 text-right font-mono text-slate-900 whitespace-nowrap">
                           {filteredData.reduce((s, r) => s + r.metalWeight, 0).toFixed(4)}
                         </td>
-                        {/* 12. Tổng TL Đá */}
+                        {/* 11. Tổng TL Đá */}
                         <td className="py-2.5 px-3 text-right font-mono text-slate-900 whitespace-nowrap">
                           {filteredData.reduce((s, r) => s + r.stoneWeight, 0).toFixed(4)}
                         </td>
-                        {/* 13. Tổng TL Toàn Bộ */}
+                        {/* 12. Tổng TL Toàn Bộ */}
                         <td className="py-2.5 px-3 text-right font-mono text-emerald-800 font-black whitespace-nowrap">
                           {filteredData.reduce((s, r) => s + r.totalWeight, 0).toFixed(4)}
                         </td>
@@ -1254,43 +1177,61 @@ export default function ReprocessInventoryPage() {
                 </div>
               </div>
 
-              {/* Box Cơ cấu số lượng & Trạng thái theo pcs thấp nhất */}
+              {/* Box Cơ cấu số lượng & Trạng thái dòng */}
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase text-slate-600">Trạng thái Lô (Theo pcs thấp nhất):</span>
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
-                    selectedLotForDrawer.status === "Đã chuyển đơn"
-                      ? "bg-blue-100 text-blue-900 border border-blue-300"
+                  <span className="text-[10px] font-bold uppercase text-slate-600">Trạng thái dòng:</span>
+                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 ${
+                    selectedLotForDrawer.status === "Chờ chuyển bag"
+                      ? "bg-blue-50 text-blue-700 border border-blue-200"
                       : selectedLotForDrawer.status === "Đã giữ chỗ"
-                      ? "bg-purple-100 text-purple-900 border border-purple-300"
-                      : "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                      ? "bg-purple-50 text-purple-700 border border-purple-200"
+                      : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                   }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                    {selectedLotForDrawer.status === "Chờ chuyển bag" ? (
+                      <CheckCircle2 className="w-3 h-3 text-blue-600" />
+                    ) : (
+                      <span className={`w-1.5 h-1.5 rounded-full ${selectedLotForDrawer.status === "Đã giữ chỗ" ? "bg-purple-600" : "bg-emerald-600"}`}></span>
+                    )}
                     <span>{selectedLotForDrawer.status}</span>
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-slate-200">
+                <div className="grid grid-cols-2 gap-2 text-center pt-1 border-t border-slate-200">
                   <div className="bg-white p-2 rounded border border-slate-200">
-                    <span className="text-[10px] text-slate-500 block">Tổng Lô</span>
-                    <span className="font-mono font-bold text-slate-900 text-xs">{selectedLotForDrawer.totalQty}</span>
+                    <span className="text-[10px] text-slate-500 block">Số lượng dòng này</span>
+                    <span className="font-mono font-bold text-slate-900 text-sm">{selectedLotForDrawer.qty} pcs</span>
                   </div>
-                  <div className="bg-emerald-50/60 p-2 rounded border border-emerald-200">
-                    <span className="text-[10px] text-emerald-800 font-bold block">SL Khả Dụng</span>
-                    <span className="font-mono font-bold text-emerald-700 text-xs">
-                      {selectedLotForDrawer.availableQty > 0 ? selectedLotForDrawer.availableQty : "—"}
-                    </span>
-                  </div>
-                  <div className="bg-purple-50/60 p-2 rounded border border-purple-200">
-                    <span className="text-[10px] text-purple-800 font-bold block">SL Đã Gán</span>
-                    <span className="font-mono font-bold text-purple-700 text-xs">
-                      {selectedLotForDrawer.assignedQty > 0 ? selectedLotForDrawer.assignedQty : "—"}
-                    </span>
-                    <span className="text-[9px] text-slate-500 block mt-0.5">
-                      ({selectedLotForDrawer.holdQty || 0} giữ chỗ / {selectedLotForDrawer.servedQty || 0} đã chuyển)
+                  <div className="bg-white p-2 rounded border border-slate-200">
+                    <span className="text-[10px] text-slate-500 block">Tổng số lượng lô gốc</span>
+                    <span className="font-mono font-bold text-slate-900 text-sm">
+                      {selectedLotForDrawer.lotTotalQty || selectedLotForDrawer.totalQty || selectedLotForDrawer.qty} pcs
                     </span>
                   </div>
                 </div>
+
+                {selectedLotForDrawer.isSplit && (
+                  <div className="p-2 bg-indigo-50/60 rounded border border-indigo-100 text-[10px] text-indigo-950 space-y-1">
+                    <div className="font-bold flex items-center justify-between">
+                      <span>Cơ cấu tách trạng thái của lô ({selectedLotForDrawer.bagCode}):</span>
+                      <span className="text-[9px] bg-indigo-100 text-indigo-800 px-1 rounded font-bold">Lô đa trạng thái</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 text-center font-mono pt-0.5">
+                      <div className="bg-white/80 p-1 rounded">
+                        <span className="text-slate-500 block text-[9px] font-sans">Chờ gán</span>
+                        <strong className="text-emerald-700">{selectedLotForDrawer.lotAvailableQty}</strong> pcs
+                      </div>
+                      <div className="bg-white/80 p-1 rounded">
+                        <span className="text-slate-500 block text-[9px] font-sans">Giữ chỗ</span>
+                        <strong className="text-purple-700">{selectedLotForDrawer.lotHoldQty}</strong> pcs
+                      </div>
+                      <div className="bg-white/80 p-1 rounded">
+                        <span className="text-slate-500 block text-[9px] font-sans">Chờ chuyển bag</span>
+                        <strong className="text-blue-700">{selectedLotForDrawer.lotServedQty}</strong> pcs
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Box Thông tin sản phẩm */}
@@ -1456,8 +1397,8 @@ export default function ReprocessInventoryPage() {
 
             {/* Drawer Footer */}
             <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center gap-2">
-              {/* Nút In Mã Bag KHSX mới nếu đã gán đơn */}
-              {selectedLotForDrawer.isAssigned && (
+              {/* Nút In Mã Bag KHSX mới nếu đã gán đơn hoặc giữ chỗ */}
+              {(selectedLotForDrawer.status === "Đã giữ chỗ" || selectedLotForDrawer.status === "Chờ chuyển bag") && (
                 <button
                   type="button"
                   onClick={() => setPrintBagTarget(selectedLotForDrawer)}
@@ -1469,12 +1410,12 @@ export default function ReprocessInventoryPage() {
                 </button>
               )}
 
-              {selectedLotForDrawer.isAlreadyServed ? (
-                <div className="flex-1 py-2 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-center text-xs border border-emerald-300 flex items-center justify-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span>Đã chuyển sang Bag mới ({selectedLotForDrawer.targetNewBagCode})</span>
+              {selectedLotForDrawer.status === "Chờ chuyển bag" ? (
+                <div className="flex-1 py-2 rounded-lg bg-blue-50 text-blue-800 font-bold text-center text-xs border border-blue-200 flex items-center justify-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                  <span>Chờ chuyển sang Bag mới ({selectedLotForDrawer.targetNewBagCode})</span>
                 </div>
-              ) : selectedLotForDrawer.isAssigned ? (
+              ) : selectedLotForDrawer.status === "Đã giữ chỗ" ? (
                 <Link
                   href={`/inventory/reprocess/serve?targetBag=${selectedLotForDrawer.targetNewBagCode}&oldBag=${selectedLotForDrawer.bagCode}`}
                   className="flex-1 py-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-center text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5"
