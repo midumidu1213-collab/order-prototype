@@ -251,32 +251,42 @@ export default function CommercialInventoryPage() {
     return list;
   }, [inventoryList, activeTab, searchQuery, columnFilters]);
 
-  // Checkbox chọn nhiều lô (AC 3)
+  // Danh sách các lô có thể chọn chuyển CXLL (Chỉ các lô ở trạng thái "Chờ phân bổ")
+  const selectableLots = useMemo(() => {
+    return filteredData.filter((r) => r.status === "Chờ phân bổ");
+  }, [filteredData]);
+
+  // Checkbox chọn nhiều lô (AC 3) - Chỉ áp dụng cho các lô "Chờ phân bổ"
   const isAllSelected = useMemo(() => {
-    return filteredData.length > 0 && filteredData.every((r) => selectedLotIds.has(r.id));
-  }, [filteredData, selectedLotIds]);
+    return selectableLots.length > 0 && selectableLots.every((r) => selectedLotIds.has(r.id));
+  }, [selectableLots, selectedLotIds]);
 
   const handleToggleSelectAll = () => {
     if (isAllSelected) {
       setSelectedLotIds(new Set());
     } else {
-      setSelectedLotIds(new Set(filteredData.map((r) => r.id)));
+      setSelectedLotIds(new Set(selectableLots.map((r) => r.id)));
     }
   };
 
-  const handleToggleSelectRow = (id, e) => {
+  const handleToggleSelectRow = (row, e) => {
     if (e) e.stopPropagation();
+    if (row.status !== "Chờ phân bổ") return;
     setSelectedLotIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(row.id)) next.delete(row.id);
+      else next.add(row.id);
       return next;
     });
   };
 
-  // Hành động Chuyển Chờ xử lý lại (Thủ kho chuyển khi đơn hàng bị hủy trước khi giao)
+  // Hành động Chuyển Chờ xử lý lại (Chỉ cho phép khi lô ở trạng thái "Chờ phân bổ")
   const handleOpenTransferCxllModal = (row, e) => {
     if (e) e.stopPropagation();
+    if (row.status !== "Chờ phân bổ") {
+      alert(`Không thể chuyển: Lô đang ở trạng thái "${row.status}". Chỉ lô ở trạng thái 'Chờ phân bổ' mới có thể Chuyển CXLL.`);
+      return;
+    }
     setLotToTransferCxll(row);
     setTransferQty(row.totalQty); // Mặc định chuyển hết lô, cho phép chỉnh lẻ (AC 4)
   };
@@ -643,10 +653,10 @@ export default function CommercialInventoryPage() {
                         />
                       </th>
 
-                      {/* 1. MÃ BAG (LÔ) */}
+                      {/* 1. MÃ LÔ */}
                       <th className="relative py-2.5 px-3">
                         <div className="flex items-center justify-between space-x-1">
-                          <span>MÃ BAG (LÔ)</span>
+                          <span>MÃ LÔ</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -658,7 +668,7 @@ export default function CommercialInventoryPage() {
                                 ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
                                 : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
                             }`}
-                            title="Lọc & sắp xếp cột Mã Bag"
+                            title="Lọc & sắp xếp cột Mã Lô"
                           >
                             <Filter className={`h-3 w-3 ${isColumnFiltered("bagCode") ? "fill-[#005a46]" : ""}`} />
                           </button>
@@ -666,7 +676,7 @@ export default function CommercialInventoryPage() {
                         {activeFilterColKey === "bagCode" && (
                           <ColumnFilterPopover
                             columnKey="bagCode"
-                            columnTitle="Mã Bag (Lô)"
+                            columnTitle="Mã Lô"
                             columnType="select"
                             uniqueValues={uniqueValuesMap.bagCode}
                             filterState={columnFilters.bagCode}
@@ -1169,17 +1179,27 @@ export default function CommercialInventoryPage() {
                           onClick={() => setSelectedLotForDrawer(row)}
                           className="hover:bg-teal-50/40 cursor-pointer transition-colors group"
                         >
-                          {/* CHECKBOX CHỌN DÒNG (AC 3) */}
+                          {/* CHECKBOX CHỌN DÒNG (Chỉ active khi Chờ phân bổ) */}
                           <td className="py-3 px-3 text-center" onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="checkbox"
-                              checked={selectedLotIds.has(row.id)}
-                              onChange={(e) => handleToggleSelectRow(row.id, e)}
-                              className="w-4 h-4 rounded text-teal-600 border-slate-300 focus:ring-teal-500 cursor-pointer"
-                            />
+                            {isUnallocated ? (
+                              <input
+                                type="checkbox"
+                                checked={selectedLotIds.has(row.id)}
+                                onChange={(e) => handleToggleSelectRow(row, e)}
+                                className="w-4 h-4 rounded text-teal-600 border-slate-300 focus:ring-teal-500 cursor-pointer"
+                                title="Chọn lô này để chuyển CXLL"
+                              />
+                            ) : (
+                              <input
+                                type="checkbox"
+                                disabled
+                                className="w-4 h-4 rounded text-slate-300 border-slate-200 bg-slate-100 cursor-not-allowed opacity-30"
+                                title={`Chỉ lô ở trạng thái Chờ phân bổ mới có thể chọn chuyển CXLL (Lô hiện tại: ${row.status})`}
+                              />
+                            )}
                           </td>
 
-                          {/* 1. Mã Bag (Lô) */}
+                          {/* 1. Mã Lô */}
                           <td className="py-3 px-3 font-mono font-bold text-teal-900 whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
                               <span>{row.bagCode}</span>
@@ -1187,7 +1207,7 @@ export default function CommercialInventoryPage() {
                                 type="button"
                                 onClick={(e) => handleCopy(row.bagCode, e)}
                                 className="text-slate-400 hover:text-slate-600 transition-colors"
-                                title="Sao chép mã Bag"
+                                title="Sao chép mã Lô"
                               >
                                 {copiedCode === row.bagCode ? (
                                   <Check className="h-3 w-3 text-emerald-600" />
@@ -1292,17 +1312,29 @@ export default function CommercialInventoryPage() {
                             {row.dateIn || "—"}
                           </td>
 
-                          {/* 16. Thao Tác (Chuyển sang CXLL khi đơn hàng bị hủy trước khi giao) */}
+                          {/* 16. Thao Tác (Chỉ lô ở trạng thái Chờ phân bổ mới có thể Chuyển CXLL) */}
                           <td className="py-3 px-3 text-center sticky right-0 bg-white group-hover:bg-[#f1fcf9] z-10 border-l border-slate-200 whitespace-nowrap">
-                            <button
-                              type="button"
-                              onClick={(e) => handleOpenTransferCxllModal(row, e)}
-                              className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-600 hover:text-white transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer mx-auto"
-                              title="Chuyển lô này sang Kho Chờ Xử Lý Lại (CXLL) khi đơn hàng bị hủy trước khi giao"
-                            >
-                              <RotateCcw className="h-3 w-3" />
-                              <span>Chuyển CXLL</span>
-                            </button>
+                            {isUnallocated ? (
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenTransferCxllModal(row, e)}
+                                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-600 hover:text-white transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer mx-auto"
+                                title="Chuyển lô này sang Kho Chờ Xử Lý Lại (CXLL)"
+                              >
+                                <RotateCcw className="h-3 w-3" />
+                                <span>Chuyển CXLL</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled
+                                className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed flex items-center gap-1.5 mx-auto opacity-50 select-none"
+                                title={`Không thể chuyển: Lô đang ở trạng thái "${row.status}". Chỉ lô Chờ phân bổ mới có thể Chuyển CXLL.`}
+                              >
+                                <RotateCcw className="h-3 w-3 text-slate-300" />
+                                <span>Chuyển CXLL</span>
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -1434,7 +1466,7 @@ export default function CommercialInventoryPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/60">
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Mã Bag (Lô):</span>
+                    <span className="text-slate-400 block text-[10px]">Mã Lô:</span>
                     <strong className="font-mono text-teal-900 text-xs">{lotToTransferCxll.bagCode}</strong>
                   </div>
                   <div>
@@ -1621,6 +1653,19 @@ export default function CommercialInventoryPage() {
 
             {/* Drawer Body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+              {/* Cảnh báo trạng thái không hợp lệ để chuyển CXLL */}
+              {selectedLotForDrawer.status !== "Chờ phân bổ" && (
+                <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-amber-900 text-xs flex items-start gap-2.5 shadow-2xs">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-bold">Lô không thể Chuyển CXLL</div>
+                    <div className="text-[11px] text-amber-800 mt-0.5">
+                      Lô đang ở trạng thái <strong>{selectedLotForDrawer.status}</strong>. Chỉ các lô ở trạng thái <strong>Chờ phân bổ</strong> mới có thể chuyển sang Kho Chờ Xử Lý Lại.
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Box Khách hàng & Mã SO */}
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
                 <div className="text-[10px] font-bold uppercase text-slate-500">Thông tin khách hàng & Đơn hàng:</div>
@@ -1740,14 +1785,26 @@ export default function CommercialInventoryPage() {
 
             {/* Drawer Footer kèm nút Action Chuyển Chờ xử lý lại */}
             <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => handleOpenTransferCxllModal(selectedLotForDrawer)}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <RotateCcw className="h-4 w-4" />
-                <span>Chuyển Chờ Xử Lý Lại (CXLL)</span>
-              </button>
+              {selectedLotForDrawer?.status === "Chờ phân bổ" ? (
+                <button
+                  type="button"
+                  onClick={() => handleOpenTransferCxllModal(selectedLotForDrawer)}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  <span>Chuyển Chờ Xử Lý Lại (CXLL)</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="flex-1 py-2.5 rounded-xl bg-slate-200 text-slate-400 font-bold text-xs cursor-not-allowed flex items-center justify-center gap-2 opacity-70"
+                  title={`Không thể chuyển: Lô đang ở trạng thái "${selectedLotForDrawer?.status}". Chỉ lô Chờ phân bổ mới có thể Chuyển CXLL.`}
+                >
+                  <RotateCcw className="h-4 w-4 text-slate-400" />
+                  <span>Chuyển Chờ Xử Lý Lại (CXLL)</span>
+                </button>
+              )}
 
               <button
                 type="button"
