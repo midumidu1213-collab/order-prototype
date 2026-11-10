@@ -4,7 +4,7 @@
 > **Epic:** CS5.Epic 3: Chờ Xử Lý Lại (Kho Thành Phẩm)  
 > **Module / Feature:** Kho Thành Phẩm / Trạm Cấp Thành Phẩm & In Thẻ Bag KHSX  
 > **Actor chính:** Thủ kho Thành phẩm tại Trạm Cấp Thành Phẩm (Serve FG)  
-> **Tài liệu tham chiếu:** [Prototype Trạm Cấp TP: /inventory/reprocess/serve](http://localhost:3000/inventory/reprocess/serve)  
+> **Tài liệu tham chiếu:** [Prototype Vercel: https://dungseva.vercel.app/inventory/reprocess/serve](https://dungseva.vercel.app/inventory/reprocess/serve) | [Localhost: http://localhost:3000/inventory/reprocess/serve](http://localhost:3000/inventory/reprocess/serve)  
 > **Trạng thái:** `Ready for Review`  
 
 ---
@@ -54,7 +54,7 @@
 
 ## 3. THIẾT KẾ (UX/UI) *
 
-*   **Link Figma / Prototype:** [Màn hình Trạm Cấp Thành Phẩm: /inventory/reprocess/serve](http://localhost:3000/inventory/reprocess/serve)
+*   **Link Prototype:** [Vercel Production: https://dungseva.vercel.app/inventory/reprocess/serve](https://dungseva.vercel.app/inventory/reprocess/serve) | [Localhost: http://localhost:3000/inventory/reprocess/serve](http://localhost:3000/inventory/reprocess/serve)
 *   **Ảnh đính kèm:**
     *   *Ảnh 1: Màn hình Trạm Cấp TP với trạng thái phẳng và nút thao tác tinh giản:*
       
@@ -88,7 +88,7 @@
 | **Mã Item** | Text / Font-mono | Có | Kế thừa | Mã 30 ký tự định danh mẫu sản phẩm. |
 | **Chủng Loại** | Text | Có | Kế thừa | Nhẫn, Bông tai, Vòng tay, Mặt dây... |
 | **TL Metal (g)** | Decimal | Có | Kế thừa | Trọng lượng kim loại của 1 pcs (4 số lẻ). |
-| **TL Đá (g)** | Decimal | Có | Kế thừa | Trọng lượng đá của 1 pcs (4 số lẻ, nếu 0 hiển thị `—`). |
+| **TL Đá (g)** | Decimal | Có | Kế thừa | Trọng lượng đá của 1 pcs (4 số lẻ, nếu không có đá hoặc = 0 hiển thị `0.0000`, tuyệt đối không để dấu `—`). |
 | **Tổng TL (g)** | Decimal | Có | Kế thừa | Tổng trọng lượng 1 pcs = TL Metal + TL Đá. |
 | **Mã Lô Cũ** | Text / Font-mono | Có | Kế thừa | Mã phôi cũ trong két kho CXLL (VD: `SO-260800061`). Chuyển về sau làm thông tin truy vết. |
 | **Mã SO Cũ** | Text / Font-mono | Có | Kế thừa | Mã đơn hàng cũ đã bị hủy. |

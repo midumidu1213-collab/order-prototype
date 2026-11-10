@@ -4,7 +4,7 @@
 > **Epic:** CS5.Epic 3: Chờ xử lý lại  
 > **Module / Feature:** Kho Thành Phẩm / Danh Sách Lô Chờ Xử Lý Lại  
 > **Actor chính:** Quản lý Kho thành phẩm (Thủ kho)  
-> **Tài liệu tham chiếu:** [Prototype Kho CXLL: /inventory/reprocess](http://localhost:3000/inventory/reprocess)  
+> **Tài liệu tham chiếu:** [Prototype Vercel: https://dungseva.vercel.app/inventory/reprocess](https://dungseva.vercel.app/inventory/reprocess) | [Localhost: http://localhost:3000/inventory/reprocess](http://localhost:3000/inventory/reprocess)  
 > **Trạng thái:** `Ready for Confluence Publish`  
 
 ---
@@ -68,7 +68,7 @@
 
 ## 3. THIẾT KẾ (UX/UI) *
 
-* **Link Prototype:** [Màn hình Danh Sách Chờ Xử Lý Lại: /inventory/reprocess](http://localhost:3000/inventory/reprocess)
+* **Link Prototype:** [Vercel Production: https://dungseva.vercel.app/inventory/reprocess](https://dungseva.vercel.app/inventory/reprocess) | [Localhost: http://localhost:3000/inventory/reprocess](http://localhost:3000/inventory/reprocess)
 * **Quy chuẩn bố cục bảng (12 cột chuẩn hóa):**
   1. `MÃ LÔ`: Mã phôi gốc (Font-mono, copy 1-click).
   2. `MÃ ITEM`: Mã 30 ký tự định danh mẫu sản phẩm (Font-mono, copy 1-click).
@@ -80,7 +80,7 @@
   8. `TRẠNG THÁI KHO`: 3 trạng thái chuẩn hóa (`Chờ gán đơn`, `Đã giữ chỗ`, `Chờ chuyển bag`).
   9. `MÃ ĐƠN HÀNG MỚI`: Hiển thị SO + KH mới + Bag mới nếu có, hoặc `—` nếu Chờ gán đơn.
   10. `TL VÀNG (L)`: Trọng lượng vàng phân bổ cho dòng (4 số thập phân, đơn vị: Lượng L).
-  11. `TL ĐÁ`: Trọng lượng đá phân bổ cho dòng (4 số thập phân, nếu không có đá hiển thị `—`).
+  11. `TL ĐÁ`: Trọng lượng đá phân bổ cho dòng (4 số thập phân, nếu không có đá hoặc = 0 hiển thị `0.0000`, tuyệt đối không để dấu —).
   12. `TỔNG TL`: Tổng trọng lượng của dòng (= TL Vàng + TL Đá).
 
 ---

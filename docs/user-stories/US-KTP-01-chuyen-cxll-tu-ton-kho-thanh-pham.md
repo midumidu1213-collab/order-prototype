@@ -4,7 +4,7 @@
 > **Epic:** CS5.Epic 3: Chờ Xử Lý Lại (Kho Thành Phẩm)  
 > **Module / Feature:** Kho Thành Phẩm / Chuyển Lô Sang Chờ Xử Lý Lại (CXLL)  
 > **Actor chính:** Quản lý Kho thành phẩm (Thủ kho)  
-> **Tài liệu tham chiếu:** [Prototype Kho Thành Phẩm: /inventory](http://localhost:3000/inventory)  
+> **Tài liệu tham chiếu:** [Prototype Vercel: https://dungseva.vercel.app/inventory](https://dungseva.vercel.app/inventory) | [Localhost: http://localhost:3000/inventory](http://localhost:3000/inventory)  
 > **Trạng thái:** `Ready for Confluence Publish`  
 
 ---
@@ -64,7 +64,7 @@
 
 ## 3. THIẾT KẾ (UX/UI) *
 
-* **Link Figma / Prototype:** [Màn hình Danh Sách Tồn Kho Thành Phẩm: /inventory](http://localhost:3000/inventory)
+* **Link Prototype:** [Vercel Production: https://dungseva.vercel.app/inventory](https://dungseva.vercel.app/inventory) | [Localhost: http://localhost:3000/inventory](http://localhost:3000/inventory)
 * **Ảnh đính kèm:**
   * Bảng danh sách Tồn kho thành phẩm với cột tiêu đề **`MÃ LÔ`**, nút `[Chuyển CXLL]` active chỉ với lô `Chờ phân bổ`:
 
