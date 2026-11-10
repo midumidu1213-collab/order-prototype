@@ -87,7 +87,7 @@ export default function CommercialInventoryPage() {
   // State chuyên sâu cho Modal Chuyển CXLL: Check có Series vs Không có Series (Cân lại & Chọn Stamp)
   const [transferIsSeries, setTransferIsSeries] = useState(true);
   const [transferSelectedSeriesNos, setTransferSelectedSeriesNos] = useState(new Set());
-  const [transferWeighedWeight, setTransferWeighedWeight] = useState(0);
+  const [transferWeighedWeight, setTransferWeighedWeight] = useState("0.0000");
   const [isWeighingActive, setIsWeighingActive] = useState(false);
   const [transferStampAllocations, setTransferStampAllocations] = useState([
     { id: 1, stampCode: "24", qty: 10 }
@@ -380,8 +380,8 @@ export default function CommercialInventoryPage() {
       setTransferSelectedSeriesNos(new Set());
     }
 
-    // 2. Khởi tạo trọng lượng cân lại Tổng TL (cho lô không có series)
-    setTransferWeighedWeight(row.weight);
+    // 2. Khởi tạo trọng lượng cân lại Tổng TL (cho lô không có series - định dạng chuẩn 4 số thập phân)
+    setTransferWeighedWeight((row.weight).toFixed(4));
 
     // 3. Khởi tạo phân bổ Stamp ban đầu cho lô không có series
     if (row.stoneWeight > 0) {
@@ -411,7 +411,7 @@ export default function CommercialInventoryPage() {
     } catch (e) {}
 
     const baseWeight = lotToTransferCxll ? (lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)) : 1.0000;
-    setTransferWeighedWeight(Number(baseWeight.toFixed(4)));
+    setTransferWeighedWeight(baseWeight.toFixed(4));
 
     setTimeout(() => {
       setIsWeighingActive(false);
@@ -1217,41 +1217,7 @@ export default function CommercialInventoryPage() {
                         )}
                       </th>
 
-                      {/* 10. ĐÃ PHÂN BỔ */}
-                      <th className="relative py-2.5 px-3 text-right text-emerald-800">
-                        <div className="flex items-center justify-end space-x-1">
-                          <span>ĐÃ PHÂN BỔ</span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveFilterColKey(activeFilterColKey === "qtyAllocated" ? null : "qtyAllocated");
-                            }}
-                            className={`p-1 rounded transition-colors cursor-pointer ${
-                              isColumnFiltered("qtyAllocated")
-                                ? "text-[#005a46] bg-emerald-100 ring-1 ring-[#005a46]"
-                                : "text-slate-400 hover:text-slate-700 hover:bg-slate-200"
-                            }`}
-                            title="Lọc & sắp xếp cột Đã phân bổ"
-                          >
-                            <Filter className={`h-3 w-3 ${isColumnFiltered("qtyAllocated") ? "fill-[#005a46]" : ""}`} />
-                          </button>
-                        </div>
-                        {activeFilterColKey === "qtyAllocated" && (
-                          <ColumnFilterPopover
-                            columnKey="qtyAllocated"
-                            columnTitle="SL Đã Phân Bổ"
-                            columnType="select"
-                            uniqueValues={uniqueValuesMap.qtyAllocated}
-                            filterState={columnFilters.qtyAllocated}
-                            onApply={(data) => handleApplyColumnFilter("qtyAllocated", data)}
-                            onClear={() => handleClearColumnFilter("qtyAllocated")}
-                            onClose={() => setActiveFilterColKey(null)}
-                          />
-                        )}
-                      </th>
-
-                      {/* 11. CHỜ LẬP HÓA ĐƠN */}
+                      {/* 10. CHỜ LẬP HÓA ĐƠN */}
                       <th className="relative py-2.5 px-3 text-right text-blue-800">
                         <div className="flex items-center justify-end space-x-1">
                           <span>CHỜ LẬP HĐ</span>
@@ -1672,12 +1638,7 @@ export default function CommercialInventoryPage() {
                             {row.qtyUnallocated ?? 0}
                           </td>
 
-                          {/* 10. Đã phân bổ */}
-                          <td className="py-3 px-3 text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
-                            {row.qtyAllocated ?? 0}
-                          </td>
-
-                          {/* 11. Chờ lập HĐ */}
+                          {/* 10. Chờ lập HĐ */}
                           <td className="py-3 px-3 text-right font-mono font-bold text-blue-700 whitespace-nowrap">
                             {row.qtyInvoice ?? 0}
                           </td>
@@ -1765,11 +1726,7 @@ export default function CommercialInventoryPage() {
                       <td className="py-2.5 px-3 text-right font-mono text-amber-800 font-black whitespace-nowrap">
                         {filteredData.reduce((s, r) => s + (r.qtyUnallocated || 0), 0)}
                       </td>
-                      {/* 3. Tổng của Đã phân bổ */}
-                      <td className="py-2.5 px-3 text-right font-mono text-emerald-800 font-black whitespace-nowrap">
-                        {filteredData.reduce((s, r) => s + (r.qtyAllocated || 0), 0)}
-                      </td>
-                      {/* 4. Tổng của Chờ lập HĐ */}
+                      {/* 3. Tổng của Chờ lập HĐ */}
                       <td className="py-2.5 px-3 text-right font-mono text-blue-800 font-black whitespace-nowrap">
                         {filteredData.reduce((s, r) => s + (r.qtyInvoice || 0), 0)}
                       </td>
@@ -1877,8 +1834,8 @@ export default function CommercialInventoryPage() {
                               }
                               return prev;
                             });
-                            // Gợi ý lại cân nặng theo tỷ lệ
-                            setTransferWeighedWeight(Number((lotToTransferCxll.weight * (newQty / lotToTransferCxll.totalQty)).toFixed(4)));
+                            // Gợi ý lại cân nặng theo tỷ lệ (định dạng chuẩn 4 số thập phân)
+                            setTransferWeighedWeight((lotToTransferCxll.weight * (newQty / lotToTransferCxll.totalQty)).toFixed(4));
                           }
                         }}
                         className="w-20 text-center font-bold text-sm font-mono bg-white border border-slate-300 rounded-lg py-1 text-slate-900 focus:ring-1 focus:ring-rose-500"
@@ -1927,7 +1884,7 @@ export default function CommercialInventoryPage() {
                       type="button"
                       onClick={() => {
                         setTransferIsSeries(false);
-                        setTransferWeighedWeight(Number((lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)).toFixed(4)));
+                        setTransferWeighedWeight((lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)).toFixed(4));
                       }}
                       className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
                         !transferIsSeries
@@ -2062,7 +2019,7 @@ export default function CommercialInventoryPage() {
                         type="button"
                         onClick={() =>
                           setTransferWeighedWeight(
-                            Number((lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)).toFixed(4))
+                            (lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)).toFixed(4)
                           )
                         }
                         className="text-[10px] text-purple-700 hover:underline cursor-pointer"
@@ -2072,12 +2029,24 @@ export default function CommercialInventoryPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <input
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        value={transferWeighedWeight || ""}
-                        onChange={(e) => setTransferWeighedWeight(parseFloat(e.target.value) || 0)}
-                        placeholder="Nhập số cân thực tế..."
+                        type="text"
+                        inputMode="decimal"
+                        value={transferWeighedWeight}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(",", ".");
+                          if (val === "" || /^[0-9]*\.?[0-9]{0,4}$/.test(val)) {
+                            setTransferWeighedWeight(val);
+                          }
+                        }}
+                        onBlur={() => {
+                          const num = parseFloat(transferWeighedWeight);
+                          if (!isNaN(num) && num > 0) {
+                            setTransferWeighedWeight(num.toFixed(4));
+                          } else if (transferWeighedWeight === "" || isNaN(num) || num <= 0) {
+                            setTransferWeighedWeight("0.0000");
+                          }
+                        }}
+                        placeholder="0.0000"
                         className="flex-1 px-3 py-1.5 bg-white border border-purple-300 rounded-lg font-mono font-bold text-slate-900 text-xs focus:ring-1 focus:ring-purple-600 focus:outline-none"
                       />
                       <button
@@ -2181,12 +2150,12 @@ export default function CommercialInventoryPage() {
               )}
 
               {/* ========================================================================= */}
-              {/* TRỌNG LƯỢNG PHÔI CHUYỂN: 3 FIELD CHUẨN HÓA (ĐƠN VỊ LƯỢNG)                 */}
+              {/* TRỌNG LƯỢNG CHUYỂN: 3 FIELD CHUẨN HÓA (ĐƠN VỊ LƯỢNG)                      */}
               {/* ========================================================================= */}
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                    Trọng lượng phôi chuyển:
+                    Trọng lượng chuyển:
                   </span>
                   <span className="text-[10px] text-slate-400">
                     Áp dụng cho {transferQty} pcs

@@ -55,10 +55,10 @@
       * Thủ kho chọn đúng số lượng mã series cần chuyển (khớp với số lượng chuyển đã nhập).
       * Hệ thống tự động tổng hợp trọng lượng từ các series được chọn: `Tổng TL`, `TL Đá`, và `TL Kim loại = Tổng TL - TL Đá` (đơn vị Lượng - L).
     * **Trường hợp 2 (Lô không có Series):**
-      * Bắt buộc Thủ kho phải **cân lại Tổng trọng lượng (Tổng TL)** thực tế bằng cách nhập tay hoặc bấm nút **`[Lấy số cân]`** tích hợp từ máy cân điện tử tại bàn làm việc (đơn vị tính là Lượng - L).
+      * Bắt buộc Thủ kho phải **cân lại Tổng trọng lượng (Tổng TL)** thực tế bằng cách nhập tay hoặc bấm nút **`[Lấy số cân]`** tích hợp từ máy cân điện tử tại bàn làm việc (đơn vị tính là Lượng - L, hiển thị chuẩn 4 số thập phân `#.####`, ví dụ `1.5000 L`).
       * Bắt buộc **chọn Stamp (quy cách đá chuẩn)**: Dropdown hiển thị các mã stamp cụ thể (ví dụ: `15`, `18`, `20`, `22`, `24`...). Quy tắc 1 pcs tương ứng với 1 stamp; hỗ trợ nút `+ Thêm loại Stamp khác` khi lô có nhiều quy cách đá khác nhau.
       * Hệ thống tự động tính toán: `TL Kim loại = Tổng TL - TL Đá`.
-  * **Thì (Then):** Bảng tóm tắt modal hiển thị tiêu đề tinh gọn **`Trọng lượng phôi chuyển:`** gồm rõ ràng **3 field tách biệt**: `TL Kim loại (L)`, `TL Đá (Stamp) (L)`, `Tổng TL (Cân lại) (L)`. Loại bỏ dòng giải thích công thức và trường `Vị trí lưu kho` để triệt tiêu rác thị giác.
+  * **Thì (Then):** Bảng tóm tắt modal hiển thị tiêu đề tinh gọn **`Trọng lượng chuyển:`** gồm rõ ràng **3 field tách biệt**: `TL Kim loại (L)`, `TL Đá (Stamp) (L)`, `Tổng TL (Cân lại) (L)`. Loại bỏ dòng giải thích công thức và trường `Vị trí lưu kho` để triệt tiêu rác thị giác.
 
 ---
 
@@ -92,7 +92,8 @@
   * Công thức bảo toàn: `TL Kim loại = Tổng TL - TL Đá`. Tuyệt đối không cho phép xác nhận chuyển nếu TL Kim loại tính ra bị âm (TL đá > Tổng TL).
 * **BR-KTP-07 (Tối giản giao diện modal - Minimalism):**
   * Subtitle Header hiển thị trực tiếp `Mã Lô: [Mã Bag]`.
-  * Tiêu đề khung trọng lượng rút ngắn: `Trọng lượng phôi chuyển:`.
+  * Tiêu đề khung trọng lượng rút ngắn: `Trọng lượng chuyển:`.
+  * Ô cân lại Tổng trọng lượng hiển thị chuẩn 4 số thập phân `#.####` (ví dụ: `1.5000 L`).
   * Loại bỏ hoàn toàn trường `Vị trí lưu kho` và dòng hiển thị công thức tính để tránh rác thị giác.
 
 ---
@@ -113,7 +114,6 @@
 | **Loại / Tuổi Vàng** | Text | Có | Kế thừa từ SO | Hàm lượng tuổi vàng (VD: `AU 61.00 Y`, `AU 75.00 W`). |
 | **Tổng SL** | Integer | Có | Kế thừa từ KHSX | Tổng số lượng pcs hoàn thiện trong lô (VD: `10`, `8`, `6`...). |
 | **Chờ Phân Bổ** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Chờ phân bổ` (sẵn sàng chuyển CXLL). Nếu = 0 hiển thị số `0` rõ ràng (không để dấu - hay —). |
-| **Đã Phân Bổ** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Đã phân bổ` cho đơn hàng. Nếu = 0 hiển thị số `0` rõ ràng (không để dấu - hay —). |
 | **Chờ Lập Hóa Đơn** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Chờ lập HĐ`. Nếu = 0 hiển thị số `0` rõ ràng (không để dấu - hay —). |
 | **Chờ Giao** | Integer | Có | Tính theo trạng thái | Số lượng pcs ở trạng thái `Chờ giao` cho khách. Nếu = 0 hiển thị số `0` rõ ràng (không để dấu - hay —). |
 | **Trạng Thái** | Enum / Badge | Có | `Chờ phân bổ` | Giá trị: `Chờ phân bổ`, `Đã phân bổ`, `Chờ lập HĐ`, `Chờ giao`. |
