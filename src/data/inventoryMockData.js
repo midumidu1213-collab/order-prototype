@@ -5,14 +5,17 @@
 // - Sau đó đi các công đoạn làm mới lại (tẩy xi, khắc logo mới, xi lại) và nhập lại kho thành phẩm để giao hàng.
 // =============================================================================
 
-// Danh mục các loại Stamp (Trọng lượng đá / pcs) chuẩn nhà máy kim hoàn
+// Danh mục các loại Stamp (Trọng lượng đá / pcs) chuẩn nhà máy kim hoàn (Ví dụ: 15, 18, 20, 22, 24...)
 export const MOCK_STAMP_OPTIONS = [
-  { code: "ST-000", name: "Không đá (Trơn)", stoneWeightPerPcs: 0.0000 },
-  { code: "ST-005", name: "Đá tấm 1.0ly - 1.2ly", stoneWeightPerPcs: 0.0050 },
-  { code: "ST-010", name: "Đá tấm 1.3ly - 1.5ly", stoneWeightPerPcs: 0.0100 },
-  { code: "ST-015", name: "Đá CZ tròn 2.0ly", stoneWeightPerPcs: 0.0150 },
-  { code: "ST-020", name: "Đá CZ tròn 2.5ly", stoneWeightPerPcs: 0.0200 },
-  { code: "ST-030", name: "Đá chủ 3.0ly", stoneWeightPerPcs: 0.0300 },
+  { code: "15", name: "15", stoneWeightPerPcs: 0.0150 },
+  { code: "18", name: "18", stoneWeightPerPcs: 0.0180 },
+  { code: "20", name: "20", stoneWeightPerPcs: 0.0200 },
+  { code: "22", name: "22", stoneWeightPerPcs: 0.0220 },
+  { code: "24", name: "24", stoneWeightPerPcs: 0.0240 },
+  { code: "26", name: "26", stoneWeightPerPcs: 0.0260 },
+  { code: "28", name: "28", stoneWeightPerPcs: 0.0280 },
+  { code: "30", name: "30", stoneWeightPerPcs: 0.0300 },
+  { code: "0", name: "0 (Không đá)", stoneWeightPerPcs: 0.0000 },
 ];
 
 // 1. DANH SÁCH TỒN KHO THÀNH PHẨM SẴN SÀNG BÁN (LOẠI TRỪ 100% HÀNG CHỜ XỬ LÝ LẠI - US-08.1)
@@ -40,16 +43,16 @@ export const MOCK_COMMERCIAL_INVENTORY = [
     location: "Két K1 - Ngăn A01",
     hasSeries: true, // LÔ CÓ QUẢN LÝ SERIES CHI TIẾT
     series: [
-      { seriNo: "SR-2608001-01", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-02", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-03", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-04", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-05", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-06", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-07", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-08", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-09", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" },
-      { seriNo: "SR-2608001-10", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "ST-015", weight: 0.5000, location: "Khay A1" }
+      { seriNo: "SR-2608001-01", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "15", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-02", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "15", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-03", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "15", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-04", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "15", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-05", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "15", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-06", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "15", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-07", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "15", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-08", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "15", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-09", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "15", weight: 0.5000, location: "Khay A1" },
+      { seriNo: "SR-2608001-10", status: "Chờ phân bổ", metalWeight: 0.4850, stoneWeight: 0.0150, stampCode: "15", weight: 0.5000, location: "Khay A1" }
     ]
   },
   {

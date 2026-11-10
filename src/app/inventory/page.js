@@ -88,8 +88,9 @@ export default function CommercialInventoryPage() {
   const [transferIsSeries, setTransferIsSeries] = useState(true);
   const [transferSelectedSeriesNos, setTransferSelectedSeriesNos] = useState(new Set());
   const [transferWeighedWeight, setTransferWeighedWeight] = useState(0);
+  const [isWeighingActive, setIsWeighingActive] = useState(false);
   const [transferStampAllocations, setTransferStampAllocations] = useState([
-    { id: 1, stampCode: "ST-015", qty: 10 }
+    { id: 1, stampCode: "24", qty: 10 }
   ]);
 
   // Bộ lọc / sắp xếp trực tiếp trên từng cột (Tham khảo chuẩn DS Đơn hàng ERP)
@@ -385,11 +386,36 @@ export default function CommercialInventoryPage() {
     // 3. Khởi tạo phân bổ Stamp ban đầu cho lô không có series
     if (row.stoneWeight > 0) {
       const avgStonePerPcs = row.stoneWeight / row.totalQty;
-      const matched = MOCK_STAMP_OPTIONS.find((s) => Math.abs(s.stoneWeightPerPcs - avgStonePerPcs) < 0.003) || MOCK_STAMP_OPTIONS[3];
+      const matched = MOCK_STAMP_OPTIONS.find((s) => Math.abs(s.stoneWeightPerPcs - avgStonePerPcs) < 0.005) || MOCK_STAMP_OPTIONS[3];
       setTransferStampAllocations([{ id: 1, stampCode: matched.code, qty: initialQty }]);
     } else {
-      setTransferStampAllocations([{ id: 1, stampCode: "ST-000", qty: initialQty }]);
+      setTransferStampAllocations([{ id: 1, stampCode: "0", qty: initialQty }]);
     }
+  };
+
+  // Tích hợp máy cân điện tử (theo chỉ đạo Ảnh 2 & Ảnh 3)
+  const handleFetchScaleWeight = () => {
+    setIsWeighingActive(true);
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(1600, ctx.currentTime);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } catch (e) {}
+
+    const baseWeight = lotToTransferCxll ? (lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)) : 1.0000;
+    setTransferWeighedWeight(Number(baseWeight.toFixed(4)));
+
+    setTimeout(() => {
+      setIsWeighingActive(false);
+    }, 400);
   };
 
   // Helper toggle chọn/bỏ chọn mã series
@@ -419,7 +445,7 @@ export default function CommercialInventoryPage() {
   const handleAddStampRow = () => {
     setTransferStampAllocations((prev) => [
       ...prev,
-      { id: Date.now(), stampCode: "ST-010", qty: 1 }
+      { id: Date.now(), stampCode: "18", qty: 1 }
     ]);
   };
 
@@ -1789,8 +1815,8 @@ export default function CommercialInventoryPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-slate-900 text-sm">Xác Nhận Chuyển Chờ Xử Lý Lại (CXLL)</h3>
-                  <p className="text-[11px] text-rose-700 font-normal mt-0.5">
-                    Chuyển lô thành phẩm từ Kho Thành Phẩm sang Kho CXLL
+                  <p className="text-[11px] text-rose-700 font-mono font-bold mt-0.5">
+                    Mã Lô: {lotToTransferCxll.bagCode}
                   </p>
                 </div>
               </div>
@@ -1988,16 +2014,19 @@ export default function CommercialInventoryPage() {
                                 className="w-3.5 h-3.5 text-teal-700 rounded border-slate-300 focus:ring-teal-500 cursor-pointer"
                               />
                               <span className="font-mono font-bold text-slate-800">{ser.seriNo}</span>
+                              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-blue-50 text-blue-800 border border-blue-200 rounded">
+                                Stamp {ser.stampCode || "24"}
+                              </span>
                             </div>
                             <div className="flex items-center gap-3 font-mono text-[10px]">
                               <span className="text-amber-900" title="TL Kim loại">
-                                Vàng: <strong>{sMetal.toFixed(4)}</strong>g
+                                Vàng: <strong>{sMetal.toFixed(4)}</strong> L
                               </span>
                               <span className="text-blue-700" title="TL Đá / Stamp">
-                                Đá: <strong>{sStone.toFixed(4)}</strong>g
+                                Đá: <strong>{sStone.toFixed(4)}</strong> L
                               </span>
                               <span className="text-slate-900 font-bold" title="Tổng TL">
-                                Tổng: <strong>{ser.weight.toFixed(4)}</strong>g
+                                Tổng: <strong>{ser.weight.toFixed(4)}</strong> L
                               </span>
                             </div>
                           </div>
@@ -2038,7 +2067,7 @@ export default function CommercialInventoryPage() {
                         }
                         className="text-[10px] text-purple-700 hover:underline cursor-pointer"
                       >
-                        Gợi ý định mức: {(lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)).toFixed(4)} g
+                        Gợi ý định mức: {(lotToTransferCxll.weight * (transferQty / lotToTransferCxll.totalQty)).toFixed(4)} L
                       </button>
                     </div>
                     <div className="flex items-center gap-2">
@@ -2051,7 +2080,17 @@ export default function CommercialInventoryPage() {
                         placeholder="Nhập số cân thực tế..."
                         className="flex-1 px-3 py-1.5 bg-white border border-purple-300 rounded-lg font-mono font-bold text-slate-900 text-xs focus:ring-1 focus:ring-purple-600 focus:outline-none"
                       />
-                      <span className="text-xs font-bold text-slate-500">gam (g)</span>
+                      <button
+                        type="button"
+                        onClick={handleFetchScaleWeight}
+                        disabled={isWeighingActive}
+                        className="px-2.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shrink-0 shadow-2xs"
+                        title="Kết nối máy cân điện tử lấy số cân tức thì"
+                      >
+                        <Scale className={`w-3.5 h-3.5 ${isWeighingActive ? "animate-spin" : ""}`} />
+                        <span>{isWeighingActive ? "Đang cân..." : "Lấy số cân"}</span>
+                      </button>
+                      <span className="text-xs font-bold text-slate-600 font-mono">L</span>
                     </div>
                   </div>
 
@@ -2060,7 +2099,7 @@ export default function CommercialInventoryPage() {
                     <div className="flex items-center justify-between">
                       <label className="text-[11px] font-bold text-slate-800 flex items-center gap-1">
                         <Gem className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Chọn Stamp (Trọng lượng đá) - 1 pcs tương ứng 1 Stamp:</span>
+                        <span>Chọn Stamp:</span>
                       </label>
                       <div className="text-[10px]">
                         Đã phân bổ:{" "}
@@ -2094,7 +2133,7 @@ export default function CommercialInventoryPage() {
                               >
                                 {MOCK_STAMP_OPTIONS.map((st) => (
                                   <option key={st.code} value={st.code}>
-                                    {st.code} - {st.name} ({st.stoneWeightPerPcs.toFixed(4)} g/pcs)
+                                    Stamp {st.code} ({st.stoneWeightPerPcs.toFixed(4)} L/pcs)
                                   </option>
                                 ))}
                               </select>
@@ -2112,7 +2151,7 @@ export default function CommercialInventoryPage() {
                               <span className="text-[10px] text-slate-500">pcs</span>
                             </div>
                             <div className="w-24 text-right font-mono text-blue-700 font-bold text-[10px]">
-                              {subStoneW.toFixed(4)} g
+                              {subStoneW.toFixed(4)} L
                             </div>
                             {transferStampAllocations.length > 1 && (
                               <button
@@ -2135,19 +2174,19 @@ export default function CommercialInventoryPage() {
                       className="text-[10px] text-purple-700 hover:text-purple-900 font-bold flex items-center gap-1 py-1 cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
-                      <span>Thêm loại Stamp khác (khi trong lô có nhiều quy cách đá)</span>
+                      <span>+ Thêm loại Stamp khác</span>
                     </button>
                   </div>
                 </div>
               )}
 
               {/* ========================================================================= */}
-              {/* TÁCH THÀNH 3 FIELD TRỌNG LƯỢNG RÕ RÀNG THEO CHÚ THÍCH ĐỎ TRONG ẢNH        */}
+              {/* TRỌNG LƯỢNG PHÔI CHUYỂN: 3 FIELD CHUẨN HÓA (ĐƠN VỊ LƯỢNG)                 */}
               {/* ========================================================================= */}
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                    Trọng lượng phôi chuyển sang CXLL (3 Field Chuẩn Hóa):
+                    Trọng lượng phôi chuyển:
                   </span>
                   <span className="text-[10px] text-slate-400">
                     Áp dụng cho {transferQty} pcs
@@ -2159,7 +2198,7 @@ export default function CommercialInventoryPage() {
                   <div className="bg-amber-50/70 border border-amber-200 p-2.5 rounded-lg">
                     <span className="text-[10px] text-amber-900 font-semibold block">TL Kim Loại</span>
                     <strong className="font-mono text-amber-900 text-sm block mt-0.5">
-                      {modalCalculatedWeights.metalWeight.toFixed(4)} g
+                      {modalCalculatedWeights.metalWeight.toFixed(4)} L
                     </strong>
                   </div>
 
@@ -2167,7 +2206,7 @@ export default function CommercialInventoryPage() {
                   <div className="bg-blue-50/70 border border-blue-200 p-2.5 rounded-lg">
                     <span className="text-[10px] text-blue-900 font-semibold block">TL Đá (Stamp)</span>
                     <strong className="font-mono text-blue-800 text-sm block mt-0.5">
-                      {(modalCalculatedWeights.stoneWeight || 0).toFixed(4)} g
+                      {(modalCalculatedWeights.stoneWeight || 0).toFixed(4)} L
                     </strong>
                   </div>
 
@@ -2175,14 +2214,9 @@ export default function CommercialInventoryPage() {
                   <div className="bg-white border border-slate-300 p-2.5 rounded-lg shadow-2xs">
                     <span className="text-[10px] text-slate-600 font-semibold block">Tổng TL (Cân lại)</span>
                     <strong className="font-mono text-slate-900 text-sm font-black block mt-0.5">
-                      {modalCalculatedWeights.totalWeight.toFixed(4)} g
+                      {modalCalculatedWeights.totalWeight.toFixed(4)} L
                     </strong>
                   </div>
-                </div>
-
-                {/* Dòng công thức tính toán minh bạch */}
-                <div className="text-[10px] text-slate-500 bg-white p-2 rounded border border-slate-200/80 text-center font-mono">
-                  Công thức: <strong>TL Kim loại</strong> ({modalCalculatedWeights.metalWeight.toFixed(4)}g) = <strong>Tổng TL</strong> ({modalCalculatedWeights.totalWeight.toFixed(4)}g) - <strong>TL Đá</strong> ({modalCalculatedWeights.stoneWeight.toFixed(4)}g)
                 </div>
 
                 {/* Cảnh báo lỗi validate nếu chưa hợp lệ */}

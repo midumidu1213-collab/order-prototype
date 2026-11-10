@@ -47,18 +47,18 @@
   * **Khi (When):** Thủ kho mở modal chuyển CXLL và nhập số lượng lẻ cần chuyển (VD: nhập 2 pcs).
   * **Thì (Then):** Hệ thống tách lô: 2 pcs được chuyển sang Kho CXLL (`Tồn khả dụng = 2 pcs`), và 2 pcs còn lại tiếp tục lưu giữ tại Tồn kho TP sẵn sàng giao theo đơn hàng.
 
-* **AC 5: Kiểm tra Lô có Series hay Không khi Chuyển CXLL**
-  * **Biết rằng (Given):** Thủ kho mở modal Chuyển CXLL cho một lô hàng `Chờ phân bổ`.
+* **AC 5: Kiểm tra Lô có Series hay Không khi Chuyển CXLL & Tích Hợp Cân**
+  * **Biết rằng (Given):** Thủ kho mở modal Chuyển CXLL cho một lô hàng `Chờ phân bổ`. Subtitle modal hiển thị trực tiếp `Mã Lô: [Mã Bag]`.
   * **Khi (When):** Hệ thống kiểm tra đặc tính quản lý series của lô:
     * **Trường hợp 1 (Lô có Series):** 
-      * Hệ thống hiển thị danh sách các mã series thuộc lô, mỗi mã series hiển thị đầy đủ: `Mã Series`, `TL Kim loại`, `TL Đá (Mã Stamp)`, `Tổng TL`.
+      * Hệ thống hiển thị danh sách các mã series thuộc lô, mỗi mã series hiển thị đầy đủ: `Mã Series`, badge `Stamp [Mã số]` (ví dụ: Stamp 15, Stamp 24), `TL Kim loại (L)`, `TL Đá (L)`, `Tổng TL (L)`.
       * Thủ kho chọn đúng số lượng mã series cần chuyển (khớp với số lượng chuyển đã nhập).
-      * Hệ thống tự động tổng hợp trọng lượng từ các series được chọn: `Tổng TL`, `TL Đá`, và `TL Kim loại = Tổng TL - TL Đá`.
+      * Hệ thống tự động tổng hợp trọng lượng từ các series được chọn: `Tổng TL`, `TL Đá`, và `TL Kim loại = Tổng TL - TL Đá` (đơn vị Lượng - L).
     * **Trường hợp 2 (Lô không có Series):**
-      * Bắt buộc Thủ kho phải **cân lại Tổng trọng lượng (Tổng TL)** thực tế và nhập vào hệ thống.
-      * Bắt buộc **chọn loại Stamp (trọng lượng đá)**: Quy tắc 1 pcs tương ứng với 1 stamp; có thể nhiều pcs có cùng 1 stamp (chọn loại Stamp + nhập số lượng pcs, tổng số lượng pcs các stamp phải bằng đúng số lượng chuyển).
+      * Bắt buộc Thủ kho phải **cân lại Tổng trọng lượng (Tổng TL)** thực tế bằng cách nhập tay hoặc bấm nút **`[Lấy số cân]`** tích hợp từ máy cân điện tử tại bàn làm việc (đơn vị tính là Lượng - L).
+      * Bắt buộc **chọn Stamp (quy cách đá chuẩn)**: Dropdown hiển thị các mã stamp cụ thể (ví dụ: `15`, `18`, `20`, `22`, `24`...). Quy tắc 1 pcs tương ứng với 1 stamp; hỗ trợ nút `+ Thêm loại Stamp khác` khi lô có nhiều quy cách đá khác nhau.
       * Hệ thống tự động tính toán: `TL Kim loại = Tổng TL - TL Đá`.
-  * **Thì (Then):** Bảng tóm tắt modal hiển thị rõ ràng **3 field tách biệt**: `TL Kim loại`, `TL Đá (Stamp)`, `Tổng TL`. Không còn hiển thị trường `Vị trí lưu kho`.
+  * **Thì (Then):** Bảng tóm tắt modal hiển thị tiêu đề tinh gọn **`Trọng lượng phôi chuyển:`** gồm rõ ràng **3 field tách biệt**: `TL Kim loại (L)`, `TL Đá (Stamp) (L)`, `Tổng TL (Cân lại) (L)`. Loại bỏ dòng giải thích công thức và trường `Vị trí lưu kho` để triệt tiêu rác thị giác.
 
 ---
 
@@ -84,13 +84,16 @@
   * Trong Drawer chi tiết: Nút thao tác chuyển cũng bị disable và hiển thị Alert Box cảnh báo.
 * **BR-KTP-03 (Trạng thái đích tại Kho CXLL):** Lô sau khi chuyển thành công sẽ xuất hiện tại DS Chờ xử lý lại với trạng thái `Chờ gán đơn` và `SL = SL đã chuyển`. Đồng thời giảm tồn kho thành phẩm sẵn sàng giao tương ứng.
 * **BR-KTP-04 (Tách lô khi chuyển SL lẻ):** Khi chuyển số lượng nhỏ hơn tổng tồn của lô (M < Tổng SL), hệ thống tự động trừ tồn lô gốc tại Kho TP và tạo bản ghi phôi mới tại Kho CXLL với số lượng đúng bằng M.
-* **BR-KTP-05 (Cơ chế phân tách Series vs Non-Series):**
-  * **Lô có Series:** Thừa hưởng trực tiếp trọng lượng từng series có sẵn trên hệ thống. Số lượng series được chọn phải khớp chính xác với số lượng chuyển.
-  * **Lô không có Series (Hàng xá):** Bắt buộc cân lại Tổng TL thực tế và khai báo phân bổ Stamp cho từng pcs (chọn loại Stamp + nhập SL pcs, bảo đảm tổng SL pcs các stamp bằng số lượng chuyển).
+* **BR-KTP-05 (Cơ chế phân tách Series vs Non-Series & Đơn vị Lượng):**
+  * **Lô có Series:** Thừa hưởng trực tiếp mã Stamp và trọng lượng từng series có sẵn trên hệ thống. Số lượng series được chọn phải khớp chính xác với số lượng chuyển. Đơn vị chuẩn là Lượng (L).
+  * **Lô không có Series (Hàng xá):** Bắt buộc cân lại Tổng TL thực tế (hỗ trợ nút `[Lấy số cân]` tích hợp máy cân điện tử) và khai báo phân bổ Stamp cho từng pcs (chọn mã Stamp số ví dụ: `15`, `18`, `20`, `22`, `24`... + nhập SL pcs, bảo đảm tổng SL pcs các stamp bằng số lượng chuyển).
 * **BR-KTP-06 (Bảo toàn công thức tính 3 chỉ tiêu trọng lượng):**
-  * Luôn tách bạch 3 field: `TL Kim Loại`, `TL Đá (Stamp)`, `Tổng TL`.
+  * Luôn tách bạch 3 field: `TL Kim Loại (L)`, `TL Đá (Stamp) (L)`, `Tổng TL (L)`.
   * Công thức bảo toàn: `TL Kim loại = Tổng TL - TL Đá`. Tuyệt đối không cho phép xác nhận chuyển nếu TL Kim loại tính ra bị âm (TL đá > Tổng TL).
-* **BR-KTP-07 (Tối giản giao diện modal):** Loại bỏ hoàn toàn trường `Vị trí lưu kho` trên modal xác nhận chuyển CXLL để tập trung vào số lượng và đối soát trọng lượng.
+* **BR-KTP-07 (Tối giản giao diện modal - Minimalism):**
+  * Subtitle Header hiển thị trực tiếp `Mã Lô: [Mã Bag]`.
+  * Tiêu đề khung trọng lượng rút ngắn: `Trọng lượng phôi chuyển:`.
+  * Loại bỏ hoàn toàn trường `Vị trí lưu kho` và dòng hiển thị công thức tính để tránh rác thị giác.
 
 ---
 
@@ -118,10 +121,10 @@
 | **TL Kim Loại (g)** | Decimal | Có | Kế thừa / Tính toán | Trọng lượng kim loại của lô. Nếu = 0 hiển thị `0.0000`. |
 | **TL Đá (g)** | Decimal | Có | Kế thừa từ KHSX | Trọng lượng đá của lô. Nếu không có đá hoặc = 0 hiển thị `0.0000` (tuyệt đối không để dấu - hay —). |
 | **SL Chuyển (Modal)** | Integer | Có | Bằng Tổng SL | Cho phép nhập số lượng lẻ cần chuyển (1 ≤ SL ≤ Tổng SL), phục vụ AC 4. |
-| **Check Series (Modal)** | Boolean | Có | Tự động nhận | Nhận diện lô có series hay không. Nếu có: chọn mã series. Nếu không: cân lại Tổng TL và chọn Stamp. |
-| **TL Kim Loại (Modal)** | Decimal | Có | Tự động tính | Trọng lượng kim loại của phôi chuyển: `TL Kim loại = Tổng TL - TL Đá`. |
-| **TL Đá / Stamp (Modal)** | Decimal | Có | Kế thừa / Tính theo Stamp | Trọng lượng đá của phôi chuyển (lấy từ series hoặc tính từ nhóm stamp khai báo). Nếu = 0 hiển thị `0.0000`. |
-| **Tổng TL (Modal)** | Decimal | Có | Kế thừa / Cân lại | Tổng trọng lượng cân lại thực tế của phôi chuyển. |
+| **Check Series (Modal)** | Boolean | Có | Tự động nhận | Nhận diện lô có series hay không. Nếu có: chọn mã series kèm hiển thị Stamp. Nếu không: cân lại Tổng TL (có nút lấy số cân) và chọn Stamp (15, 18, 20...). |
+| **TL Kim Loại (L) (Modal)** | Decimal | Có | Tự động tính | Trọng lượng kim loại của phôi chuyển (đơn vị Lượng - L): `TL Kim loại = Tổng TL - TL Đá`. |
+| **TL Đá / Stamp (L) (Modal)** | Decimal | Có | Kế thừa / Tính theo Stamp | Trọng lượng đá của phôi chuyển (lấy từ series hoặc tính từ nhóm stamp khai báo). Nếu = 0 hiển thị `0.0000`. |
+| **Tổng TL (L) (Modal)** | Decimal | Có | Kế thừa / Cân lại | Tổng trọng lượng cân lại thực tế của phôi chuyển (đơn vị Lượng - L). |
 | **Thao Tác** | Action / Button | — | — | Nút `[Chuyển CXLL]`. Active khi trạng thái là `Chờ phân bổ`; Vô hiệu hóa (disabled) khi ở trạng thái khác. |
 
 ---
