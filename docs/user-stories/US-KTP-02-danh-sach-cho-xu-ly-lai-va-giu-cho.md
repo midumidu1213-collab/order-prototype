@@ -17,6 +17,7 @@
     2. Theo dõi số lượng thông qua **1 cột `SL` duy nhất**, phản ánh chính xác số lượng cho trạng thái của lô trên từng dòng.
     3. Trường hợp 1 lô có nhiều trạng thái (ví dụ tổng 10 pcs gồm: 3 pcs chờ gán đơn, 3 pcs đã giữ chỗ, 4 pcs chờ chuyển bag), hệ thống tự động **tách làm 3 dòng riêng biệt** với 3 trạng thái tương ứng.
     4. Trực tiếp theo dõi đơn hàng mới được gán (Mã SO mới, Khách hàng mới, Mã Bag mới) trên từng dòng đã giữ chỗ hoặc chờ chuyển bag.
+    5. Mọi giá trị số lượng và trọng lượng bằng 0 hiển thị số `0` hoặc `0.0000` rõ ràng (tuyệt đối không để dấu `-` hay `—`). Toàn bộ trọng lượng lấy chuẩn 4 số sau dấu thập phân.
 * **Để (So that):** Ngăn chặn tuyệt đối việc pick trùng một lô cho nhiều đơn hàng khác nhau, loại bỏ hoàn toàn ô dữ liệu phức tạp/popover, giữ giao diện bảng luôn phẳng, tinh gọn và đối soát số lượng tức thì.
 
 ---
@@ -59,10 +60,12 @@
   * **When (Khi):** Đơn hàng mới bị hủy bỏ hoặc xóa dòng hàng trước khi bấm Chuyển KHSX.
   * **Then (Thì):** Dòng phôi tự động chuyển trạng thái hoàn nhập về `Chờ gán đơn`, xóa liên kết với đơn hàng mới, giải phóng phôi để các đơn hàng khác có thể pick lại. Nếu lô gốc đã có dòng `Chờ gán đơn`, hệ thống tự động gộp số lượng lại thành 1 dòng.
 
-* **AC 7: Chốt chặn điều chuyển từ Kho Tồn Thành Phẩm sang CXLL**
-  * **Given (Biết rằng):** Thủ kho thao tác tại màn hình Tồn kho thành phẩm (`/inventory`).
-  * **When (Khi):** Thủ kho chọn một hoặc nhiều lô để Chuyển CXLL.
-  * **Then (Thì):** Chỉ cho phép bấm `[Chuyển CXLL]` đối với các lô đang ở trạng thái **`Chờ phân bổ`**. Các lô ở trạng thái khác (`Chờ lập HĐ`, `Chờ giao`, `Đã phân bổ`) bị khóa nút và checkbox, ngăn chặn việc chuyển nhầm hàng đang trong quy trình xuất bán.
+* **AC 7: Quy chuẩn hiển thị số 0 và 4 số sau thập phân**
+  * **Given (Biết rằng):** Các ô dữ liệu số lượng hoặc trọng lượng trên bảng.
+  * **Then (Thì):** 
+    * Đối với số lượng = 0: Hiển thị số `0` rõ ràng (không để dấu `-` hay `—`).
+    * Đối với trọng lượng đá hoặc kim loại = 0: Hiển thị số `0.0000` rõ ràng (không để dấu `-` hay `—`).
+    * Mọi thông số trọng lượng lấy đúng 4 số sau dấu thập phân (`#.####`, ví dụ: `0.0130 L`, `0.0004 L`, `0.0134 L`).
 
 ---
 
@@ -79,9 +82,9 @@
   7. `SL`: Chỉ 1 cột duy nhất, hiển thị số lượng pcs của trạng thái trên dòng đó.
   8. `TRẠNG THÁI KHO`: 3 trạng thái chuẩn hóa (`Chờ gán đơn`, `Đã giữ chỗ`, `Chờ chuyển bag`).
   9. `MÃ ĐƠN HÀNG MỚI`: Hiển thị SO + KH mới + Bag mới nếu có, hoặc `—` nếu Chờ gán đơn.
-  10. `TL VÀNG (L)`: Trọng lượng vàng phân bổ cho dòng (4 số thập phân, đơn vị: Lượng L).
-  11. `TL ĐÁ`: Trọng lượng đá phân bổ cho dòng (4 số thập phân, nếu không có đá hoặc = 0 hiển thị `0.0000`, tuyệt đối không để dấu —).
-  12. `TỔNG TL`: Tổng trọng lượng của dòng (= TL Vàng + TL Đá).
+  10. `TL VÀNG (L)`: Trọng lượng vàng phân bổ cho dòng (4 số thập phân, đơn vị: Lượng L). Nếu = 0 hiển thị `0.0000`.
+  11. `TL ĐÁ`: Trọng lượng đá phân bổ cho dòng (4 số thập phân). Nếu không có đá hoặc = 0 hiển thị `0.0000` (tuyệt đối không để dấu `-` hay `—`).
+  12. `TỔNG TL`: Tổng trọng lượng của dòng (= TL Vàng + TL Đá, 4 số thập phân).
 
 ---
 
@@ -90,7 +93,7 @@
 * **BR-CXLL-01 (Cơ chế 1 cột SL và tách dòng theo trạng thái):**
   * Bảng danh sách sử dụng duy nhất 1 cột `SL` để phản ánh số lượng cho trạng thái của lô trên dòng đó.
   * Trường hợp 1 lô gồm các pcs ở nhiều trạng thái khác nhau (ví dụ tổng 10 pcs: 3 pcs chờ gán đơn, 3 pcs đã giữ chỗ, 4 pcs chờ chuyển bag), hệ thống tự động tách làm các dòng độc lập với trạng thái tương ứng.
-  * Trọng lượng kim loại và trọng lượng đá của từng dòng tách được phân bổ theo tỷ lệ: `SL_dong ÷ Tong_SL_lo`, đảm bảo tổng trọng lượng các dòng luôn bằng chính xác trọng lượng lô gốc.
+  * Trọng lượng kim loại và trọng lượng đá của từng dòng tách được phân bổ theo tỷ lệ: `SL_dong / Tong_SL_lo`, đảm bảo tổng trọng lượng các dòng luôn bằng chính xác trọng lượng lô gốc.
 * **BR-CXLL-02 (Chuẩn hóa 3 trạng thái kho):**
   * `Chờ gán đơn`: Phôi tự do trong két kho, sẵn sàng gán cho đơn hàng mới (`SL` > 0).
   * `Đã giữ chỗ`: Đã được QLĐH pick vào đơn mới và đang khóa chờ duyệt KHSX.
@@ -98,11 +101,12 @@
 * **BR-CXLL-03 (Quy chuẩn hiển thị đơn hàng mới):**
   * Dòng ở trạng thái `Chờ gán đơn`: Hiển thị dấu gạch ngang mờ `—`.
   * Dòng ở trạng thái `Đã giữ chỗ` hoặc `Chờ chuyển bag`: Hiển thị trực tiếp mã SO mới (link click chuyển trang) kèm tên khách hàng mới và mã bag mới.
-* **BR-CXLL-04 (Quy chuẩn hiển thị số liệu):**
+* **BR-CXLL-04 (Quy chuẩn hiển thị số 0):**
   * Bỏ toàn bộ chữ "pcs" trong các ô số lượng, chỉ hiển thị số nguyên thuần túy (VD: `3`, `4`, `1`).
-  * Đối với các vị trí có giá trị bằng 0: Hiển thị số `0` rõ ràng (đối với Số lượng: `0`; đối với Trọng lượng đá / kim loại: `0.0000`; tuyệt đối không để dấu `-` hay `—`).
+  * Đối với các vị trí có giá trị bằng 0: Hiển thị số `0` rõ ràng (đối với Số lượng: `0`; đối với Trọng lượng đá / kim loại: `0.0000`; tuyệt đối không để dấu `-` hay `—`). Dấu `—` chỉ áp dụng cho cột chữ không có phát sinh như Mã đơn hàng mới.
 * **BR-CXLL-05 (Chốt chặn điều chuyển sang CXLL):** Chỉ các lô đang ở trạng thái `Chờ phân bổ` tại Kho Tồn Thành Phẩm mới được phép Chuyển CXLL. Các lô đang ở trạng thái `Chờ lập HĐ`, `Chờ giao`, `Đã phân bổ` bị chặn tuyệt đối.
 * **BR-CXLL-06 (Bảo toàn định danh và lịch sử gốc):** Toàn bộ thông số gốc của lô (Mã Item, Chủng loại, Mã SO cũ, Khách hàng cũ, Tuổi vàng) được bảo toàn lưu vết 100% trên mọi dòng tách của lô đó.
+* **BR-CXLL-07 (Quy chuẩn 4 số sau dấu thập phân):** Toàn bộ thông số trọng lượng kim loại, đá và tổng trọng lượng luôn hiển thị đúng 4 chữ số sau dấu thập phân (`#.####`, ví dụ: `0.0130 L`, `0.0004 L`, `0.0134 L`).
 
 ---
 
@@ -118,12 +122,12 @@
 | **Mã SO Cũ** | Text / Font-mono | Có | Kế thừa từ Kho TP | Mã đơn hàng cũ đã bị hủy (VD: `SO123456`). |
 | **Khách Hàng Cũ** | Text | Có | Kế thừa từ Kho TP | Tên khách hàng của đơn cũ đã hủy. |
 | **Tuổi Vàng** | Text | Có | Kế thừa từ Kho TP | Hàm lượng tuổi vàng (VD: `AU 61.00 Y`, `AU 75.00 Y`). |
-| **SL** | Integer | Có | Kế thừa | Số lượng pcs cho trạng thái của lô trên dòng đó. Chỉ hiển thị số nguyên. |
+| **SL** | Integer | Có | Kế thừa | Số lượng pcs cho trạng thái của lô trên dòng đó. Chỉ hiển thị số nguyên. Nếu = 0 hiển thị `0`. |
 | **Trạng Thái Kho** | Enum / Badge | Có | `Chờ gán đơn` | 1 trong 3 trạng thái: `Chờ gán đơn` (xanh lá) / `Đã giữ chỗ` (tím) / `Chờ chuyển bag` (xanh dương). |
 | **Mã Đơn Hàng Mới** | Text / Link | Không | `—` | Hiển thị link SO mới + KH mới + Bag mới nếu trạng thái là `Đã giữ chỗ` hoặc `Chờ chuyển bag`. Hiển thị `—` nếu `Chờ gán đơn`. |
-| **TL Vàng (L)** | Decimal | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Trọng lượng vàng của dòng (làm tròn đến 4 số thập phân, đơn vị: Lượng L). |
-| **TL Đá** | Decimal | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Trọng lượng đá của dòng (làm tròn đến 4 số thập phân). Nếu không có đá hoặc = 0 hiển thị `0.0000` (tuyệt đối không để dấu - hay —). |
-| **Tổng TL** | Decimal | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Tổng trọng lượng toàn bộ sản phẩm của dòng (làm tròn đến 4 số thập phân). Công thức: `Tổng TL = TL Vàng + TL Đá`. |
+| **TL Vàng (L)** | Decimal (4 số lẻ) | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Trọng lượng vàng của dòng (chuẩn 4 số thập phân, đơn vị: Lượng L). Nếu = 0 hiển thị `0.0000`. |
+| **TL Đá** | Decimal (4 số lẻ) | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Trọng lượng đá của dòng (chuẩn 4 số thập phân). Nếu không có đá hoặc = 0 hiển thị `0.0000` (tuyệt đối không để dấu `-` hay `—`). |
+| **Tổng TL** | Decimal (4 số lẻ) | Có | Kế thừa (tính theo tỷ lệ SL dòng) | Tổng trọng lượng toàn bộ sản phẩm của dòng (chuẩn 4 số thập phân). Công thức: `Tổng TL = TL Vàng + TL Đá`. |
 
 ---
 
@@ -145,27 +149,3 @@ flowchart TD
     KHSXAction -->|Hủy SO mới trước khi duyệt| Rollback["Tự động hoàn nhập dòng về Chờ gán đơn<br>(Gộp lại nếu cùng lô)"]
     KHSXAction -->|Bấm Xác nhận chuyển KHSX| TransferBag["Dòng chuyển trạng thái: Chờ chuyển bag<br>Đồng bộ sang Trạm Cấp TP (/serve) để xuất phôi"]
 ```
-
----
-
-## 7. GHI CHÚ KỸ THUẬT & VALIDATION (TECH NOTES)
-
-1. **Thuật toán Tách Dòng theo Trạng thái (Row Splitting Algorithm):**
-   ```text
-   Mỗi lô phôi (lot) có tổng số lượng totalQty và 3 chỉ tiêu:
-     - availableQty: Số pcs chờ gán đơn
-     - holdQty: Số pcs đã giữ chỗ
-     - servedQty: Số pcs chờ chuyển bag
-   
-   Quy tắc tạo dòng hiển thị:
-     1. Nếu servedQty > 0: Tạo 1 dòng với status = "Chờ chuyển bag", qty = servedQty, tỷ lệ TL = servedQty / totalQty.
-     2. Nếu holdQty > 0: Tạo 1 dòng với status = "Đã giữ chỗ", qty = holdQty, tỷ lệ TL = holdQty / totalQty.
-     3. Nếu availableQty > 0: Tạo 1 dòng với status = "Chờ gán đơn", qty = availableQty, tỷ lệ TL = availableQty / totalQty.
-   ```
-2. **Quy chuẩn Định dạng Hiển thị Số liệu & Màu sắc:**
-   - **Số lượng (SL):** Chỉ hiển thị số nguyên thuần túy (VD: `3`, `4`, `1`). Tuyệt đối không hiển thị chữ "pcs" trong ô bảng.
-   - **Bảng màu Badge Trạng Thái Kho:**
-     - Xanh lá (`bg-emerald-50 text-emerald-700 border-emerald-200`): Chờ gán đơn
-     - Tím (`bg-purple-50 text-purple-700 border-purple-200`): Đã giữ chỗ
-     - Xanh dương (`bg-blue-50 text-blue-700 border-blue-200`): Chờ chuyển bag
-   - **Định dạng công thức:** Sử dụng Plain text và ký hiệu Unicode (`=`, `+`, `-`, `—`, `≤`, `≥`, `÷`), tuyệt đối không dùng mã LaTeX.
