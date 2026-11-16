@@ -25,7 +25,16 @@ import {
   RotateCcw,
   ListFilter,
   ArrowLeft,
-  Filter
+  Filter,
+  Scale,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Trash2,
+  RefreshCw,
+  Sliders,
+  ShieldCheck
 } from "lucide-react";
 import InventorySidebar from "@/components/inventory/InventorySidebar";
 import ColumnFilterPopover from "@/components/orders/ColumnFilterPopover";
@@ -35,12 +44,39 @@ import {
   MOCK_NEW_SO_TARGETS
 } from "@/data/inventoryMockData";
 
+// Dữ liệu mẫu 8 Series chi tiết của Lô cũ SO-260800063 chuẩn theo UI Cấp Thành Phẩm
+const MOCK_SERIES_LIST = [
+  { id: "0123456A-01", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01305, totalWeight: 0.01345 },
+  { id: "0123456A-02", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01305, totalWeight: 0.01345 },
+  { id: "0123456A-03", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01305, totalWeight: 0.01345 },
+  { id: "0123456A-04", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01306, totalWeight: 0.01346 },
+  { id: "0123456A-05", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01306, totalWeight: 0.01346 },
+  { id: "0123456A-06", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01305, totalWeight: 0.01345 },
+  { id: "0123456A-07", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01307, totalWeight: 0.01347 },
+  { id: "0123456A-08", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01305, totalWeight: 0.01345 }
+];
+
 export default function FgIssueServePage() {
   const [newSos, setNewSos] = useState(MOCK_NEW_SO_TARGETS);
   const [oldLots, setOldLots] = useState(MOCK_REPROCESS_LOTS);
 
   // Chế độ xem: 'list' (Danh Sách Chờ Serve FG) hoặc 'transfer' (Điều Phối Chuyển Component Bag)
   const [viewMode, setViewMode] = useState("list");
+
+  // Kịch bản Cấp Thành Phẩm: "series" (Có series) | "no-series" (Chưa có series)
+  const [serveScenario, setServeScenario] = useState("series");
+  const [isSection1Collapsed, setIsSection1Collapsed] = useState(false);
+
+  // Kịch bản A: Lô có series
+  const [selectedSeriesCodes, setSelectedSeriesCodes] = useState(["0123456A-01", "0123456A-02"]);
+  const [seriesScanInput, setSeriesScanInput] = useState("");
+
+  // Kịch bản B: Lô chưa có series
+  const [scaleWeight, setScaleWeight] = useState(0.02690);
+  const [isScaleReading, setIsScaleReading] = useState(false);
+  const [stampRows, setStampRows] = useState([
+    { id: 1, stampCode: "18 (10K / 416)", stoneWeightPerPcs: 0.00040, qty: 2 }
+  ]);
 
   // Tab lọc danh sách chờ serve FG: 'all' | 'waiting' | 'served'
   const [activeTab, setActiveTab] = useState("all");
@@ -280,6 +316,127 @@ export default function FgIssueServePage() {
     alert(`Không tìm thấy Bag nào khớp với mã: ${code}`);
   };
 
+  // Helper xử lý Kịch bản A (Chọn Series)
+  const handleToggleSeries = (id) => {
+    if (selectedSeriesCodes.includes(id)) {
+      playScanBeep();
+      setSelectedSeriesCodes((prev) => prev.filter((c) => c !== id));
+    } else {
+      if (selectedSeriesCodes.length >= 2) {
+        alert("Đã đủ số lượng 2 PCS cần chọn theo KHSX!");
+        return;
+      }
+      playScanBeep();
+      setSelectedSeriesCodes((prev) => [...prev, id]);
+    }
+  };
+
+  const handleScanSeriesBarcode = (e) => {
+    e.preventDefault();
+    if (!seriesScanInput.trim()) return;
+    const query = seriesScanInput.trim().toUpperCase();
+    const found = MOCK_SERIES_LIST.find((s) => s.id.toUpperCase() === query);
+    if (!found) {
+      alert(`Không tìm thấy mã Seri: ${query}`);
+      return;
+    }
+    if (selectedSeriesCodes.includes(found.id)) {
+      alert(`Mã Seri ${found.id} đã được chọn!`);
+      setSeriesScanInput("");
+      return;
+    }
+    if (selectedSeriesCodes.length >= 2) {
+      alert("Đã đủ số lượng 2 PCS cần chọn!");
+      setSeriesScanInput("");
+      return;
+    }
+    playScanBeep();
+    setSelectedSeriesCodes((prev) => [...prev, found.id]);
+    setSeriesScanInput("");
+  };
+
+  // Helper xử lý Kịch bản B (Cân lại & Chọn Stamp)
+  const handleReadScale = () => {
+    setIsScaleReading(true);
+    playScanBeep();
+    setTimeout(() => {
+      setScaleWeight(0.02690);
+      setIsScaleReading(false);
+      setToastMessage({
+        type: "success",
+        text: "Đã đọc thành công số cân điện tử FQC: 0.02690 Lượng!"
+      });
+      setTimeout(() => setToastMessage(null), 3000);
+    }, 450);
+  };
+
+  const handleAddStampRow = () => {
+    playScanBeep();
+    setStampRows((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        stampCode: "20 (14K / 585)",
+        stoneWeightPerPcs: 0.00040,
+        qty: 1
+      }
+    ]);
+  };
+
+  const handleRemoveStampRow = (id) => {
+    if (stampRows.length <= 1) {
+      alert("Phải có ít nhất 1 dòng Stamp!");
+      return;
+    }
+    playScanBeep();
+    setStampRows((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  const handleUpdateStampRow = (id, field, value) => {
+    setStampRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r))
+    );
+  };
+
+  // Tính toán Kịch bản A
+  const currentSelectedSeries = useMemo(() => {
+    return MOCK_SERIES_LIST.filter((s) => selectedSeriesCodes.includes(s.id));
+  }, [selectedSeriesCodes]);
+
+  const calcSeriesStoneWeight = useMemo(() => {
+    return currentSelectedSeries.reduce((acc, s) => acc + s.stoneWeight, 0);
+  }, [currentSelectedSeries]);
+
+  const calcSeriesGoldWeight = useMemo(() => {
+    return currentSelectedSeries.reduce((acc, s) => acc + s.goldWeight, 0);
+  }, [currentSelectedSeries]);
+
+  const calcSeriesTotalWeight = useMemo(() => {
+    return currentSelectedSeries.reduce((acc, s) => acc + s.totalWeight, 0);
+  }, [currentSelectedSeries]);
+
+  // Tính toán Kịch bản B
+  const totalStampStoneWeight = useMemo(() => {
+    return stampRows.reduce(
+      (acc, r) => acc + (parseFloat(r.stoneWeightPerPcs) || 0) * (parseInt(r.qty) || 0),
+      0
+    );
+  }, [stampRows]);
+
+  const totalStampQty = useMemo(() => {
+    return stampRows.reduce((acc, r) => acc + (parseInt(r.qty) || 0), 0);
+  }, [stampRows]);
+
+  const calculatedMetalWeightB = useMemo(() => {
+    const total = parseFloat(scaleWeight) || 0;
+    return Math.max(0, total - totalStampStoneWeight);
+  }, [scaleWeight, totalStampStoneWeight]);
+
+  // Thông số chuyển đang kích hoạt (phản ánh sang Khối 2 & Khối 3)
+  const activeTransTotal = serveScenario === "series" ? calcSeriesTotalWeight : (parseFloat(scaleWeight) || 0.02690);
+  const activeTransStone = serveScenario === "series" ? calcSeriesStoneWeight : totalStampStoneWeight;
+  const activeTransMetal = serveScenario === "series" ? calcSeriesGoldWeight : calculatedMetalWeightB;
+
   // 1. Unique Values Map cho từng cột để truyền vào ColumnFilterPopover
   const uniqueValuesMap = useMemo(() => {
     return {
@@ -465,58 +622,80 @@ export default function FgIssueServePage() {
 
         {/* Topbar Navigation */}
         <header className="h-14 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-2xs">
-          <div className="flex items-center space-x-2 text-xs text-slate-500">
-            <Link href="/inventory/reprocess" className="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1">
-              <span>← Kho Chờ Xử Lý Lại (CXLL)</span>
-            </Link>
-            <ChevronRight className="h-3 w-3 text-slate-400" />
-            <span className="font-bold text-slate-800">
-              {viewMode === "transfer"
-                ? "Cấp thành phẩm (Serve FG)"
-                : "Danh Sách Chờ Serve Finish Good (FG)"}
-            </span>
-          </div>
+          {viewMode === "transfer" ? (
+            <>
+              <div className="flex items-center space-x-2 text-xs text-slate-500">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span>Quay lại Danh sách</span>
+                </button>
+                <span className="text-slate-300">/</span>
+                <span className="text-slate-600 font-medium">Kho Chờ Xử Lý Lại (CXLL)</span>
+                <span className="text-slate-300">/</span>
+                <span className="text-slate-700 font-semibold">Cấp Thành Phẩm:</span>
+                <span className="font-mono font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                  {selectedNewBag?.newBagCode || "SO-261024-003"}
+                </span>
+              </div>
 
-          <div className="flex items-center space-x-2">
-            {viewMode === "transfer" ? (
-              <button
-                type="button"
-                onClick={() => setViewMode("list")}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="h-3.5 w-3.5 text-slate-500" />
-                <span>Trở Về Danh Sách ({newSos.length})</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setViewMode("transfer")}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
-              >
-                <Zap className="h-3.5 w-3.5 text-amber-300" />
-                <span>Mở Màn Hình Cấp Thành Phẩm</span>
-              </button>
-            )}
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleConfirmServeAndCloseBag}
+                  className="px-4 py-2 rounded-lg bg-[#005a46] hover:bg-[#004737] text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Check className="h-4 w-4" />
+                  <span>Xác Nhận Chuyển & Đóng Bag Cũ</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center space-x-2 text-xs text-slate-500">
+                <Link href="/inventory/reprocess" className="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1">
+                  <span>← Kho Chờ Xử Lý Lại (CXLL)</span>
+                </Link>
+                <ChevronRight className="h-3 w-3 text-slate-400" />
+                <span className="font-bold text-slate-800">
+                  Danh Sách Chờ Serve Finish Good (FG)
+                </span>
+              </div>
 
-            <Link
-              href="/orders/11"
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors"
-              title="Mở chi tiết đơn hàng SO2608011 của QLĐH"
-            >
-              <FileText className="h-3.5 w-3.5 text-emerald-600" />
-              <span>Đơn Hàng SO2608011</span>
-              <ExternalLink className="h-3 w-3 text-slate-400" />
-            </Link>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("transfer")}
+                  className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Zap className="h-3.5 w-3.5 text-amber-300" />
+                  <span>Mở Màn Hình Cấp Thành Phẩm</span>
+                </button>
 
-            <Link
-              href="/orders/warehouse-picker"
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold shadow-2xs transition-colors"
-              title="Xem màn hình QLĐH gán phôi và tách 2 luồng"
-            >
-              <Layers className="h-3.5 w-3.5 text-teal-700" />
-              <span>Luồng QLĐH Phân Bổ</span>
-            </Link>
-          </div>
+                <Link
+                  href="/orders/11"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors"
+                  title="Mở chi tiết đơn hàng SO2608011 của QLĐH"
+                >
+                  <FileText className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Đơn Hàng SO2608011</span>
+                  <ExternalLink className="h-3 w-3 text-slate-400" />
+                </Link>
+
+                <Link
+                  href="/orders/warehouse-picker"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold shadow-2xs transition-colors"
+                  title="Xem màn hình QLĐH gán phôi và tách 2 luồng"
+                >
+                  <Layers className="h-3.5 w-3.5 text-teal-700" />
+                  <span>Luồng QLĐH Phân Bổ</span>
+                </Link>
+              </div>
+            </>
+          )}
         </header>
 
         {/* Toast Notification Alert */}
@@ -1257,401 +1436,824 @@ export default function FgIssueServePage() {
         )}
 
         {/* ========================================================= */}
-        {/* VIEW 2: KHÔNG GIAN ĐIỀU PHỐI LIỀN MẠCH THEO IMAGE 1 & 2   */}
-        {/* (CỐ ĐỊNH LAYOUT NGANG SIDE-BY-SIDE, THÊM MÃ ITEM THEO NOTE) */}
+        {/* VIEW 2: KHÔNG GIAN ĐIỀU PHỐI LIỀN MẠCH THEO CHUẨN MỚI      */}
+        {/* HỖ TRỢ 2 KỊCH BẢN: CÓ SERI (KỊCH BẢN A) & CHƯA CÓ SERI (KỊCH BẢN B) */}
         {/* ========================================================= */}
         {viewMode === "transfer" && (
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
 
-            {/* Header Điều Phối & Breadcrumb (Đổi thành "Cấp thành phẩm" theo chỉ đạo Chị đẹp) */}
-            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-500 font-semibold border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("list")}
-                    className="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 mr-2 cursor-pointer"
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                    <span>Quay lại DS</span>
-                  </button>
-                  <span className="text-slate-300">|</span>
-                  <span className="font-bold text-slate-900 text-sm">Cấp thành phẩm (Công đoạn Serve Finish Good)</span>
+            {/* BANNER TIÊU ĐỀ TRANG CẤP THÀNH PHẨM (CHUẨN XANH RÊU ĐẬM) */}
+            <div className="bg-[#005a46] rounded-xl p-4 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-sm md:text-base font-extrabold tracking-wide uppercase flex items-center gap-2">
+                  <span>MÀN HÌNH CẤP THÀNH PHẨM (SERVE FG) — CHUYỂN PHÔI SANG BAG MỚI</span>
+                </h1>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-emerald-100 font-mono mt-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-emerald-200/80 font-sans uppercase text-[11px] font-bold">Mã Item:</span>
+                    <strong className="text-white font-bold tracking-wider">
+                      {selectedOldLot?.itemCode || "GY0BE000144A00A00000000CZWW1048"}
+                    </strong>
+                  </div>
+                  <span className="text-emerald-300/60">•</span>
+                  <div className="flex items-center gap-1.5 font-sans">
+                    <span className="text-emerald-200/80 uppercase text-[11px] font-bold">Chủng loại:</span>
+                    <span className="text-white font-semibold">{selectedOldLot?.itemName || "Vòng Tay Nữ"}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-400">Đơn hàng đích:</span>
-                  <span className="font-mono font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+              </div>
+
+              <div className="shrink-0 flex items-center gap-2">
+                <span className="text-xs bg-[#004737] border border-emerald-600/40 px-3 py-1.5 rounded-lg text-emerald-100 font-mono font-bold">
+                  Đơn hàng mới: <strong className="text-white">{selectedNewBag?.soCode || "SO2608011"}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* KHỐI LÔ NGUỒN & BAG ĐÍCH (SIDE-BY-SIDE VỚI MŨI TÊN CHUYỂN Ở GIỮA) */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+
+              {/* Box Trái: LÔ NGUỒN (5 Cột) */}
+              <div className="md:col-span-5 bg-white rounded-xl border border-slate-200 p-4 shadow-xs relative">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                    <span className="font-extrabold text-xs text-slate-800 uppercase tracking-wide">Lô Nguồn</span>
+                  </div>
+                  <span className="text-[11px] font-mono font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                    {selectedOldLot?.originalSoCode || "SO123456"}
+                  </span>
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium text-[11px]">MÃ LÔ PHÔI:</span>
+                    <strong className="font-mono text-slate-900 font-bold text-sm">
+                      {selectedOldLot?.bagCode || "SO-260800063"}
+                    </strong>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium text-[11px]">KHÁCH HÀNG CŨ:</span>
+                    <span className="text-slate-700 font-medium truncate max-w-[240px]">
+                      {selectedOldLot?.oldCustomer || "2000071 - Công ty TNHH Vàng Bạc Kim Thành"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Giữa: MŨI TÊN CHUYỂN & BADGE SL (2 Cột) */}
+              <div className="md:col-span-2 flex flex-col items-center justify-center py-2 text-center">
+                <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-600 mb-1">
+                  <ArrowRight className="h-4 w-4 text-[#005a46]" />
+                </div>
+                <span className="text-xs font-bold text-[#005a46] bg-emerald-50 border border-emerald-300 px-3 py-1 rounded-full whitespace-nowrap shadow-2xs">
+                  Chuyển: 2/8 pcs
+                </span>
+              </div>
+
+              {/* Box Phải: BAG ĐÍCH (5 Cột) */}
+              <div className="md:col-span-5 bg-white rounded-xl border border-teal-200 p-4 shadow-xs relative">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span className="font-extrabold text-xs text-slate-800 uppercase tracking-wide">Bag Đích</span>
+                  </div>
+                  <span className="text-[11px] font-mono font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
                     {selectedNewBag?.soCode || "SO2608011"}
                   </span>
-                  <span className="text-slate-600 font-medium truncate max-w-[200px]">
-                    {selectedNewBag?.customerName || "DOANH NGHIỆP TƯ NHÂN Ý NGỌC"}
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium text-[11px]">MÃ BAG MỚI:</span>
+                    <strong className="font-mono text-teal-900 font-bold text-sm">
+                      {selectedNewBag?.newBagCode || "SO-261024-003"}
+                    </strong>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium text-[11px]">KHÁCH HÀNG NHẬN:</span>
+                    <span className="text-slate-700 font-medium truncate max-w-[200px]">
+                      {selectedNewBag?.customerName || "DOANH NGHIỆP TƯ NHÂN Ý NGỌC"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-0.5 border-t border-slate-100">
+                    <span className="text-slate-400 font-medium text-[10px]">NGUYÊN LIỆU - TUỔI VÀNG:</span>
+                    <span className="font-mono font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded text-[11px]">
+                      {selectedNewBag?.goldAge || "75W"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ========================================================= */}
+            {/* KHỐI 1: CHỌN SERIES (KỊCH BẢN A) HOẶC CÂN & CHỌN STAMP (KỊCH BẢN B) */}
+            {/* ========================================================= */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+              
+              {/* Header Khối 1 kèm Toggle Kịch bản & Nút Thu gọn */}
+              <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#005a46]"></span>
+                  <h2 className="font-bold text-xs text-slate-900 uppercase tracking-wide">
+                    {serveScenario === "series"
+                      ? "1. CHỌN SERIES"
+                      : "1. CÂN KIỂM TRA PHÔI GỐC & CHỌN MÃ STAMP"}
+                  </h2>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${
+                    serveScenario === "series"
+                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                      : "bg-amber-50 text-amber-900 border-amber-200"
+                  }`}>
+                    {serveScenario === "series"
+                      ? "Kịch bản A: Lô đã có mã Seri chi tiết (Kế thừa 100%, không cần cân & chọn lại Stamp)"
+                      : "Kịch bản B: Lô chưa có Seri — Bắt buộc cân lại tổng trọng lượng & chọn lại Stamp!"}
                   </span>
                 </div>
-              </div>
 
-              {/* Thanh Quét hoặc Nhập Barcode */}
-              <form onSubmit={handleBarcodeSubmit} className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Barcode className="h-4 w-4" />
-                </div>
-                <input
-                  ref={barcodeInputRef}
-                  type="text"
-                  placeholder="Quét hoặc nhập mã Bag nguồn / Bag đích (VD: SO-260800063 hoặc SO-261024-003)..."
-                  value={barcodeInput}
-                  onChange={(e) => setBarcodeInput(e.target.value)}
-                  className="w-full pl-10 pr-28 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all placeholder:font-sans placeholder:text-slate-400"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-1.5 top-1.5 bottom-1.5 px-3.5 bg-teal-700 hover:bg-teal-800 text-white rounded-md text-xs font-bold transition-colors cursor-pointer"
-                >
-                  Tra cứu Bag
-                </button>
-              </form>
-
-              {/* 2 KHUNG BAG NGUỒN & BAG ĐÍCH CỐ ĐỊNH NGANG NHAU (SIDE-BY-SIDE) THEO MŨI TÊN ĐỎ ẢNH 1 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch pt-1">
-
-                {/* Box Trái: Bag nguồn (Xuất đi) */}
-                <div className="p-3.5 bg-slate-50 border border-slate-300 rounded-xl relative group hover:border-slate-400 transition-all">
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 font-bold mb-1">
-                    <span className="text-slate-700 uppercase tracking-wide">Bag nguồn (Xuất đi)</span>
-                    <span className="text-[10px] font-mono bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-bold">
-                      Kho CXLL (Đơn hủy SO123456)
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <strong className="font-mono text-base font-black text-slate-900">
-                        {selectedOldLot?.bagCode || "— Chưa chọn Bag"}
-                      </strong>
-                      <span className="text-xs text-slate-600 font-medium truncate max-w-[190px]">
-                        ({selectedOldLot?.itemName || "Vòng Tay Nữ"})
-                      </span>
-                    </div>
-                    {selectedOldLot && (
-                      <span className="font-mono text-xs font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
-                        TL: {currentTotalWeight.toFixed(4)} lượng
-                      </span>
-                    )}
-                  </div>
-                  {/* Hiển thị Mã Item Bag Nguồn (THEO NOTE ĐỎ ẢNH 1) */}
-                  <div className="mt-1.5 pt-1.5 border-t border-slate-200/80 flex items-center justify-between text-[11px]">
-                    <div className="flex items-center gap-1.5 font-mono">
-                      <span className="text-[10px] text-slate-400 font-sans font-bold uppercase">Mã Item:</span>
-                      <strong className="text-teal-800 font-bold">{selectedOldLot?.itemCode || "GY0BE000144A00A0000000CZWW1048"}</strong>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => handleCopy(selectedOldLot?.itemCode, e)}
-                      className="text-slate-400 hover:text-slate-600"
-                      title="Sao chép mã Item nguồn"
-                    >
-                      {copiedCode === selectedOldLot?.itemCode ? (
-                        <Check className="h-3 w-3 text-emerald-600" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Box Phải: Bag đích (Nhận vào) - NẰM NGANG VỚI BAG NGUỒN THEO MŨI TÊN ẢNH 1 */}
-                <div className="p-3.5 bg-teal-50/60 border border-teal-300 rounded-xl relative group hover:border-teal-400 transition-all">
-                  <div className="flex items-center justify-between text-[11px] text-teal-800 font-bold mb-1">
-                    <span className="text-teal-900 uppercase tracking-wide">Bag đích (Nhận vào)</span>
-                    <span className="text-[10px] font-mono bg-teal-200 text-teal-900 px-2 py-0.5 rounded font-bold">
-                      Đơn mới SO2608011
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <strong className="font-mono text-base font-black text-teal-950">
-                        {selectedNewBag?.newBagCode || "— Chưa chọn Bag"}
-                      </strong>
-                      <span className="text-xs text-teal-700 font-medium truncate max-w-[190px]">
-                        ({selectedNewBag?.itemName || "Vòng Tay Nữ VT-048"})
-                      </span>
-                    </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${isCurrentServed
-                        ? "bg-emerald-600 text-white"
-                        : "bg-amber-100 text-amber-900 border border-amber-300"
-                      }`}>
-                      {selectedNewBag?.serveStatus || "Chờ chuyển bag"}
-                    </span>
-                  </div>
-                  {/* Hiển thị Mã Item Bag Đích (THEO NOTE ĐỎ ẢNH 1) */}
-                  <div className="mt-1.5 pt-1.5 border-t border-teal-200/80 flex items-center justify-between text-[11px]">
-                    <div className="flex items-center gap-1.5 font-mono">
-                      <span className="text-[10px] text-teal-600 font-sans font-bold uppercase">Mã Item:</span>
-                      <strong className="text-teal-900 font-bold">{selectedNewBag?.itemCode || "GY0BE000144A00A0000000CZWW1048"}</strong>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => handleCopy(selectedNewBag?.itemCode, e)}
-                      className="text-teal-600 hover:text-teal-800"
-                      title="Sao chép mã Item đích"
-                    >
-                      {copiedCode === selectedNewBag?.itemCode ? (
-                        <Check className="h-3 w-3 text-emerald-600" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* BẢNG COMPONENT SO SÁNH NGANG HÀNG TRỰC DIỆN (TINH GỌN, BAG ĐÍCH ĐƯỢC ĐƯA LÊN NGANG HÀNG BAG NGUỒN) */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-
-              {/* Header Toolbar Tinh Gọn & Cụm Nút Thao Tác Điều Phối */}
-              <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold shrink-0">
-                    <Boxes className="h-4.5 w-4.5 text-teal-700" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-xs text-slate-900 flex items-center gap-2">
-                      <span>Bảng So Sánh & Điều Phối Component Trực Diện</span>
-                      <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-200 px-2 py-0.5 rounded font-mono font-bold">
-                        {selectedOldLot?.lop || "AU 61.00 Y"}
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5 font-medium">
-                      <span>Bag Nguồn: <strong className="font-mono text-slate-800">{selectedOldLot?.bagCode}</strong></span>
-                      <span className="text-slate-300">➔</span>
-                      <span>Bag Đích: <strong className="font-mono text-teal-800">{selectedNewBag?.newBagCode}</strong></span>
-                      <span className="text-slate-400">({selectedNewBag?.customerName || "DNTN Ý NGỌC"})</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Cụm Nút Điều Phối Tinh Gọn Nằm Trên Toolbar (Không làm gián đoạn dòng bảng) */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Nút Thu gọn / Mở rộng */}
                   <button
                     type="button"
-                    onClick={handleTransferAll}
-                    disabled={isCurrentTransferred}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer ${isCurrentTransferred
-                        ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
-                        : "bg-teal-700 hover:bg-teal-800 text-white"
-                      }`}
+                    onClick={() => setIsSection1Collapsed((prev) => !prev)}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-600 hover:text-slate-900 border border-slate-300 rounded-md bg-white hover:bg-slate-50 transition-colors cursor-pointer"
                   >
-                    <span>Chuyển tất cả sang Bag đích</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleRevertAll}
-                    disabled={!isCurrentTransferred || isCurrentServed}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${!isCurrentTransferred || isCurrentServed
-                        ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                        : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
-                      }`}
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    <span>Trả tất cả</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Bảng Dữ Liệu So Sánh Ngang Hàng Tuyệt Đối Giữa Bag Nguồn và Bag Đích (Dịch sang trái, bố trí cân đối theo chỉ đạo) */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left border-collapse table-fixed">
-                  <thead className="bg-[#f8fafc] text-slate-700 font-bold border-b border-slate-200 text-[11px] select-none">
-                    <tr>
-                      <th rowSpan={2} className="py-2.5 px-3.5 border-r border-slate-200 w-[36%]">
-                        Component (Phụ liệu & Khuôn Cast)
-                      </th>
-                      <th colSpan={2} className="py-1.5 px-3 text-center border-r border-slate-200 bg-slate-100/70 text-slate-800 w-[28%]">
-                        Bag Nguồn ({selectedOldLot?.bagCode})
-                      </th>
-                      <th rowSpan={2} className="py-2.5 px-2 text-center border-r border-slate-200 w-[6%] bg-slate-50 text-slate-400 font-mono">
-                        ➔
-                      </th>
-                      <th colSpan={2} className="py-1.5 px-3 text-center bg-teal-50/70 text-teal-900 w-[30%]">
-                        Bag Đích ({selectedNewBag?.newBagCode})
-                      </th>
-                    </tr>
-                    <tr className="border-t border-slate-200 text-[10px] text-slate-500">
-                      <th className="py-1.5 px-3 text-center w-[14%]">Hiện tại</th>
-                      <th className="py-1.5 px-3 text-center w-[14%] border-r border-slate-200">Còn lại</th>
-                      <th className="py-1.5 px-3 text-center w-[15%] text-emerald-700 font-bold">Nhận thêm (+)</th>
-                      <th className="py-1.5 px-3 text-center w-[15%] text-teal-950 font-bold">Sau khi nhận</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-
-                    {/* Nhóm: Phụ liệu - Đá */}
-                    <tr className="bg-slate-100/70 font-bold text-slate-700 text-[11px]">
-                      <td colSpan={6} className="py-1.5 px-3.5">▾ Phụ liệu - Đá</td>
-                    </tr>
-                    {selectedOldLot?.components?.stones?.length > 0 ? (
-                      selectedOldLot.components.stones.map((st, i) => (
-                        <tr key={i} className="hover:bg-slate-50/80 text-[11px] transition-colors">
-                          <td className="py-2.5 px-3.5 pl-6 font-mono text-slate-800 border-r border-slate-100">
-                            <div className="font-bold text-teal-900">{st.code}</div>
-                            <div className="text-[10px] text-slate-400 font-sans mt-0.5">{st.name}</div>
-                          </td>
-                          {/* Nguồn: Hiện tại */}
-                          <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-700">
-                            {st.qty}
-                          </td>
-                          {/* Nguồn: Còn lại */}
-                          <td className="py-2.5 px-3 text-center font-mono font-bold border-r border-slate-200">
-                            <span className={isCurrentTransferred ? "text-slate-400" : "text-slate-900"}>
-                              {isCurrentTransferred ? "0" : st.qty}
-                            </span>
-                          </td>
-                          {/* Mũi tên chuyển */}
-                          <td className="py-2.5 px-2 text-center text-teal-600 font-bold border-r border-slate-200 bg-slate-50/40">
-                            ➔
-                          </td>
-                          {/* Đích: Nhận thêm (+) */}
-                          <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-700">
-                            {isCurrentTransferred ? `+${st.qty}` : "—"}
-                          </td>
-                          {/* Đích: Sau khi nhận */}
-                          <td className="py-2.5 px-3 text-center font-mono font-bold text-teal-950">
-                            {isCurrentTransferred ? st.qty : "—"}
-                          </td>
-                        </tr>
-                      ))
+                    {isSection1Collapsed ? (
+                      <>
+                        <ChevronDown className="h-3.5 w-3.5" />
+                        <span>Mở rộng</span>
+                      </>
                     ) : (
-                      <tr className="text-[11px] text-slate-400">
-                        <td className="py-2.5 px-3.5 pl-6 italic border-r border-slate-100">Không có đá (Phôi trơn)</td>
-                        <td className="py-2.5 px-3 text-center">—</td>
-                        <td className="py-2.5 px-3 text-center border-r border-slate-200">—</td>
-                        <td className="py-2.5 px-2 text-center border-r border-slate-200 bg-slate-50/40">—</td>
-                        <td className="py-2.5 px-3 text-center">—</td>
-                        <td className="py-2.5 px-3 text-center">—</td>
-                      </tr>
+                      <>
+                        <ChevronUp className="h-3.5 w-3.5" />
+                        <span>Thu gọn</span>
+                      </>
                     )}
+                  </button>
 
-                    {/* Nhóm: Khuôn (Cast) / Thân Phôi */}
-                    <tr className="bg-slate-100/70 font-bold text-slate-700 text-[11px]">
-                      <td colSpan={6} className="py-1.5 px-3.5">▾ Khuôn (Cast) / Thân Phôi</td>
-                    </tr>
-                    {selectedOldLot?.components?.cast?.map((cs, i) => (
-                      <tr key={i} className="hover:bg-slate-50/80 text-[11px] transition-colors">
-                        <td className="py-2.5 px-3.5 pl-6 font-mono text-slate-800 border-r border-slate-100">
-                          <div className="font-bold text-teal-900">{cs.code}</div>
-                          <div className="text-[10px] text-slate-400 font-sans mt-0.5">{cs.name}</div>
-                        </td>
-                        {/* Nguồn: Hiện tại */}
-                        <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-700">
-                          {cs.qty}
-                        </td>
-                        {/* Nguồn: Còn lại */}
-                        <td className="py-2.5 px-3 text-center font-mono font-bold border-r border-slate-200">
-                          <span className={isCurrentTransferred ? "text-slate-400" : "text-slate-900"}>
-                            {isCurrentTransferred ? "0" : cs.qty}
+                  {/* Toggle Chế độ test: Có Seri vs Chưa có Seri */}
+                  <div className="flex items-center bg-slate-200/80 p-0.5 rounded-lg border border-slate-300 text-xs">
+                    <span className="text-[10px] text-slate-500 font-semibold px-2">Chế độ test:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playScanBeep();
+                        setServeScenario("series");
+                      }}
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                        serveScenario === "series"
+                          ? "bg-white text-slate-900 shadow-2xs border border-slate-300"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Có Seri (Chọn PCS)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playScanBeep();
+                        setServeScenario("no-series");
+                      }}
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                        serveScenario === "no-series"
+                          ? "bg-amber-500 text-white shadow-2xs font-bold"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Chưa có Seri (Cân lại)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Body Khối 1: Hiển thị nội dung tương ứng theo kịch bản */}
+              {!isSection1Collapsed && (
+                <div className="p-4 space-y-4">
+
+                  {/* ========================================================= */}
+                  {/* KỊCH BẢN A: LÔ ĐÃ CÓ MÃ SERI CHI TIẾT (ẢNH 1)              */}
+                  {/* ========================================================= */}
+                  {serveScenario === "series" ? (
+                    <div className="space-y-3">
+                      {/* Form Quét súng Barcode */}
+                      <form onSubmit={handleScanSeriesBarcode} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <div className="relative flex-1">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <Barcode className="h-4 w-4" />
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Quét súng Barcode vào tem niêm phong Seri (hoặc nhập mã rồi nhấn Enter)..."
+                            value={seriesScanInput}
+                            onChange={(e) => setSeriesScanInput(e.target.value)}
+                            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#005a46] focus:border-[#005a46] transition-all"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-[#005a46] hover:bg-[#004737] text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                        >
+                          <Barcode className="h-4 w-4" />
+                          <span>Quét Barcode</span>
+                        </button>
+                        <div className="flex items-center px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-700 font-bold shrink-0">
+                          <span>Số lượng cần chọn: </span>
+                          <strong className="text-[#005a46] ml-1 font-mono text-sm">
+                            {selectedSeriesCodes.length} / 2 PCS
+                          </strong>
+                        </div>
+                      </form>
+
+                      {/* Bảng Danh Sách Seri Chi Tiết (8 Dòng) */}
+                      <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                        <table className="w-full text-xs text-left border-collapse">
+                          <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 text-[11px]">
+                            <tr>
+                              <th className="py-2.5 px-3 text-center w-12">Chọn</th>
+                              <th className="py-2.5 px-3">Mã Seri (Niêm phong)</th>
+                              <th className="py-2.5 px-3 text-center">Mã Stamp gốc</th>
+                              <th className="py-2.5 px-3 text-right">TL Đá (Lượng)</th>
+                              <th className="py-2.5 px-3 text-right">TL Vàng (Lượng)</th>
+                              <th className="py-2.5 px-3 text-right">Tổng TL Psc (Lượng)</th>
+                              <th className="py-2.5 px-3 text-center">Trạng thái</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                            {MOCK_SERIES_LIST.map((sr) => {
+                              const isSelected = selectedSeriesCodes.includes(sr.id);
+                              const isLocked = !isSelected && selectedSeriesCodes.length >= 2;
+
+                              return (
+                                <tr
+                                  key={sr.id}
+                                  className={`transition-colors ${
+                                    isSelected
+                                      ? "bg-emerald-50/70"
+                                      : isLocked
+                                        ? "bg-slate-50/50 text-slate-400"
+                                        : "hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <td className="py-2 px-3 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      disabled={isLocked}
+                                      onChange={() => handleToggleSeries(sr.id)}
+                                      className={`w-4 h-4 rounded text-[#005a46] focus:ring-[#005a46] ${
+                                        isLocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
+                                      }`}
+                                    />
+                                  </td>
+                                  <td className="py-2 px-3 font-bold text-slate-800">
+                                    {sr.id}
+                                  </td>
+                                  <td className="py-2 px-3 text-center text-slate-700">
+                                    {sr.stampCode}
+                                  </td>
+                                  <td className="py-2 px-3 text-right text-slate-700">
+                                    {sr.stoneWeight.toFixed(5)}
+                                  </td>
+                                  <td className="py-2 px-3 text-right text-slate-700">
+                                    {sr.goldWeight.toFixed(5)}
+                                  </td>
+                                  <td className="py-2 px-3 text-right font-bold text-slate-900">
+                                    {sr.totalWeight.toFixed(5)}
+                                  </td>
+                                  <td className="py-2 px-3 text-center">
+                                    {isSelected ? (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+                                        <Check className="h-3 w-3" />
+                                        <span>Đã chọn</span>
+                                      </span>
+                                    ) : isLocked ? (
+                                      <span className="text-[10px] text-slate-400 font-sans italic">
+                                        Khóa (Đã đủ SL)
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] text-slate-500 font-sans">
+                                        Khả dụng
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Footer Ghi chú Kịch bản A */}
+                      <div className="flex justify-end pt-1">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-md border border-emerald-200">
+                          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                          <span>Không bắt buộc cân lại (Dữ liệu đã niêm phong)</span>
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    /* ========================================================= */
+                    /* KỊCH BẢN B: LÔ CHƯA CÓ SERI — BẮT BUỘC CÂN & CHỌN STAMP (ẢNH 2) */
+                    /* ========================================================= */
+                    <div className="space-y-4">
+                      {/* Warning Banner Kịch bản B */}
+                      <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg flex items-center justify-between text-xs text-amber-900 gap-3">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                          <span>
+                            Lô phôi cũ chưa có mã Seri lẻ + Kế hoạch chọn xuất <strong>2 PCS</strong>. Bắt buộc đặt phôi lên cân điện tử để cân lại & chọn Mã Stamp theo PCS!
                           </span>
-                        </td>
-                        {/* Mũi tên chuyển */}
-                        <td className="py-2.5 px-2 text-center text-teal-600 font-bold border-r border-slate-200 bg-slate-50/40">
-                          ➔
-                        </td>
-                        {/* Đích: Nhận thêm (+) */}
-                        <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-700">
-                          {isCurrentTransferred ? `+${cs.qty}` : "—"}
-                        </td>
-                        {/* Đích: Sau khi nhận */}
-                        <td className="py-2.5 px-3 text-center font-mono font-bold text-teal-950">
-                          {isCurrentTransferred ? cs.qty : "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-
-                  {/* Chân Bảng Tóm Tắt Trọng Lượng Ngang Hàng Tuyệt Đối */}
-                  <tfoot className="bg-slate-50 font-bold text-slate-700 border-t border-slate-200 text-[11px]">
-                    <tr className="border-b border-slate-100">
-                      <td className="py-2 px-3.5 text-right font-sans border-r border-slate-200">
-                        Tổng trọng lượng:
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono text-slate-800">
-                        {currentTotalWeight.toFixed(4)}
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono border-r border-slate-200">
-                        <span className={isCurrentTransferred ? "text-slate-400" : "text-slate-900"}>
-                          {isCurrentTransferred ? "0.0000" : currentTotalWeight.toFixed(4)}
+                        </div>
+                        <span className="text-[10px] uppercase font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded shrink-0">
+                          Bắt buộc cân lại
                         </span>
-                      </td>
-                      <td className="py-2 px-2 text-center text-teal-600 font-bold border-r border-slate-200 bg-slate-100/50">
-                        ➔
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono text-emerald-700 font-bold">
-                        {isCurrentTransferred ? `+${currentTotalWeight.toFixed(4)}` : "—"}
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono text-teal-950 font-black">
-                        {isCurrentTransferred ? currentTotalWeight.toFixed(4) : "—"}
-                      </td>
-                    </tr>
+                      </div>
 
-                    <tr className="border-b border-slate-100">
-                      <td className="py-2 px-3.5 text-right font-sans border-r border-slate-200">
-                        Trọng lượng đá:
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono text-slate-800">
-                        {currentStoneWeight.toFixed(4)}
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono border-r border-slate-200">
-                        <span className={isCurrentTransferred ? "text-slate-400" : "text-slate-900"}>
-                          {isCurrentTransferred ? "0.0000" : currentStoneWeight.toFixed(4)}
-                        </span>
-                      </td>
-                      <td className="py-2 px-2 text-center text-teal-600 font-bold border-r border-slate-200 bg-slate-100/50">
-                        ➔
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono text-emerald-700 font-bold">
-                        {isCurrentTransferred ? `+${currentStoneWeight.toFixed(4)}` : "—"}
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono text-slate-800 font-bold">
-                        {isCurrentTransferred ? currentStoneWeight.toFixed(4) : "—"}
-                      </td>
-                    </tr>
+                      {/* KHỐI CÂN LẠI TỔNG TRỌNG LƯỢNG (FQC BÀN CÂN - THEME CÔNG NGHIỆP DARK) */}
+                      <div className="bg-slate-900 rounded-xl p-4 text-white shadow-sm space-y-3">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                          <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-200">
+                            <Scale className="h-4 w-4 text-amber-400" />
+                            <span>CÂN LẠI TỔNG TRỌNG LƯỢNG (FQC BÀN CÂN)</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            Đơn vị: <strong>LƯỢNG</strong>
+                          </span>
+                        </div>
 
-                    <tr>
-                      <td className="py-2 px-3.5 text-right font-sans border-r border-slate-200">
-                        Trọng lượng kim loại:
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono text-slate-800">
-                        {currentMetalWeight.toFixed(4)}
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono border-r border-slate-200">
-                        <span className={isCurrentTransferred ? "text-slate-400" : "text-slate-900"}>
-                          {isCurrentTransferred ? "0.0000" : currentMetalWeight.toFixed(4)}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                          {/* Trọng lượng chuẩn lý thuyết */}
+                          <div className="p-3 bg-slate-800/80 rounded-lg border border-slate-700/80">
+                            <div className="text-[11px] text-slate-400 font-semibold mb-1">
+                              TRỌNG LƯỢNG CHUẨN LÝ THUYẾT (KHSX):
+                            </div>
+                            <div className="text-[10px] text-slate-500">Ước tính KHSX:</div>
+                            <div className="text-2xl font-black font-mono text-amber-300 my-1">
+                              0.02690 Lượng
+                            </div>
+                            <div className="flex items-center gap-3 text-[11px] text-slate-400 pt-1 border-t border-slate-700/60 font-mono">
+                              <span>Vàng LT: <strong className="text-slate-200">0.02610</strong></span>
+                              <span>•</span>
+                              <span>Đá LT: <strong className="text-slate-200">0.00080</strong></span>
+                            </div>
+                          </div>
+
+                          {/* Tổng trọng lượng cân thực tế (Màn LED) */}
+                          <div className="p-3 bg-slate-800/80 rounded-lg border border-slate-700/80 flex flex-col justify-between">
+                            <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold mb-1">
+                              <span>TỔNG TRỌNG LƯỢNG CÂN THỰC TẾ:</span>
+                              <span className="text-[10px] font-mono text-emerald-400">CÂN: FQC-C015</span>
+                            </div>
+
+                            {/* Màn hình LED màu đen viền xanh ngọc */}
+                            <div className="bg-black/90 border border-emerald-500/50 rounded-lg p-2.5 my-1 flex items-center justify-between shadow-inner">
+                              <span className="text-2xl md:text-3xl font-black font-mono text-emerald-400 tracking-wider">
+                                {Number(scaleWeight).toFixed(5)}
+                              </span>
+                              <span className="text-xs font-bold text-emerald-500 uppercase font-mono">
+                                Lượng
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-1">
+                              <button
+                                type="button"
+                                onClick={handleReadScale}
+                                disabled={isScaleReading}
+                                className="px-3 py-1 bg-[#005a46] hover:bg-[#004737] text-white rounded text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                              >
+                                <RefreshCw className={`h-3.5 w-3.5 ${isScaleReading ? "animate-spin" : ""}`} />
+                                <span>{isScaleReading ? "Đang đọc cân..." : "Đọc Cân Điện Tử"}</span>
+                              </button>
+
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">
+                                  Chuẩn
+                                </span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-700 text-slate-400">
+                                  Lệch
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* KHỐI CHỌN MÃ STAMP & PHÂN BỔ SỐ LƯỢNG PCS */}
+                      <div className="space-y-2 pt-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-[#005a46]"></span>
+                              <h3 className="font-bold text-xs text-slate-900 uppercase">
+                                CHỌN MÃ STAMP & PHÂN BỔ SỐ LƯỢNG PCS
+                              </h3>
+                            </div>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              1 PCS tương ứng 1 Stamp • Mã Stamp xưởng: 18, 20, 24... • Nhập TL Đá/PCS theo thực tế • Ràng buộc: SL Chuyển = SL Stamp
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-md">
+                              ✓ Đã khớp: {totalStampQty}/2 PCS (SL Chuyển = SL Stamp)
+                            </span>
+                            <button
+                              type="button"
+                              onClick={handleAddStampRow}
+                              className="px-3 py-1 bg-[#005a46] hover:bg-[#004737] text-white rounded-md text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                              <span>Thêm Dòng Stamp</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Bảng Dòng Stamp */}
+                        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                          <table className="w-full text-xs text-left border-collapse">
+                            <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 text-[11px]">
+                              <tr>
+                                <th className="py-2 px-3 text-center w-12">STT</th>
+                                <th className="py-2 px-3">Mã Stamp</th>
+                                <th className="py-2 px-3 text-center">TL Đá / 1 PCS (Lượng)</th>
+                                <th className="py-2 px-3 text-center w-28">Số lượng (PCS)</th>
+                                <th className="py-2 px-3 text-right">Tổng TL Đá (Lượng)</th>
+                                <th className="py-2 px-3 text-center w-16">Thao tác</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                              {stampRows.map((row, index) => {
+                                const rowStoneTotal = (parseFloat(row.stoneWeightPerPcs) || 0) * (parseInt(row.qty) || 0);
+
+                                return (
+                                  <tr key={row.id} className="hover:bg-slate-50">
+                                    <td className="py-2 px-3 text-center text-slate-500 font-sans">
+                                      #{index + 1}
+                                    </td>
+                                    <td className="py-2 px-3">
+                                      <select
+                                        value={row.stampCode}
+                                        onChange={(e) => handleUpdateStampRow(row.id, "stampCode", e.target.value)}
+                                        className="w-full py-1 px-2 border border-slate-300 rounded bg-white text-xs font-sans font-medium focus:ring-1 focus:ring-[#005a46]"
+                                      >
+                                        <option value="18 (10K / 416)">18 (10K / 416)</option>
+                                        <option value="20 (14K / 585)">20 (14K / 585)</option>
+                                        <option value="24 (18K / 750)">24 (18K / 750)</option>
+                                        <option value="STP-10K-0.5">STP-10K-0.5</option>
+                                      </select>
+                                    </td>
+                                    <td className="py-2 px-3 text-center">
+                                      <input
+                                        type="number"
+                                        step="0.00001"
+                                        value={row.stoneWeightPerPcs}
+                                        onChange={(e) => handleUpdateStampRow(row.id, "stoneWeightPerPcs", e.target.value)}
+                                        className="w-28 text-center py-1 px-2 border border-slate-300 rounded font-mono text-xs focus:ring-1 focus:ring-[#005a46]"
+                                      />
+                                    </td>
+                                    <td className="py-2 px-3 text-center">
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        value={row.qty}
+                                        onChange={(e) => handleUpdateStampRow(row.id, "qty", parseInt(e.target.value) || 0)}
+                                        className="w-16 text-center py-1 px-2 border border-slate-300 rounded font-mono font-bold text-xs focus:ring-1 focus:ring-[#005a46]"
+                                      />
+                                    </td>
+                                    <td className="py-2 px-3 text-right font-bold text-slate-900">
+                                      {rowStoneTotal.toFixed(5)} L
+                                    </td>
+                                    <td className="py-2 px-3 text-center font-sans">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveStampRow(row.id)}
+                                        disabled={stampRows.length <= 1}
+                                        className={`p-1 rounded text-slate-400 hover:text-rose-600 transition-colors ${
+                                          stampRows.length <= 1 ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
+                                        }`}
+                                        title="Xóa dòng"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* KHỐI KẾT QUẢ TÍNH TRỌNG LƯỢNG (3 HỘP THỐNG KÊ) */}
+                      <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1.5 font-bold text-slate-800 uppercase">
+                            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                            <span>KẾT QUẢ TÍNH TRỌNG LƯỢNG (TL KIM LOẠI = TỔNG TL - TL ĐÁ)</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 italic">
+                            * Bảo toàn trọng lượng • Tự động đồng bộ sang Bảng Diff
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {/* Hộp 1: Tổng TL cân */}
+                          <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
+                            <div className="text-[10px] text-slate-500 font-bold uppercase">
+                              TỔNG TRỌNG LƯỢNG (CÂN)
+                            </div>
+                            <div className="text-lg font-black font-mono text-slate-900 my-0.5">
+                              {Number(scaleWeight).toFixed(5)} Lượng
+                            </div>
+                            <div className="text-[10px] text-slate-400">Đo từ cân FQC</div>
+                          </div>
+
+                          {/* Hộp 2: Trọng lượng đá */}
+                          <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
+                            <div className="text-[10px] text-amber-700 font-bold uppercase">
+                              TRỌNG LƯỢNG ĐÁ (TỪ STAMP)
+                            </div>
+                            <div className="text-lg font-black font-mono text-amber-600 my-0.5">
+                              {totalStampStoneWeight.toFixed(5)} Lượng
+                            </div>
+                            <div className="text-[10px] text-slate-400">Tính từ mã Stamp đã chọn</div>
+                          </div>
+
+                          {/* Hộp 3: Trọng lượng kim loại */}
+                          <div className="p-3 bg-white rounded-lg border border-teal-200 bg-teal-50/30 shadow-2xs">
+                            <div className="text-[10px] text-teal-800 font-bold uppercase">
+                              TRỌNG LƯỢNG KIM LOẠI (VÀNG)
+                            </div>
+                            <div className="text-lg font-black font-mono text-teal-900 my-0.5">
+                              {calculatedMetalWeightB.toFixed(5)} Lượng
+                            </div>
+                            <div className="text-[10px] text-teal-600 font-medium">= Tổng TL - TL Đá</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ========================================================= */}
+            {/* KHỐI 2: ĐIỀU PHỐI COMPONENT BAG THEO SL SERI ĐÃ CHỌN       */}
+            {/* ========================================================= */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#005a46]"></span>
+                    <h2 className="font-bold text-xs text-slate-900 uppercase tracking-wide">
+                      2. ĐIỀU PHỐI COMPONENT BAG THEO SL SERI ĐÃ CHỌN
+                    </h2>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    KHSX phân bổ cố định số lượng chuyển • Kế thừa đầy đủ cấu trúc linh kiện phôi
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 px-3 py-1 rounded-md self-start sm:self-auto">
+                  KHSX chỉ định: Chuyển: 2/8 pcs
+                </span>
+              </div>
+
+              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+
+                {/* Box Trái: Component Lô Nguồn (SO-260800063) */}
+                <div className="bg-rose-50/20 rounded-xl border border-rose-200 p-3.5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between border-b border-rose-200/60 pb-2 mb-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span className="font-bold text-xs text-rose-950">
+                          Component Lô Nguồn ({selectedOldLot?.bagCode || "SO-260800063"})
                         </span>
-                      </td>
-                      <td className="py-2 px-2 text-center text-teal-600 font-bold border-r border-slate-200 bg-slate-100/50">
-                        ➔
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono text-emerald-700 font-bold">
-                        {isCurrentTransferred ? `+${currentMetalWeight.toFixed(4)}` : "—"}
-                      </td>
-                      <td className="py-2 px-3 text-center font-mono text-slate-800 font-bold">
-                        {isCurrentTransferred ? currentMetalWeight.toFixed(4) : "—"}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+                      </div>
+                      <span className="text-[10px] font-bold text-rose-700 bg-rose-100/70 border border-rose-200 px-2 py-0.5 rounded">
+                        Xuất đi 2 PCS
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      {/* Nhóm Khuôn Cast */}
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-bold text-slate-700">▾ Khuôn (Cast) — Phôi đúc</div>
+                        <div className="p-2 bg-white rounded border border-rose-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-slate-800">DE000144A00-MOLD-1-A</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Khuôn Vòng Tay Nữ (Phôi đúc kim loại)</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-slate-500">Hiện tại: <strong>8 Cái</strong></div>
+                            <div className="text-rose-700 font-bold">Còn lại: 6 Cái</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Nhóm Bán thành phẩm / Linh kiện phụ */}
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-bold text-slate-700">▾ Bán thành phẩm / Linh kiện phụ (HTJ)</div>
+                        <div className="p-2 bg-white rounded border border-rose-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-slate-800">CBC049TH BM00249</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Chấu đúc / Khóa</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-slate-500">Hiện tại: <strong>3 Cái</strong></div>
+                            <div className="text-rose-700 font-bold">Còn lại: 2 Cái</div>
+                          </div>
+                        </div>
+                        <div className="p-2 bg-white rounded border border-rose-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-slate-800">HTJP000003</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Hạt nối assembling</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-slate-500">Hiện tại: <strong>12 Hạt</strong></div>
+                            <div className="text-rose-700 font-bold">Còn lại: 10 Hạt</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Nhóm Phụ liệu - Đá */}
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-bold text-slate-700">▾ Phụ liệu — Đá</div>
+                        <div className="p-2 bg-white rounded border border-rose-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-slate-800">CZ10RVDWW11RD1.25</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Đá tròn trắng 1.25mm</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-slate-500">Hiện tại: <strong>10 Viên</strong></div>
+                            <div className="text-rose-700 font-bold">Còn lại: 9 Viên</div>
+                          </div>
+                        </div>
+                        <div className="p-2 bg-white rounded border border-rose-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-slate-800">CZ10RVDWW11RD4</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Đá tròn trắng 4mm</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-slate-500">Hiện tại: <strong>6 Viên</strong></div>
+                            <div className="text-rose-700 font-bold">Còn lại: 5 Viên</div>
+                          </div>
+                        </div>
+                        <div className="p-2 bg-white rounded border border-rose-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-slate-800">CZ10RVDDD11RD1.1</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Đá xanh dương gắn tay</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-slate-500">Hiện tại: <strong>2 Viên</strong></div>
+                            <div className="text-rose-700 font-bold">Còn lại: 1 Viên</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Box Trái: Tổng trọng lượng còn lại */}
+                  <div className="mt-3 pt-2.5 border-t border-rose-200 text-xs font-mono space-y-0.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 font-sans text-[11px]">Tổng trọng lượng:</span>
+                      <strong className="text-rose-900 font-bold">0.0807 Lượng (Gốc: 0.1076)</strong>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span className="font-sans">Trọng lượng đá:</span>
+                      <span>0.0024 Lượng</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span className="font-sans">Trọng lượng kim loại:</span>
+                      <span>0.0783 Lượng</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Box Phải: Component Bag Đích (SO-261024-003) */}
+                <div className="bg-emerald-50/20 rounded-xl border border-emerald-200 p-3.5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between border-b border-emerald-200/60 pb-2 mb-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span className="font-bold text-xs text-emerald-950">
+                          Component Bag Đích ({selectedNewBag?.newBagCode || "SO-261024-003"})
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-200 px-2 py-0.5 rounded">
+                        Nhận 2 PCS
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      {/* Nhóm Khuôn Cast */}
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-bold text-slate-700">▾ Khuôn (Cast) — Phôi đúc</div>
+                        <div className="p-2 bg-white rounded border border-emerald-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-teal-900">DE000144A00-MOLD-1-A</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Khuôn Vòng Tay Nữ (Phôi đúc kim loại)</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-emerald-700 font-bold">Nhận: +2 Cái</div>
+                            <div className="text-slate-500 text-[10px]">Tổng: 1 Cái</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Nhóm Bán thành phẩm / Linh kiện */}
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-bold text-slate-700">▾ Bán thành phẩm / Linh kiện (HTJ)</div>
+                        <div className="p-2 bg-white rounded border border-emerald-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-teal-900">CBC049TH BM00249</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Chấu đúc / Khóa</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-emerald-700 font-bold">Nhận: +1 Cái</div>
+                            <div className="text-slate-500 text-[10px]">Tổng: 1 Cái</div>
+                          </div>
+                        </div>
+                        <div className="p-2 bg-white rounded border border-emerald-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-teal-900">HTJP000003</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Hạt nối assembling</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-emerald-700 font-bold">Nhận: +2 Hạt</div>
+                            <div className="text-slate-500 text-[10px]">Tổng: 1 Hạt</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Nhóm Phụ liệu - Đá */}
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-bold text-slate-700">▾ Phụ liệu — Đá (Kế thừa cho 1 chiếc)</div>
+                        <div className="p-2 bg-white rounded border border-emerald-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-teal-900">CZ10RVDWW11RD1.25</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Đá tròn trắng 1.25mm</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-emerald-700 font-bold">Nhận: +1</div>
+                            <div className="text-slate-500 text-[10px]">Tổng: 1 Viên</div>
+                          </div>
+                        </div>
+                        <div className="p-2 bg-white rounded border border-emerald-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-teal-900">CZ10RVDWW11RD4</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Đá tròn trắng 4mm</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-emerald-700 font-bold">Nhận: +1</div>
+                            <div className="text-slate-500 text-[10px]">Tổng: 1 Viên</div>
+                          </div>
+                        </div>
+                        <div className="p-2 bg-white rounded border border-emerald-100 flex items-center justify-between font-mono text-[11px]">
+                          <div>
+                            <div className="font-bold text-teal-900">CZ10RVDDD11RD1.1</div>
+                            <div className="text-[10px] text-slate-400 font-sans">Đá xanh dương gắn tay</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-emerald-700 font-bold">Nhận: +1</div>
+                            <div className="text-slate-500 text-[10px]">Tổng: 1 Viên</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Box Phải: Tổng trọng lượng nhận */}
+                  <div className="mt-3 pt-2.5 border-t border-emerald-200 text-xs font-mono space-y-0.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 font-sans text-[11px]">Tổng trọng lượng nhận:</span>
+                      <strong className="text-emerald-800 font-bold">+0.02690 Lượng</strong>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span className="font-sans">Trọng lượng đá:</span>
+                      <span className="text-emerald-700 font-medium">+0.00080 Lượng</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span className="font-sans">Trọng lượng kim loại:</span>
+                      <span className="text-emerald-700 font-medium">+0.02610 Lượng</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* BẢNG XEM TRƯỚC SỰ THAY ĐỔI TRỌNG LƯỢNG (THEO IMAGE 2 & CHỈ ĐẠO BỎ REJECT + GRAM) */}
+            {/* ========================================================= */}
+            {/* KHỐI 3: BẢNG XEM TRƯỚC SỰ THAY ĐỔI TRỌNG LƯỢNG (9 CỘT)    */}
+            {/* ========================================================= */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
               <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
-                <div className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  <span>Bảng xem trước sự thay đổi trọng lượng (Đối soát kế toán)</span>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#005a46]"></span>
+                  <h2 className="font-bold text-xs text-slate-800 uppercase tracking-wide">
+                    3. BẢNG XEM TRƯỚC SỰ THAY ĐỔI TRỌNG LƯỢNG (WEIGHT DIFF PREVIEW)
+                  </h2>
                 </div>
-                <span className="text-[10px] text-slate-500">
-                  Đơn vị tính: <b>Lượng vàng</b> (Làm tròn 4 số lẻ)
+                <span className="text-[10px] text-slate-500 font-mono">
+                  Đơn vị: <strong>LƯỢNG</strong>
                 </span>
               </div>
 
@@ -1659,149 +2261,188 @@ export default function FgIssueServePage() {
                 <table className="w-full text-xs text-left border-collapse table-fixed">
                   <thead className="bg-[#f8fafc] text-slate-700 font-bold border-b border-slate-200 text-[11px]">
                     <tr>
-                      <th rowSpan={2} className="py-2 px-3 border-r border-slate-200 w-[22%]">
-                        Thông số
+                      <th rowSpan={2} className="py-2 px-3 border-r border-slate-200 w-[18%]">
+                        Thông số trọng lượng
                       </th>
-                      <th colSpan={3} className="py-1 px-3 text-center border-r border-slate-200 bg-slate-100/70 w-[39%]">
-                        Bag Nguồn ({selectedOldLot?.bagCode})
+                      <th rowSpan={2} className="py-2 px-2 text-center border-r border-slate-200 w-[7%]">
+                        ĐVT
                       </th>
-                      <th colSpan={3} className="py-1 px-3 text-center bg-teal-50/70 text-teal-900 w-[39%]">
-                        Bag Đích ({selectedNewBag?.newBagCode})
+                      <th colSpan={3} className="py-1 px-3 text-center border-r border-slate-200 bg-slate-100/70 text-slate-800 w-[36%]">
+                        Lô Nguồn ({selectedOldLot?.bagCode || "SO-260800063"})
+                      </th>
+                      <th colSpan={4} className="py-1 px-3 text-center bg-teal-50/70 text-teal-900 w-[39%]">
+                        Bag Đích ({selectedNewBag?.newBagCode || "SO-261024-003"})
                       </th>
                     </tr>
                     <tr className="border-t border-slate-200 text-[10px] text-slate-500">
-                      <th className="py-1.5 px-3 text-right w-[13%]">Trước</th>
-                      <th className="py-1.5 px-3 text-right w-[13%]">Chuyển (-)</th>
-                      <th className="py-1.5 px-3 text-right border-r border-slate-200 w-[13%]">Sau</th>
-                      <th className="py-1.5 px-3 text-right w-[13%]">Trước</th>
-                      <th className="py-1.5 px-3 text-right w-[13%]">Nhận (+)</th>
-                      <th className="py-1.5 px-3 text-right font-bold text-teal-950 w-[13%]">Sau</th>
+                      <th className="py-1.5 px-3 text-right w-[12%]">Trước</th>
+                      <th className="py-1.5 px-3 text-right w-[12%] text-rose-600 font-bold">Chuyển (-)</th>
+                      <th className="py-1.5 px-3 text-right border-r border-slate-200 w-[12%]">Sau</th>
+                      <th className="py-1.5 px-3 text-right w-[10%]">Trước</th>
+                      <th className="py-1.5 px-3 text-right text-emerald-700 font-bold w-[10%]">Nhận (+)</th>
+                      <th className="py-1.5 px-3 text-right text-slate-400 w-[9%]">Reject (-)</th>
+                      <th className="py-1.5 px-3 text-right font-black text-teal-950 w-[10%]">Sau</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-[11px] font-mono">
-
-                    {/* 1. Tổng TL */}
+                    {/* Dòng 1: Tổng Trọng Lượng */}
                     <tr className="hover:bg-slate-50">
                       <td className="py-2.5 px-3 font-sans font-bold text-slate-900 border-r border-slate-200">
-                        Tổng TL
+                        Tổng Trọng Lượng
                       </td>
-                      <td className="py-2.5 px-3 text-right text-slate-700">
-                        {currentTotalWeight.toFixed(4)}
+                      <td className="py-2.5 px-2 text-center text-slate-500 border-r border-slate-200 font-sans">
+                        Lượng
                       </td>
-                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">
-                        {isCurrentTransferred ? `-${currentTotalWeight.toFixed(4)}` : "—"}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-slate-600 border-r border-slate-200">
-                        {isCurrentTransferred ? "—" : currentTotalWeight.toFixed(4)}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-slate-400">
-                        —
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">
-                        {isCurrentTransferred ? `+${currentTotalWeight.toFixed(4)}` : "—"}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-black text-teal-950">
-                        {isCurrentTransferred ? currentTotalWeight.toFixed(4) : "—"}
-                      </td>
+                      <td className="py-2.5 px-3 text-right text-slate-700">0.1076</td>
+                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">-0.02690</td>
+                      <td className="py-2.5 px-3 text-right text-slate-700 border-r border-slate-200 font-bold">0.0807</td>
+                      <td className="py-2.5 px-3 text-right text-slate-400">0.0000</td>
+                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">+0.02690</td>
+                      <td className="py-2.5 px-3 text-right text-slate-400">—</td>
+                      <td className="py-2.5 px-3 text-right font-black text-teal-950">0.02690</td>
                     </tr>
 
-                    {/* 2. TL Đá */}
+                    {/* Dòng 2: Trọng Lượng Đá */}
                     <tr className="hover:bg-slate-50">
                       <td className="py-2.5 px-3 font-sans font-bold text-slate-900 border-r border-slate-200">
-                        TL Đá
+                        Trọng Lượng Đá
                       </td>
-                      <td className="py-2.5 px-3 text-right text-slate-700">
-                        {currentStoneWeight.toFixed(4)}
+                      <td className="py-2.5 px-2 text-center text-slate-500 border-r border-slate-200 font-sans">
+                        Lượng
                       </td>
-                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">
-                        {isCurrentTransferred ? `-${currentStoneWeight.toFixed(4)}` : "—"}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-slate-600 border-r border-slate-200">
-                        {isCurrentTransferred ? "0.0000" : currentStoneWeight.toFixed(4)}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-slate-400">
-                        0.0000
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">
-                        {isCurrentTransferred ? `+${currentStoneWeight.toFixed(4)}` : "—"}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-black text-teal-950">
-                        {isCurrentTransferred ? currentStoneWeight.toFixed(4) : "—"}
-                      </td>
+                      <td className="py-2.5 px-3 text-right text-slate-700">0.0032</td>
+                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">-0.00080</td>
+                      <td className="py-2.5 px-3 text-right text-slate-700 border-r border-slate-200 font-bold">0.0024</td>
+                      <td className="py-2.5 px-3 text-right text-slate-400">0.0000</td>
+                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">+0.00080</td>
+                      <td className="py-2.5 px-3 text-right text-slate-400">—</td>
+                      <td className="py-2.5 px-3 text-right font-black text-teal-950">0.00080</td>
                     </tr>
 
-                    {/* 3. TL Kim loại */}
+                    {/* Dòng 3: Trọng Lượng Kim Loại */}
                     <tr className="hover:bg-slate-50">
                       <td className="py-2.5 px-3 font-sans font-bold text-slate-900 border-r border-slate-200">
-                        TL Kim loại
+                        Trọng Lượng Kim Loại
                       </td>
-                      <td className="py-2.5 px-3 text-right text-slate-700">
-                        {currentMetalWeight.toFixed(4)}
+                      <td className="py-2.5 px-2 text-center text-slate-500 border-r border-slate-200 font-sans">
+                        Lượng
                       </td>
-                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">
-                        {isCurrentTransferred ? `-${currentMetalWeight.toFixed(4)}` : "—"}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-slate-600 border-r border-slate-200">
-                        {isCurrentTransferred ? "—" : currentMetalWeight.toFixed(4)}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-slate-400">
-                        —
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">
-                        {isCurrentTransferred ? `+${currentMetalWeight.toFixed(4)}` : "—"}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-black text-teal-950">
-                        {isCurrentTransferred ? currentMetalWeight.toFixed(4) : "—"}
-                      </td>
+                      <td className="py-2.5 px-3 text-right text-slate-700">0.1044</td>
+                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">-0.02610</td>
+                      <td className="py-2.5 px-3 text-right text-slate-700 border-r border-slate-200 font-bold">0.0783</td>
+                      <td className="py-2.5 px-3 text-right text-slate-400">0.0000</td>
+                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">+0.02610</td>
+                      <td className="py-2.5 px-3 text-right text-slate-400">—</td>
+                      <td className="py-2.5 px-3 text-right font-black text-teal-950">0.02610</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
+            </div>
 
-              {/* Thanh Nút Hành Động Chân Trang */}
-              <div className="p-3.5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <span className="font-bold text-slate-700">Ghi chú:</span>
-                  <span>Sau khi bấm xác nhận, Bag cũ sẽ bị hủy nhãn và đóng vĩnh viễn trong kho CXLL.</span>
+            {/* ========================================================= */}
+            {/* KHỐI 4: DANH SÁCH BƯỚC THỰC THI (ROUTING 2A)               */}
+            {/* ========================================================= */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#005a46]"></span>
+                  <h2 className="font-bold text-xs text-slate-800 uppercase tracking-wide">
+                    4. DANH SÁCH BƯỚC THỰC THI (ROUTING 2A)
+                  </h2>
+                </div>
+                <span className="text-[10px] text-slate-400 italic">5 bước gia công liên thông xưởng</span>
+              </div>
+
+              <div className="p-3.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5">
+                {/* Bước 1 */}
+                <div className="p-2.5 rounded-lg border border-amber-300 bg-amber-50/60 flex flex-col justify-between">
+                  <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">1</span>
+                    <span>WC-0111: Serve FG</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                      ● Đang thực hiện
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setPrintModalTarget(selectedNewBagCode)}
-                    className="px-3.5 py-2 rounded-lg border border-teal-300 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                    title="In thẻ Bag KHSX mới theo format nhà máy"
-                  >
-                    <Printer className="h-4 w-4 text-teal-700" />
-                    <span>In Mã Bag (Format KHSX)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("list")}
-                    className="px-4 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                  >
-                    Hủy & Về danh sách
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleConfirmServeAndCloseBag}
-                    disabled={!isCurrentTransferred}
-                    className={`px-5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-xs cursor-pointer ${!isCurrentTransferred
-                        ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                        : isCurrentServed
-                          ? "bg-emerald-700 text-white hover:bg-emerald-800"
-                          : "bg-[#005a46] hover:bg-[#004737] text-white"
-                      }`}
-                  >
-                    <CheckCheck className="h-4 w-4 text-amber-300" />
-                    <span>
-                      {isCurrentServed ? "In lại Thẻ Bag & Xem" : "Xác nhận cấp & Đóng Bag cũ"}
+                {/* Bước 2 */}
+                <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 flex flex-col justify-between">
+                  <div className="font-bold text-xs text-slate-700 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">2</span>
+                    <span>WC-0013: Stamping</span>
+                  </div>
+                  <div className="mt-2">
+                    <span className="text-[10px] text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
+                      Xưởng: Stamp STP-10K-0.5
                     </span>
-                  </button>
+                  </div>
+                </div>
+
+                {/* Bước 3 */}
+                <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 flex flex-col justify-between">
+                  <div className="font-bold text-xs text-slate-700 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">3</span>
+                    <span>WC-0020: Polishing</span>
+                  </div>
+                  <div className="mt-2">
+                    <span className="text-[10px] text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
+                      Đánh bóng
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bước 4 */}
+                <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 flex flex-col justify-between">
+                  <div className="font-bold text-xs text-slate-700 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">4</span>
+                    <span>WC-0153: Platting</span>
+                  </div>
+                  <div className="mt-2">
+                    <span className="text-[10px] text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
+                      Xi mạ
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bước 5 */}
+                <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 flex flex-col justify-between">
+                  <div className="font-bold text-xs text-slate-700 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-slate-400 text-white flex items-center justify-center text-[10px]">5</span>
+                    <span>WC-0147: Packing in</span>
+                  </div>
+                  <div className="mt-2">
+                    <span className="text-[10px] text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
+                      Đóng gói
+                    </span>
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {/* ========================================================= */}
+            {/* THANH FOOTER DƯỚI CÙNG                                     */}
+            {/* ========================================================= */}
+            <div className="flex items-center justify-between pt-2 pb-6">
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer text-xs"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Quay lại Danh sách</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmServeAndCloseBag}
+                className="px-5 py-2.5 rounded-lg bg-[#005a46] hover:bg-[#004737] text-white text-xs font-bold transition-all flex items-center gap-2 shadow-xs cursor-pointer"
+              >
+                <Check className="h-4 w-4" />
+                <span>Xác Nhận Chuyển & Đóng Bag Cũ</span>
+              </button>
             </div>
           </div>
         )}
