@@ -44,16 +44,19 @@ import {
   MOCK_NEW_SO_TARGETS
 } from "@/data/inventoryMockData";
 
-// Dữ liệu mẫu 8 Series chi tiết của Lô cũ SO-260800063 chuẩn theo UI Cấp Thành Phẩm
+// Dữ liệu mẫu 8 Series chi tiết của Lô cũ SO-260800063
+// Quy tắc chuẩn:
+// 1. Số stamp = TL đá (Lượng) × 1000 (Ví dụ: 0.0004 -> stamp = 0.4, 0.0012 -> stamp = 1.2)
+// 2. Trọng lượng (kim loại, đá, tổng) chỉ lấy đúng 4 số sau dấu thập phân (Ví dụ: 0.0004, 0.0130, 0.0134...)
 const MOCK_SERIES_LIST = [
-  { id: "0123456A-01", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01305, totalWeight: 0.01345 },
-  { id: "0123456A-02", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01305, totalWeight: 0.01345 },
-  { id: "0123456A-03", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01305, totalWeight: 0.01345 },
-  { id: "0123456A-04", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01306, totalWeight: 0.01346 },
-  { id: "0123456A-05", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01306, totalWeight: 0.01346 },
-  { id: "0123456A-06", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01305, totalWeight: 0.01345 },
-  { id: "0123456A-07", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01307, totalWeight: 0.01347 },
-  { id: "0123456A-08", stampCode: "24", stoneWeight: 0.00040, goldWeight: 0.01305, totalWeight: 0.01345 }
+  { id: "0123456A-01", stampCode: "0.4", stoneWeight: 0.0004, goldWeight: 0.0131, totalWeight: 0.0135 },
+  { id: "0123456A-02", stampCode: "0.4", stoneWeight: 0.0004, goldWeight: 0.0130, totalWeight: 0.0134 },
+  { id: "0123456A-03", stampCode: "0.4", stoneWeight: 0.0004, goldWeight: 0.0130, totalWeight: 0.0134 },
+  { id: "0123456A-04", stampCode: "0.4", stoneWeight: 0.0004, goldWeight: 0.0131, totalWeight: 0.0135 },
+  { id: "0123456A-05", stampCode: "0.4", stoneWeight: 0.0004, goldWeight: 0.0131, totalWeight: 0.0135 },
+  { id: "0123456A-06", stampCode: "0.4", stoneWeight: 0.0004, goldWeight: 0.0130, totalWeight: 0.0134 },
+  { id: "0123456A-07", stampCode: "0.4", stoneWeight: 0.0004, goldWeight: 0.0131, totalWeight: 0.0135 },
+  { id: "0123456A-08", stampCode: "0.4", stoneWeight: 0.0004, goldWeight: 0.0130, totalWeight: 0.0134 }
 ];
 
 export default function FgIssueServePage() {
@@ -71,11 +74,11 @@ export default function FgIssueServePage() {
   const [selectedSeriesCodes, setSelectedSeriesCodes] = useState(["0123456A-01", "0123456A-02"]);
   const [seriesScanInput, setSeriesScanInput] = useState("");
 
-  // Kịch bản B: Lô chưa có series
-  const [scaleWeight, setScaleWeight] = useState(0.02690);
+  // Kịch bản B: Lô chưa có series (Trọng lượng lấy chuẩn 4 số sau thập phân)
+  const [scaleWeight, setScaleWeight] = useState(0.0269);
   const [isScaleReading, setIsScaleReading] = useState(false);
   const [stampRows, setStampRows] = useState([
-    { id: 1, stampCode: "18 (10K / 416)", stoneWeightPerPcs: 0.00040, qty: 2 }
+    { id: 1, stampCode: "0.4", stoneWeightPerPcs: 0.0004, qty: 2 }
   ]);
 
   // Tab lọc danh sách chờ serve FG: 'all' | 'waiting' | 'served'
@@ -360,11 +363,11 @@ export default function FgIssueServePage() {
     setIsScaleReading(true);
     playScanBeep();
     setTimeout(() => {
-      setScaleWeight(0.02690);
+      setScaleWeight(0.0269);
       setIsScaleReading(false);
       setToastMessage({
         type: "success",
-        text: "Đã đọc thành công số cân điện tử FQC: 0.02690 Lượng!"
+        text: "Đã đọc thành công số cân điện tử FQC: 0.0269 Lượng!"
       });
       setTimeout(() => setToastMessage(null), 3000);
     }, 450);
@@ -376,8 +379,8 @@ export default function FgIssueServePage() {
       ...prev,
       {
         id: Date.now(),
-        stampCode: "20 (14K / 585)",
-        stoneWeightPerPcs: 0.00040,
+        stampCode: "0.4",
+        stoneWeightPerPcs: 0.0004,
         qty: 1
       }
     ]);
@@ -394,7 +397,30 @@ export default function FgIssueServePage() {
 
   const handleUpdateStampRow = (id, field, value) => {
     setStampRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r))
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        if (field === "stampCode") {
+          // Quy tắc: số stamp = TL đá × 1000 => TL đá = số stamp / 1000
+          const numericStamp = parseFloat(value) || 0;
+          const autoStoneWeight = Number((numericStamp / 1000).toFixed(4));
+          return {
+            ...r,
+            stampCode: value,
+            stoneWeightPerPcs: autoStoneWeight
+          };
+        }
+        if (field === "stoneWeightPerPcs") {
+          // Quy tắc: số stamp = TL đá × 1000 (Ví dụ: 0.0012 -> 1.2)
+          const numericStone = parseFloat(value) || 0;
+          const autoStamp = (numericStone * 1000).toFixed(1).replace(/\.0$/, "");
+          return {
+            ...r,
+            stoneWeightPerPcs: Number(numericStone.toFixed(4)),
+            stampCode: autoStamp
+          };
+        }
+        return { ...r, [field]: value };
+      })
     );
   };
 
@@ -433,7 +459,7 @@ export default function FgIssueServePage() {
   }, [scaleWeight, totalStampStoneWeight]);
 
   // Thông số chuyển đang kích hoạt (phản ánh sang Khối 2 & Khối 3)
-  const activeTransTotal = serveScenario === "series" ? calcSeriesTotalWeight : (parseFloat(scaleWeight) || 0.02690);
+  const activeTransTotal = serveScenario === "series" ? calcSeriesTotalWeight : (parseFloat(scaleWeight) || 0.0269);
   const activeTransStone = serveScenario === "series" ? calcSeriesStoneWeight : totalStampStoneWeight;
   const activeTransMetal = serveScenario === "series" ? calcSeriesGoldWeight : calculatedMetalWeightB;
 
@@ -1710,13 +1736,13 @@ export default function FgIssueServePage() {
                                     {sr.stampCode}
                                   </td>
                                   <td className="py-2 px-3 text-right text-slate-700">
-                                    {sr.stoneWeight.toFixed(5)}
+                                    {sr.stoneWeight.toFixed(4)}
                                   </td>
                                   <td className="py-2 px-3 text-right text-slate-700">
-                                    {sr.goldWeight.toFixed(5)}
+                                    {sr.goldWeight.toFixed(4)}
                                   </td>
                                   <td className="py-2 px-3 text-right font-bold text-slate-900">
-                                    {sr.totalWeight.toFixed(5)}
+                                    {sr.totalWeight.toFixed(4)}
                                   </td>
                                   <td className="py-2 px-3 text-center">
                                     {isSelected ? (
@@ -1787,12 +1813,12 @@ export default function FgIssueServePage() {
                             </div>
                             <div className="text-[10px] text-slate-500">Ước tính KHSX:</div>
                             <div className="text-2xl font-black font-mono text-amber-300 my-1">
-                              0.02690 Lượng
+                              0.0269 Lượng
                             </div>
                             <div className="flex items-center gap-3 text-[11px] text-slate-400 pt-1 border-t border-slate-700/60 font-mono">
-                              <span>Vàng LT: <strong className="text-slate-200">0.02610</strong></span>
+                              <span>Vàng LT: <strong className="text-slate-200">0.0261</strong></span>
                               <span>•</span>
-                              <span>Đá LT: <strong className="text-slate-200">0.00080</strong></span>
+                              <span>Đá LT: <strong className="text-slate-200">0.0008</strong></span>
                             </div>
                           </div>
 
@@ -1806,7 +1832,7 @@ export default function FgIssueServePage() {
                             {/* Màn hình LED màu đen viền xanh ngọc */}
                             <div className="bg-black/90 border border-emerald-500/50 rounded-lg p-2.5 my-1 flex items-center justify-between shadow-inner">
                               <span className="text-2xl md:text-3xl font-black font-mono text-emerald-400 tracking-wider">
-                                {Number(scaleWeight).toFixed(5)}
+                                {Number(scaleWeight).toFixed(4)}
                               </span>
                               <span className="text-xs font-bold text-emerald-500 uppercase font-mono">
                                 Lượng
@@ -1848,7 +1874,7 @@ export default function FgIssueServePage() {
                               </h3>
                             </div>
                             <p className="text-[11px] text-slate-500 mt-0.5">
-                              1 PCS tương ứng 1 Stamp • Mã Stamp xưởng: 18, 20, 24... • Nhập TL Đá/PCS theo thực tế • Ràng buộc: SL Chuyển = SL Stamp
+                              1 PCS tương ứng 1 Stamp • Số Stamp = TL Đá × 1000 (VD: 0.0012 ➔ Stamp 1.2) • Nhập TL Đá/PCS theo thực tế (4 số lẻ)
                             </p>
                           </div>
 
@@ -1873,7 +1899,7 @@ export default function FgIssueServePage() {
                             <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 text-[11px]">
                               <tr>
                                 <th className="py-2 px-3 text-center w-12">STT</th>
-                                <th className="py-2 px-3">Mã Stamp</th>
+                                <th className="py-2 px-3">Mã Stamp (Số Stamp = TL Đá × 1000)</th>
                                 <th className="py-2 px-3 text-center">TL Đá / 1 PCS (Lượng)</th>
                                 <th className="py-2 px-3 text-center w-28">Số lượng (PCS)</th>
                                 <th className="py-2 px-3 text-right">Tổng TL Đá (Lượng)</th>
@@ -1895,16 +1921,18 @@ export default function FgIssueServePage() {
                                         onChange={(e) => handleUpdateStampRow(row.id, "stampCode", e.target.value)}
                                         className="w-full py-1 px-2 border border-slate-300 rounded bg-white text-xs font-sans font-medium focus:ring-1 focus:ring-[#005a46]"
                                       >
-                                        <option value="18 (10K / 416)">18 (10K / 416)</option>
-                                        <option value="20 (14K / 585)">20 (14K / 585)</option>
-                                        <option value="24 (18K / 750)">24 (18K / 750)</option>
-                                        <option value="STP-10K-0.5">STP-10K-0.5</option>
+                                        <option value="0.4">Stamp 0.4 (TL đá: 0.0004 L)</option>
+                                        <option value="0.8">Stamp 0.8 (TL đá: 0.0008 L)</option>
+                                        <option value="1.2">Stamp 1.2 (TL đá: 0.0012 L)</option>
+                                        <option value="1.5">Stamp 1.5 (TL đá: 0.0015 L)</option>
+                                        <option value="2.0">Stamp 2.0 (TL đá: 0.0020 L)</option>
+                                        <option value="2.4">Stamp 2.4 (TL đá: 0.0024 L)</option>
                                       </select>
                                     </td>
                                     <td className="py-2 px-3 text-center">
                                       <input
                                         type="number"
-                                        step="0.00001"
+                                        step="0.0001"
                                         value={row.stoneWeightPerPcs}
                                         onChange={(e) => handleUpdateStampRow(row.id, "stoneWeightPerPcs", e.target.value)}
                                         className="w-28 text-center py-1 px-2 border border-slate-300 rounded font-mono text-xs focus:ring-1 focus:ring-[#005a46]"
@@ -1920,7 +1948,7 @@ export default function FgIssueServePage() {
                                       />
                                     </td>
                                     <td className="py-2 px-3 text-right font-bold text-slate-900">
-                                      {rowStoneTotal.toFixed(5)} L
+                                      {rowStoneTotal.toFixed(4)} L
                                     </td>
                                     <td className="py-2 px-3 text-center font-sans">
                                       <button
@@ -1962,7 +1990,7 @@ export default function FgIssueServePage() {
                               TỔNG TRỌNG LƯỢNG (CÂN)
                             </div>
                             <div className="text-lg font-black font-mono text-slate-900 my-0.5">
-                              {Number(scaleWeight).toFixed(5)} Lượng
+                              {Number(scaleWeight).toFixed(4)} Lượng
                             </div>
                             <div className="text-[10px] text-slate-400">Đo từ cân FQC</div>
                           </div>
@@ -1973,9 +2001,9 @@ export default function FgIssueServePage() {
                               TRỌNG LƯỢNG ĐÁ (TỪ STAMP)
                             </div>
                             <div className="text-lg font-black font-mono text-amber-600 my-0.5">
-                              {totalStampStoneWeight.toFixed(5)} Lượng
+                              {totalStampStoneWeight.toFixed(4)} Lượng
                             </div>
-                            <div className="text-[10px] text-slate-400">Tính từ mã Stamp đã chọn</div>
+                            <div className="text-[10px] text-slate-400">Số Stamp = TL Đá × 1000</div>
                           </div>
 
                           {/* Hộp 3: Trọng lượng kim loại */}
@@ -1984,7 +2012,7 @@ export default function FgIssueServePage() {
                               TRỌNG LƯỢNG KIM LOẠI (VÀNG)
                             </div>
                             <div className="text-lg font-black font-mono text-teal-900 my-0.5">
-                              {calculatedMetalWeightB.toFixed(5)} Lượng
+                              {calculatedMetalWeightB.toFixed(4)} Lượng
                             </div>
                             <div className="text-[10px] text-teal-600 font-medium">= Tổng TL - TL Đá</div>
                           </div>
@@ -2226,15 +2254,15 @@ export default function FgIssueServePage() {
                   <div className="mt-3 pt-2.5 border-t border-emerald-200 text-xs font-mono space-y-0.5">
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500 font-sans text-[11px]">Tổng trọng lượng nhận:</span>
-                      <strong className="text-emerald-800 font-bold">+0.02690 Lượng</strong>
+                      <strong className="text-emerald-800 font-bold">+0.0269 Lượng</strong>
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
                       <span className="font-sans">Trọng lượng đá:</span>
-                      <span className="text-emerald-700 font-medium">+0.00080 Lượng</span>
+                      <span className="text-emerald-700 font-medium">+0.0008 Lượng</span>
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
                       <span className="font-sans">Trọng lượng kim loại:</span>
-                      <span className="text-emerald-700 font-medium">+0.02610 Lượng</span>
+                      <span className="text-emerald-700 font-medium">+0.0261 Lượng</span>
                     </div>
                   </div>
                 </div>
@@ -2253,7 +2281,7 @@ export default function FgIssueServePage() {
                   </h2>
                 </div>
                 <span className="text-[10px] text-slate-500 font-mono">
-                  Đơn vị: <strong>LƯỢNG</strong>
+                  Đơn vị: <strong>LƯỢNG</strong> (Chuẩn 4 số lẻ)
                 </span>
               </div>
 
@@ -2294,12 +2322,12 @@ export default function FgIssueServePage() {
                         Lượng
                       </td>
                       <td className="py-2.5 px-3 text-right text-slate-700">0.1076</td>
-                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">-0.02690</td>
+                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">-0.0269</td>
                       <td className="py-2.5 px-3 text-right text-slate-700 border-r border-slate-200 font-bold">0.0807</td>
                       <td className="py-2.5 px-3 text-right text-slate-400">0.0000</td>
-                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">+0.02690</td>
+                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">+0.0269</td>
                       <td className="py-2.5 px-3 text-right text-slate-400">—</td>
-                      <td className="py-2.5 px-3 text-right font-black text-teal-950">0.02690</td>
+                      <td className="py-2.5 px-3 text-right font-black text-teal-950">0.0269</td>
                     </tr>
 
                     {/* Dòng 2: Trọng Lượng Đá */}
@@ -2311,12 +2339,12 @@ export default function FgIssueServePage() {
                         Lượng
                       </td>
                       <td className="py-2.5 px-3 text-right text-slate-700">0.0032</td>
-                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">-0.00080</td>
+                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">-0.0008</td>
                       <td className="py-2.5 px-3 text-right text-slate-700 border-r border-slate-200 font-bold">0.0024</td>
                       <td className="py-2.5 px-3 text-right text-slate-400">0.0000</td>
-                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">+0.00080</td>
+                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">+0.0008</td>
                       <td className="py-2.5 px-3 text-right text-slate-400">—</td>
-                      <td className="py-2.5 px-3 text-right font-black text-teal-950">0.00080</td>
+                      <td className="py-2.5 px-3 text-right font-black text-teal-950">0.0008</td>
                     </tr>
 
                     {/* Dòng 3: Trọng Lượng Kim Loại */}
@@ -2328,12 +2356,12 @@ export default function FgIssueServePage() {
                         Lượng
                       </td>
                       <td className="py-2.5 px-3 text-right text-slate-700">0.1044</td>
-                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">-0.02610</td>
+                      <td className="py-2.5 px-3 text-right text-rose-600 font-bold">-0.0261</td>
                       <td className="py-2.5 px-3 text-right text-slate-700 border-r border-slate-200 font-bold">0.0783</td>
                       <td className="py-2.5 px-3 text-right text-slate-400">0.0000</td>
-                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">+0.02610</td>
+                      <td className="py-2.5 px-3 text-right text-emerald-700 font-bold">+0.0261</td>
                       <td className="py-2.5 px-3 text-right text-slate-400">—</td>
-                      <td className="py-2.5 px-3 text-right font-black text-teal-950">0.02610</td>
+                      <td className="py-2.5 px-3 text-right font-black text-teal-950">0.0261</td>
                     </tr>
                   </tbody>
                 </table>
@@ -2376,7 +2404,7 @@ export default function FgIssueServePage() {
                   </div>
                   <div className="mt-2">
                     <span className="text-[10px] text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
-                      Xưởng: Stamp STP-10K-0.5
+                      Xưởng: Stamp 0.4
                     </span>
                   </div>
                 </div>
