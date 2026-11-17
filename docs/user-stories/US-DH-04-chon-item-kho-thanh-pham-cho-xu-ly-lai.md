@@ -1,3 +1,4 @@
+
 # US-ENH-01: Chọn Item Trong Kho Thành Phẩm Chờ Xử Lý Lại (CXLL) Vào Đơn Hàng
 
 > **Mã Story:** `US-ENH-01` (Kế thừa / Alias: `US-DH-04`)  
@@ -12,7 +13,7 @@
 ## 1. USER STORY *
 
 * **Là một (As a):** Nhân viên Kinh doanh (Sales) / Sale Admin
-* **Tôi muốn (I want):** 
+* **Tôi muốn (I want):**
     1. Khi tạo đơn hàng mới (`/orders/create`) hoặc khi chỉnh sửa đơn hàng (`/orders/[id]`), hệ thống tự động nhận diện nếu có sản phẩm trùng khớp 100% trong Kho Thành Phẩm Chờ Xử Lý Lại (CXLL) ở trạng thái **`Chờ gán đơn`** và hiển thị banner chỉ báo gợi ý cho phép pick vào đơn.
     2. Popup gán phôi (`WarehouseSyncPopup`) hiển thị theo phân cấp rõ ràng: Item Cha ➔ Chi tiết từng Lô con (≤ 10 món/lô), chỉ hiển thị các dòng phôi ở trạng thái **`Chờ gán đơn`** (ẩn 100% các dòng đã giữ chỗ hoặc chờ chuyển bag để chống pick trùng).
     3. Hỗ trợ phân bổ linh hoạt (Split Allocation): Nếu khách đặt số lượng lớn hơn số lượng tồn phôi CXLL, phần lấy phôi CXLL được tách riêng, và phần còn lại tự động đưa sang luồng sản xuất mới hoàn toàn.
@@ -55,9 +56,9 @@
 
 * **Link Prototype Chi Tiết Đơn Hàng:** [https://dungseva.vercel.app/orders/SO2608011](https://dungseva.vercel.app/orders/SO2608011)
 * **Bố cục Popup Gán Phôi (`WarehouseSyncPopup`):**
-  - Khung thông tin Item cha: Mã Item 30 ký tự, Tuổi vàng, Ni tay, Màu đá, Tổng tồn khả dụng CXLL.
-  - Danh sách các Lô con (≤ 10 món/lô): Mã Lô, Mã SO cũ, Khách hàng cũ, Tồn khả dụng, Ô nhập SL pick (stepper), Mã Stamp, Trọng lượng chuẩn 4 số sau thập phân.
-  - Thanh tổng kết dưới đáy: Tổng SL đặt, Tổng SL pick kho CXLL (badge xanh), SL còn lại chuyển Sản xuất mới (badge cam), Nút `[Hủy]` và Nút `[Xác nhận pick chọn phôi]`.
+  * Khung thông tin Item cha: Mã Item 30 ký tự, Tuổi vàng, Ni tay, Màu đá, Tổng tồn khả dụng CXLL.
+  * Danh sách các Lô con (≤ 10 món/lô): Mã Lô, Mã SO cũ, Khách hàng cũ, Tồn khả dụng, Ô nhập SL pick (stepper), Mã Stamp, Trọng lượng chuẩn 4 số sau thập phân.
+  * Thanh tổng kết dưới đáy: Tổng SL đặt, Tổng SL pick kho CXLL (badge xanh), SL còn lại chuyển Sản xuất mới (badge cam), Nút `[Hủy]` và Nút `[Xác nhận pick chọn phôi]`.
 
 ---
 
@@ -68,9 +69,9 @@
 * **BR-DH-03 (Chỉ hiển thị dòng Chờ gán đơn):** Popup gán phôi chỉ quét và hiển thị các dòng phôi đang ở trạng thái `Chờ gán đơn`. Tuyệt đối không hiển thị các dòng `Đã giữ chỗ` hoặc `Chờ chuyển bag` để triệt tiêu nguy cơ pick trùng.
 * **BR-DH-04 (Split Allocation Mandatory):** Khi `SL Đặt > SL Tồn CXLL`, hệ thống bắt buộc phân bổ: Tối đa số lượng kho có sẵn và phần thiếu hụt tự động chuyển sang luồng sản xuất mới.
 * **BR-DH-05 (Stone Delta Release):** Tự động nhả số lượng đá giữ chỗ tương ứng với số lượng phôi lấy từ kho CXLL về kho phụ liệu đá khả dụng ngay khi xác nhận gán đơn.
-* **BR-DH-06 (Quy chuẩn Stamp và Trọng lượng 4 số thập phân):** 
-  - `Số Stamp = TL Đá × 1000` (ví dụ: `TL Đá = 0.0004` ➔ `Stamp = 0.4`; `TL Đá = 0.0012` ➔ `Stamp = 1.2`).
-  - Mọi thông số trọng lượng kim loại, đá và tổng trọng lượng lấy chuẩn 4 số sau dấu thập phân.
+* **BR-DH-06 (Quy chuẩn Stamp và Trọng lượng 4 số thập phân):**
+  * `Số Stamp = TL Đá × 1000` (ví dụ: `TL Đá = 0.0004` ➔ `Stamp = 0.4`; `TL Đá = 0.0012` ➔ `Stamp = 1.2`).
+  * Mọi thông số trọng lượng kim loại, đá và tổng trọng lượng lấy chuẩn 4 số sau dấu thập phân.
 
 ---
 
