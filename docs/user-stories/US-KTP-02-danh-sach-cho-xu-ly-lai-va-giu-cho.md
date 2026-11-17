@@ -34,7 +34,7 @@
   * **Given (Biết rằng):** Mỗi dòng hiển thị một trạng thái kho cụ thể:
     * **`Chờ gán đơn`** (Badge xanh lá `bg-emerald-50 text-emerald-700 border-emerald-200`): Pcs phôi còn tự do trong két kho, sẵn sàng để QLĐH pick vào đơn hàng mới.
     * **`Đã giữ chỗ`** (Badge tím `bg-purple-50 text-purple-700 border-purple-200`): Pcs phôi đã được pick vào đơn hàng mới và đang khóa giữ chỗ (chờ duyệt KHSX).
-    * **`Chờ chuyển bag`** (Badge xanh dương `bg-blue-50 text-blue-700 border-blue-200`): Pcs phôi đã được duyệt KHSX, sẵn sàng xuất phôi tại Trạm Cấp TP để làm mới.
+    * **`Chờ chuyển bag`** (Badge xanh dương `bg-blue-50 text-blue-700 border-blue-200`): Pcs phôi đã được KHSX lên kế hoạch, sinh Thẻ Bag và đẩy lệnh Serve FG xuống Kho TP để xuất phôi sang Bag mới.
   * **Then (Thì):** Thủ kho nhận biết ngay tiến độ xử lý của từng phần phôi mà không cần bấm mở chi tiết.
 
 * **AC 3: Hiển thị trực tiếp tại cột Mã Đơn Hàng Mới**
@@ -97,7 +97,7 @@
 * **BR-CXLL-02 (Chuẩn hóa 3 trạng thái kho):**
   * `Chờ gán đơn`: Phôi tự do trong két kho, sẵn sàng gán cho đơn hàng mới (`SL` > 0).
   * `Đã giữ chỗ`: Đã được QLĐH pick vào đơn mới và đang khóa chờ duyệt KHSX.
-  * `Chờ chuyển bag`: Đơn mới đã duyệt KHSX, sẵn sàng chuyển Bag mới tại Trạm Cấp TP.
+  * `Chờ chuyển bag`: KHSX đã duyệt kế hoạch, sinh Thẻ Bag và đẩy lệnh Serve FG xuống Kho TP.
 * **BR-CXLL-03 (Quy chuẩn hiển thị đơn hàng mới):**
   * Dòng ở trạng thái `Chờ gán đơn`: Hiển thị dấu gạch ngang mờ `—`.
   * Dòng ở trạng thái `Đã giữ chỗ` hoặc `Chờ chuyển bag`: Hiển thị trực tiếp mã SO mới (link click chuyển trang) kèm tên khách hàng mới và mã bag mới.
@@ -147,5 +147,5 @@ flowchart TD
     SplitState --> KHSXAction
     
     KHSXAction -->|Hủy SO mới trước khi duyệt| Rollback["Tự động hoàn nhập dòng về Chờ gán đơn<br>(Gộp lại nếu cùng lô)"]
-    KHSXAction -->|Bấm Xác nhận chuyển KHSX| TransferBag["Dòng chuyển trạng thái: Chờ chuyển bag<br>Đồng bộ sang Trạm Cấp TP (/serve) để xuất phôi"]
+    KHSXAction -->|KHSX duyệt KH, sinh Bag & đẩy lệnh Serve FG| TransferBag["Dòng chuyển trạng thái: Chờ chuyển bag<br>Đồng bộ sang Trạm Cấp TP (/serve) để xuất phôi sang Bag mới"]
 ```

@@ -13,7 +13,7 @@
 
 * **Là một (As a):** Thủ kho Thành phẩm tại Trạm Cấp Thành Phẩm (Serve FG)
 * **Tôi muốn (I want):** 
-    1. Tiếp nhận danh sách các Bag mới chờ cấp phôi làm mới theo kế hoạch sản xuất (KHSX) tại màn hình **Trạm Cấp Thành Phẩm (`/inventory/reprocess/serve`)**. Bảng danh sách ưu tiên hiển thị **thông tin Lô Mới lên trước** (`Mã Lô Mới`, `Mã SO Mới`, `Khách Hàng Mới`) và thông tin **Lô Cũ về sau** (`Mã Lô Cũ`, `Mã SO Cũ`, `Khách Hàng Cũ`) để đối soát nhanh theo đơn đặt hàng mới.
+    1. Tiếp nhận danh sách các Bag mới chờ cấp phôi chuyển đơn do Kế hoạch sản xuất (KHSX) lên lịch và đẩy lệnh xuống tại màn hình **Trạm Cấp Thành Phẩm (`/inventory/reprocess/serve`)**. Bảng danh sách ưu tiên hiển thị **thông tin Lô Mới lên trước** (`Mã Lô Mới`, `Mã SO Mới`, `Khách Hàng Mới`) và thông tin **Lô Cũ về sau** (`Mã Lô Cũ`, `Mã SO Cũ`, `Khách Hàng Cũ`) để đối soát nhanh theo đơn đặt hàng mới.
     2. Nhấp chọn một Bag để mở **Màn Hình Cấp Thành Phẩm (Serve FG) — Chuyển Phôi Sang Bag Mới** với 4 Khối tác nghiệp trực quan và bảo toàn dữ liệu.
     3. Hệ thống tự động phân loại và hỗ trợ xử lý linh hoạt cho 2 trường hợp:
        * **Kịch bản A (Lô đã có mã Series chi tiết):** Quét súng Barcode hoặc chọn mã Series lẻ đã niêm phong từ trước, kế thừa 100% trọng lượng (TL Đá, TL Vàng, Tổng TL) và mã Stamp gốc, **không bắt buộc phải cân lại**.
@@ -21,7 +21,7 @@
     4. Toàn bộ thông số trọng lượng (kim loại, đá, tổng) **chỉ lấy đúng 4 số sau dấu thập phân** (Ví dụ: `0.0012`, `0.0123`, `0.0004`, `0.0130`, `0.0134`, `0.0269`...). Các vị trí bằng 0 hiển thị `0` hoặc `0.0000`, tuyệt đối không để dấu `-` hay `—`.
     5. Kiểm tra sự điều phối linh kiện (Khuôn đúc, Bán thành phẩm HTJ, Phụ liệu đá) giữa Lô Nguồn và Bag Đích, đối soát dữ liệu qua **Bảng xem trước sự thay đổi trọng lượng (Weight Diff Preview 9 cột)** và lộ trình 5 bước thực thi (Routing 2A).
     6. Bấm nút **`[Xác Nhận Chuyển & Đóng Bag Cũ]`** để hoàn tất việc chuyển phôi, đóng vĩnh viễn Bag cũ trong kho CXLL và in Thẻ Bag KHSX mới chuẩn định dạng nhà máy kim hoàn.
-* **Để (So that):** Bàn giao đúng và đủ phôi vật lý kèm Thẻ Bag KHSX chuẩn xác sang Xưởng Stamping (khắc logo, stamp đá, tẩy xi), bảo đảm quy trình sản xuất làm mới thông suốt và số liệu kế toán - kho - xưởng không bao giờ bị sai lệch.
+* **Để (So that):** Bàn giao đúng và đủ phôi vật lý kèm Thẻ Bag KHSX chuẩn xác sang Xưởng Stamping (khắc logo, stamp đá, tẩy xi), bảo đảm quy trình sản xuất chuyển đơn thông suốt và số liệu kế toán - kho - xưởng không bao giờ bị sai lệch.
 
 ---
 

@@ -125,5 +125,5 @@ flowchart TD
     PickAllBtn --> ClickConfirm
     
     ClickConfirm --> ExecuteTx[Thực thi Transaction đồng bộ:<br>1. Phân bổ SL pick CXLL vs SL đúc mới<br>2. Khóa giữ chỗ phôi tại CXLL: Đổi trạng thái sang Đã giữ chỗ & Tách dòng nếu pick lẻ<br>3. Phát lệnh nhả đá dự trù Stone Delta Release về kho phụ liệu]
-    ExecuteTx --> Done([Chuyển tiếp sang US-ENH-01B: Phân tách luồng KHSX & Gán Routing])
+    ExecuteTx --> Done([Chuyển tiếp sang US-ENH-01B: Phân tách luồng KHSX & Gán Routing Chuyển Đơn])
 ```
